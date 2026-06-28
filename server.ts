@@ -108,6 +108,18 @@ if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
   }
 }
 
+// Persistent Settings File Path
+const SETTINGS_FILE_PATH = path.join(process.cwd(), "settings.json");
+let savedSettings: any = {};
+try {
+  if (fs.existsSync(SETTINGS_FILE_PATH)) {
+    savedSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE_PATH, "utf8"));
+    console.log("[Settings] Loaded persistent settings from settings.json");
+  }
+} catch (e) {
+  console.warn("[Settings] Error reading settings.json:", e);
+}
+
 // In-Memory Database for SaaS Experience
 const dbState = {
   _profileFallback: {
@@ -343,7 +355,8 @@ const dbState = {
     resend_api_key: "re_**********************",
     supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ais-project.supabase.co",
     supabase_anon_key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsIn...",
-    simulated_sales_sound_url: null
+    simulated_sales_sound_url: null,
+    ...savedSettings
   } as Record<string, any>,
   custom_avatars: [] as any[],
   custom_scenarios: [] as any[],
@@ -3704,6 +3717,14 @@ app.post("/api/admin/settings", (req, res) => {
 
     const updatedKeys = keys ? Object.keys(keys) : [];
     logAudit("CONFIGURACOES_SALVAS_ADMIN", "profiles", { updated_keys: updatedKeys });
+
+    try {
+      fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(dbState.settings, null, 2), "utf8");
+      console.log("[Settings] Successfully persisted settings to settings.json");
+    } catch (e) {
+      console.warn("[Settings] Error writing to settings.json (ephemeral on Vercel):", e);
+    }
+
     broadcastEvent("SETTINGS_UPDATE");
     res.json({ success: true, settings: dbState.settings });
   } catch (error: any) {
@@ -3929,9 +3950,16 @@ app.delete("/api/viral-library/:id", (req, res) => {
 
 // GET Course Modules sorted by order_position ascending
 app.get("/api/course-modules", async (req, res) => {
-  await syncFromSupabase("course_modules");
-  const sortedModules = [...(dbState.course_modules || [])].sort((a, b) => Number(a.order_position) - Number(b.order_position));
-  res.json(sortedModules);
+  try {
+    await syncFromSupabase("course_modules");
+    const sortedModules = [...(dbState.course_modules || [])].sort((a, b) => Number(a.order_position || 0) - Number(b.order_position || 0));
+    res.json(sortedModules);
+  } catch (err: any) {
+    console.error("[Course Modules GET Error]:", err);
+    // Safe fallback to local in-memory state
+    const sortedFallback = [...(dbState.course_modules || [])].sort((a, b) => Number(a.order_position || 0) - Number(b.order_position || 0));
+    res.json(sortedFallback);
+  }
 });
 
 // POST Create Course Module
@@ -4017,9 +4045,16 @@ app.post("/api/course-modules/reorder", (req, res) => {
 
 // GET Course Lessons
 app.get("/api/course-lessons", async (req, res) => {
-  await syncFromSupabase("course_lessons");
-  const sortedLessons = [...(dbState.course_lessons || [])].sort((a, b) => Number(a.order_position) - Number(b.order_position));
-  res.json(sortedLessons);
+  try {
+    await syncFromSupabase("course_lessons");
+    const sortedLessons = [...(dbState.course_lessons || [])].sort((a, b) => Number(a.order_position || 0) - Number(b.order_position || 0));
+    res.json(sortedLessons);
+  } catch (err: any) {
+    console.error("[Course Lessons GET Error]:", err);
+    // Safe fallback to local in-memory state
+    const sortedFallback = [...(dbState.course_lessons || [])].sort((a, b) => Number(a.order_position || 0) - Number(b.order_position || 0));
+    res.json(sortedFallback);
+  }
 });
 
 // GET Lessons by Module ID
