@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Lock, ArrowRight, Zap, ShieldCheck, Copy, Sparkles, LogIn, Mail, UserPlus, Info } from 'lucide-react';
-import { initSupabase, getSupabase } from '../lib/supabaseClient';
+import { getSupabase } from '../lib/supabaseClient';
 
 import HeroSection from './marketing/HeroSection';
 import ProblemSection from './marketing/ProblemSection';
@@ -35,7 +35,7 @@ interface ScreenLandingProps {
 export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
   // Configured gateway urls from public-settings
   const [supabaseUrl, setSupabaseUrl] = useState<string>('');
-  const [supabaseKey, setSupabaseKey] = useState<string>('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSJ9.vit_proj_777_vendedor_key');
+  const [supabaseKey, setSupabaseKey] = useState<string>('');
   const [appflyMonthly, setAppflyMonthly] = useState<string>('https://appfly.com/checkout/monthly-placeholder');
   const [appflyLifetime, setAppflyLifetime] = useState<string>('https://appfly.com/checkout/lifetime-placeholder');
 
@@ -59,19 +59,6 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
   // Check URL query parameters and load keys on launch
   useEffect(() => {
-    // 1. Fetch public SaaS variables and API keys
-    fetch('/api/public-settings')
-      .then(res => res.json())
-      .then(data => {
-        if (data.supabase_url) setSupabaseUrl(data.supabase_url);
-        if (data.supabase_anon_key) setSupabaseKey(data.supabase_anon_key);
-        if (data.appfly_monthly_url) setAppflyMonthly(data.appfly_monthly_url);
-        if (data.appfly_lifetime_url) setAppflyLifetime(data.appfly_lifetime_url);
-      })
-      .catch(err => {
-        console.warn("Could not fetch public config:", err);
-      });
-
     // 2. Parse URL for checkout success landing
     const query = new URLSearchParams(window.location.search);
     const planParam = query.get('plan');
@@ -85,11 +72,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
   // Initialize client when we perform registration or login
   const getSupabaseClient = () => {
-    let client = getSupabase();
-    if (!client) {
-      client = initSupabase(supabaseUrl, supabaseKey);
-    }
-    return client;
+    return getSupabase();
   };
 
   // 1. Redirect to AppFly gateway URL
