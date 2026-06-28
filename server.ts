@@ -119,6 +119,11 @@ try {
   console.warn("[Settings] Error reading settings.json:", e);
 }
 
+// Boot diagnostic logs
+console.log("[Boot] SUPABASE_URL presente:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+console.log("[Boot] SUPABASE_ANON_KEY presente:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+console.log("[Boot] SERVICE_ROLE_KEY presente:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
 // In-Memory Database for SaaS Experience
 const dbState = {
   _profileFallback: {
@@ -1248,10 +1253,10 @@ function logAudit(action: string, resource: string, metadata: any) {
 // GET Public Settings Config (Safe for non-auth access)
 app.get("/api/public-settings", (req, res) => {
   res.json({
-    supabase_url: dbState.settings.supabase_url || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ais-project.supabase.co",
-    supabase_anon_key: dbState.settings.supabase_anon_key || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI...",
-    appfly_monthly_url: dbState.settings.appfly_monthly_url || process.env.APPFLY_MONTHLY_URL || "https://appfly.com/checkout/monthly-placeholder",
-    appfly_lifetime_url: dbState.settings.appfly_lifetime_url || process.env.APPFLY_LIFETIME_URL || "https://appfly.com/checkout/lifetime-placeholder"
+    supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    supabase_anon_key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+    appfly_monthly_url: process.env.APPFLY_MONTHLY_URL || "",
+    appfly_lifetime_url: process.env.APPFLY_LIFETIME_URL || ""
   });
 });
 
@@ -1499,9 +1504,8 @@ function sanitizeSupabaseUrl(url: string): string {
 
 // Helper to get raw Supabase client
 function getSupabaseClient() {
-  const rawUrl = dbState.settings?.supabase_url || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const sUrl = sanitizeSupabaseUrl(rawUrl);
-  const sKey = dbState.settings?.supabase_anon_key || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const sUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const sKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
   if (sUrl && sKey && !sUrl.includes("placeholder") && !sKey.includes("placeholder")) {
     try {
       return createClient(sUrl, sKey);
@@ -1514,9 +1518,8 @@ function getSupabaseClient() {
 
 // Helper to get Supabase Admin client with service_role key
 function getSupabaseAdminClient() {
-  const rawUrl = dbState.settings?.supabase_url || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const sUrl = sanitizeSupabaseUrl(rawUrl);
-  const sKey = dbState.settings?.supabase_service_role_key || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const sUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const sKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (sUrl && sKey && !sUrl.includes("placeholder") && !sKey.includes("placeholder")) {
     try {
       return createClient(sUrl, sKey, {
