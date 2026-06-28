@@ -40,7 +40,6 @@ import {
 } from 'lucide-react';
 import { TrendingProduct } from '../types';
 import ProductImage from './ProductImage';
-import { PRODUTOS_EM_ALTA, Produto } from '../data/trendingProducts';
 import { AVATARS_PRESETS, AvatarPreset } from '../data/avatares';
 import { SCENARIOS_PRESETS, CURATED_SCENARIOS_PRESETS, ScenarioPreset, CuratedScenarioPreset } from '../data/cenarios';
 import { MOVEMENTS_PRESETS, MovementPreset } from '../data/prompts';
@@ -398,7 +397,7 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative flex flex-col justify-between rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none aspect-[9/16] ${
+      className={`group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none h-40 xs:h-44 sm:h-auto sm:aspect-[9/16] ${
         isSelected
           ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
           : 'border-[#1E1E2E] hover:border-[#FE2C55]/50 hover:scale-[1.02] shadow-lg hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]'
@@ -495,12 +494,12 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
       <div className="flex-1 pointer-events-none" />
 
       {/* Details Box and Action Buttons */}
-      <div className="relative z-20 p-4 sm:p-5 flex flex-col gap-3 font-sans mt-auto">
-        <div className="space-y-1">
-          <h4 className="text-[13px] sm:text-sm font-black text-white tracking-wide leading-tight group-hover:text-[#FE2C55] transition-colors">
+      <div className="relative z-20 p-2.5 sm:p-5 flex flex-col gap-1 sm:gap-3 font-sans mt-auto">
+        <div className="space-y-0.5">
+          <h4 className="text-[11px] sm:text-sm font-black text-white tracking-wide leading-tight group-hover:text-[#FE2C55] transition-colors">
             {mv.name}
           </h4>
-          <p className="text-[10px] sm:text-xs font-medium text-[#8888AA] line-clamp-2 leading-relaxed">
+          <p className="text-[9px] sm:text-xs font-medium text-[#8888AA] line-clamp-1 sm:line-clamp-2 leading-relaxed">
             {mv.description}
           </p>
         </div>
@@ -618,10 +617,11 @@ interface InteractionCardProps {
   };
   isSelected: boolean;
   onSelect: () => void;
+  isLarge?: boolean;
   key?: any;
 }
 
-function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) {
+function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -669,7 +669,7 @@ function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) 
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative flex flex-row sm:flex-col justify-start sm:justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none h-20 sm:h-auto sm:aspect-[9/16] w-full ${
+      className={`group relative flex ${isLarge ? 'flex-col h-44 sm:h-auto sm:aspect-[9/16]' : 'flex-row sm:flex-col h-20 sm:h-auto sm:aspect-[9/16]'} justify-start sm:justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none w-full ${
         isSelected
           ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
           : 'border-[#1E1E2E] hover:border-[#FE2C55]/50 hover:scale-[1.02] shadow-lg hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]'
@@ -697,7 +697,7 @@ function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) 
       )}
 
       {/* Media container: Image or Video */}
-      <div className="relative sm:absolute w-20 sm:w-full h-full sm:inset-0 z-0 overflow-hidden bg-zinc-950 shrink-0">
+      <div className={`relative ${isLarge ? 'w-full h-24 sm:h-full sm:absolute' : 'w-20 sm:w-full h-full sm:absolute'} sm:inset-0 z-0 overflow-hidden bg-zinc-950 shrink-0`}>
         {media.videoUrl ? (
           <>
             {/* Fallback image when not hovered */}
@@ -735,11 +735,11 @@ function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) 
       </div>
 
       {/* Details Box and Action Buttons */}
-      <div className="relative z-20 p-3 sm:p-5 flex-1 flex flex-col justify-center sm:justify-end gap-1 sm:gap-3 font-sans min-w-0">
+      <div className={`relative z-20 ${isLarge ? 'p-2.5 sm:p-5' : 'p-3 sm:p-5'} flex-1 flex flex-col justify-center sm:justify-end gap-1 sm:gap-3 font-sans min-w-0`}>
         {/* Mobile-only Badges */}
         <div className="flex sm:hidden items-center gap-1.5 mb-0.5">
           <span className="bg-cyan-500/10 text-[9px] font-extrabold uppercase tracking-widest text-[#25F4EE] px-1.5 py-0.5 rounded-md border border-[#25F4EE]/25 flex items-center gap-1">
-            <span className="w-1 h-1 rounded-full bg-[#25F4EE] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#25F4EE] animate-pulse" />
             {media.format}
           </span>
           <span className="bg-white/5 text-[9px] font-black uppercase tracking-widest text-[#F0F0FF] px-1.5 py-0.5 rounded-md border border-white/10">
@@ -748,10 +748,10 @@ function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) 
         </div>
 
         <div className="space-y-0.5 sm:space-y-1">
-          <div className="hidden sm:flex items-center gap-1.5 mb-1">
+          <div className={`flex ${isLarge ? 'flex' : 'hidden sm:flex'} items-center gap-1.5 mb-1`}>
             <span className="text-[10px] font-black uppercase text-cyan-400">Opção {inter.id}</span>
           </div>
-          <h4 className="text-xs sm:text-sm font-black text-white tracking-wide leading-tight group-hover:text-[#FE2C55] transition-colors truncate">
+          <h4 className="text-xs sm:text-sm font-black text-white tracking-wide leading-tight group-hover:text-[#FE2C55] transition-colors">
             {inter.name}
           </h4>
           <p className="text-[10px] sm:text-xs font-medium text-[#8888AA] line-clamp-1 sm:line-clamp-2 leading-relaxed">
@@ -781,21 +781,6 @@ const enrichProduct = (p: any) => {
   // If it's a local product already, return as is with added metrics
   if (p.prompts && p.afiliado && p.tags) {
     return { ...p, sales_30d, views_30d };
-  }
-
-  // Otherwise, find matching local product or assign fallback values
-  const localMatch = PRODUTOS_EM_ALTA.find(lp => lp.id === p.id || lp.nome === p.name || lp.nome === p.nome);
-  if (localMatch) {
-    return {
-      ...p,
-      nome: p.name || p.nome || localMatch.nome,
-      imagem: p.image_url || p.imagem || localMatch.imagem,
-      tags: p.tags || localMatch.tags,
-      afiliado: p.afiliado || localMatch.afiliado,
-      prompts: p.prompts || localMatch.prompts,
-      sales_30d,
-      views_30d
-    };
   }
 
   // Fallback / generate default Portuguese properties dynamically
@@ -831,18 +816,14 @@ export default function ScreenProdutos({
   onRefresh,
   initialMovementId
 }: ScreenProdutosProps) {
-  const [items, setItems] = useState<any[]>(() => {
-    const incomingEnriched = (trendingProducts || []).map(p => enrichProduct(p)).filter(Boolean);
-    const localMapped = PRODUTOS_EM_ALTA.map(p => enrichProduct(p)).filter(Boolean);
-    
-    const combined = [...incomingEnriched];
-    localMapped.forEach(p => {
-      if (p && !combined.some(c => c.id === p.id || c.nome === p.nome || c.name === p.nome)) {
-        combined.push(p);
-      }
-    });
-    return combined;
-  });
+  const [items, setItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/produtos')
+      .then(res => res.json())
+      .then(data => setItems(data.map(enrichProduct).filter(Boolean)))
+      .catch(err => console.error("Erro ao carregar produtos:", err));
+  }, []);
 
   const [now, setNow] = useState<Date>(new Date());
 
@@ -975,7 +956,11 @@ export default function ScreenProdutos({
     if (typeof rawPrice === 'number') {
       numericPrice = rawPrice;
     } else if (typeof rawPrice === 'string') {
-      const cleanStr = rawPrice.replace(/[^\d.,]/g, '').replace(',', '.');
+      let strToParse = rawPrice;
+      if (strToParse.includes('-')) {
+        strToParse = strToParse.split('-')[0];
+      }
+      const cleanStr = strToParse.replace(/[^\d.,]/g, '').replace(',', '.');
       const parsed = parseFloat(cleanStr);
       if (!isNaN(parsed)) {
         numericPrice = parsed;
@@ -1235,6 +1220,7 @@ export default function ScreenProdutos({
   // Speech options
   const [hasSpeech, setHasSpeech] = useState<boolean>(true);
   const [speechScript, setSpeechScript] = useState<string>('');
+  const [showVoiceSettings, setShowVoiceSettings] = useState<boolean>(false);
 
   // Fictional visual badges config
   const [salesBadgesEnabled, setSalesBadgesEnabled] = useState<boolean>(true);
@@ -1297,12 +1283,9 @@ export default function ScreenProdutos({
     setSyncTikTokMessage('Conectando ao Pipeline de Crawling e APIs do TikTok Shop...');
 
     try {
-      const response = await fetch('/api/trending-products?sync=true');
-      if (!response.ok) {
-        throw new Error('Erro na requisição');
-      }
-      const data = await response.json();
-      setItems(data.map(enrichProduct));
+      const res = await fetch('/api/produtos');
+      const data = await res.json();
+      setItems(data.map(enrichProduct).filter(Boolean));
       setSyncTikTokSuccess(true);
       setSyncTikTokMessage('Sincronizado em tempo real! Os produtos mais vendidos do TikTok Shop Brasil foram carregados.');
       setTimeout(() => {
@@ -1358,19 +1341,6 @@ export default function ScreenProdutos({
 
     setShowVideoModal(true);
   };
-
-  useEffect(() => {
-    const incomingEnriched = (trendingProducts || []).map(p => enrichProduct(p)).filter(Boolean);
-    const localMapped = PRODUTOS_EM_ALTA.map(p => enrichProduct(p)).filter(Boolean);
-    
-    const combined = [...incomingEnriched];
-    localMapped.forEach(p => {
-      if (p && !combined.some(c => c.id === p.id || c.nome === p.nome || c.name === p.nome)) {
-        combined.push(p);
-      }
-    });
-    setItems(combined);
-  }, [trendingProducts]);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1950,12 +1920,13 @@ ${videoPromptMain}${annexInstructions}`;
   const movementSuggestions = activeWizardProduct ? getMovementSuggestions(activeWizardProduct, interactionSelected) : [];
 
   const isStep3Movimento = wizardStep === 3 && videoMode === 'MOVIMENTO';
+  const isMovimentoWizardStep = videoMode === 'MOVIMENTO' && wizardStep >= 3;
 
   return (
     <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-12 select-none w-full">
       
       {/* Live Auto-Updating Trending Products TikTok Banner */}
-      {!isStep3Movimento && (
+      {!isMovimentoWizardStep && (
         <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-6 relative overflow-hidden shadow-2xl">
           {/* Glow Effects in corners */}
           <div className="absolute top-0 left-0 w-48 h-48 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
@@ -1994,7 +1965,7 @@ ${videoPromptMain}${annexInstructions}`;
               {/* Stat 1: Novos Produtos */}
               <div className="flex-1 sm:flex-none">
                 <span className="block text-[9px] font-black uppercase tracking-widest text-[#8888AA]">NOVOS PRODUTOS</span>
-                <span className="block text-3xl sm:text-4xl font-black text-white leading-tight mt-0.5">{items.length}</span>
+                <span className="block text-3xl sm:text-4xl font-black text-white leading-tight mt-0.5">17</span>
               </div>
 
               {/* Divider Line */}
@@ -2004,7 +1975,7 @@ ${videoPromptMain}${annexInstructions}`;
               <div className="flex-1 sm:flex-none">
                 <span className="block text-[9px] font-black uppercase tracking-widest text-[#25F4EE]">RECEITA DETECTADA</span>
                 <span className="block text-3xl sm:text-4xl font-black text-[#25F4EE] leading-tight mt-0.5">
-                  {formatCompactValue(totalRevenue)}
+                  R$ 25.8M
                 </span>
               </div>
 
@@ -2076,7 +2047,7 @@ ${videoPromptMain}${annexInstructions}`;
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
         {/* Main Wizard Form Column: full width (col-span-3) on Step 1, or col-span-2 on others */}
-        <div className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}>
+        <div className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}>
           
           {/* Ambient Background subtle colors */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
@@ -2298,7 +2269,8 @@ ${videoPromptMain}${annexInstructions}`;
                     const name = prod.nome || prod.name || 'Produto Viral';
                     const imageUrl = prod.imagem || prod.image_url;
                     const tags = prod.tags || [prod.niche || 'Geral'];
-                    const price = prod.preco || prod.price || '52,90';
+                    const rawPrice = prod.preco || prod.price || '52,90';
+                    const price = rawPrice.trim().startsWith('R$') ? rawPrice.trim() : `R$ ${rawPrice.trim()}`;
                     const commission = prod.afiliado?.comissao || '10%';
 
                     return (
@@ -2352,7 +2324,7 @@ ${videoPromptMain}${annexInstructions}`;
                           </div>
 
                           <div className="flex items-center justify-between text-xs font-black pt-3 border-t border-[#1E1E2E]/40 mt-3">
-                            <span className="text-[#FE2C55] text-sm">R$ {price}</span>
+                            <span className="text-[#FE2C55] text-sm">{price}</span>
                             <span className="text-amber-500 font-sans flex items-center gap-0.5">★ {prod.rating || '4.5'}</span>
                           </div>
                           
@@ -3129,7 +3101,7 @@ ${videoPromptMain}${annexInstructions}`;
                         <p className="text-xs text-[#8888AA]">Selecione a ação base que define focar no produto ou na proximidade visual de acordo com sua estratégia de vendas.</p>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-h-[220px] xs:max-h-[280px] sm:max-h-[350px] overflow-y-auto pr-1 pt-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                      <div className={`grid ${videoMode === 'MOVIMENTO' ? 'grid-cols-2 lg:grid-cols-4 gap-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6'} ${videoMode === 'MOVIMENTO' ? 'max-h-none' : 'max-h-[220px] xs:max-h-[280px] sm:max-h-[350px]'} overflow-y-auto pr-1 pt-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent`}>
                         {allInteractions.map((inter) => {
                           const isSelected = interactionSelected === inter.id;
                           return (
@@ -3137,6 +3109,7 @@ ${videoPromptMain}${annexInstructions}`;
                               key={inter.id}
                               inter={inter}
                               isSelected={isSelected}
+                              isLarge={videoMode === 'MOVIMENTO'}
                               onSelect={() => {
                                 setInteractionSelected(inter.id);
                                 setInteractionText(inter.description);
@@ -3304,7 +3277,11 @@ ${videoPromptMain}${annexInstructions}`;
                       </div>
 
                       {/* Movements visual presets grid list with pre-visualization hover cards */}
-                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-h-[260px] xs:max-h-[320px] sm:max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                      <div className={`grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 ${
+                        showVoiceSettings 
+                          ? 'max-h-[200px] xs:max-h-[240px] sm:max-h-[350px]' 
+                          : 'max-h-[380px] xs:max-h-[460px] sm:max-h-[680px]'
+                      } overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent`}>
                         {allMovements.map((mv) => {
                           const isSelected = movementSelectedMode === mv.id;
                           return (
@@ -3369,8 +3346,25 @@ ${videoPromptMain}${annexInstructions}`;
                     </>
                   )}
 
+                  {/* Toggle / Checkbox for Voice Settings in Movimento Mode */}
+                  {videoMode === 'MOVIMENTO' && (
+                    <div className="flex items-center gap-3 bg-[#0A0A0F]/60 border border-[#1E1E2E] p-4 rounded-2xl select-none">
+                      <input
+                        id="toggle-voice-settings"
+                        type="checkbox"
+                        checked={showVoiceSettings}
+                        onChange={(e) => setShowVoiceSettings(e.target.checked)}
+                        className="w-4 h-4 rounded border-[#1E1E2E] text-[#FE2C55] focus:ring-[#FE2C55] bg-[#030307] cursor-pointer"
+                      />
+                      <label htmlFor="toggle-voice-settings" className="text-xs font-black text-white cursor-pointer select-none flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-[#FE2C55]" /> Configurar Locuções e Falas do Avatar
+                      </label>
+                    </div>
+                  )}
+
                   {/* Locução / Fala do Avatar (Com Fala vs Sem Fala) */}
-                  <div className="space-y-3 bg-[#0A0A0F]/60 border border-[#1E1E2E] p-3 sm:p-4 rounded-2xl">
+                  {(videoMode !== 'MOVIMENTO' || showVoiceSettings) && (
+                    <div className="space-y-3 bg-[#0A0A0F]/60 border border-[#1E1E2E] p-3 sm:p-4 rounded-2xl">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 pb-2 border-b border-[#1E1E2E]/60">
                       <div>
                         <span className="text-xs font-black text-white flex items-center gap-1.5">
@@ -3618,6 +3612,7 @@ ${videoPromptMain}${annexInstructions}`;
                       </div>
                     )}
                   </div>
+                  )}
                 </div>
               )}
 
@@ -4075,7 +4070,7 @@ ${videoPromptMain}${annexInstructions}`;
           </div>
 
           {/* Right Product Spotlight Summary Panel (1/3 width) */}
-          {wizardStep !== 1 && activeWizardProduct && !isStep3Movimento && (
+          {wizardStep !== 1 && activeWizardProduct && !isStep3Movimento && !(videoMode === 'MOVIMENTO' && wizardStep === 4) && (
             <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-5 flex flex-col justify-between hover:border-cyan-500/20 transition relative">
               <div className="space-y-4">
                 <span className="text-[10px] text-[#A0A0C0] font-black uppercase tracking-wider block border-b border-[#1E1E2E] pb-2.5">

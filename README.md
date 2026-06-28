@@ -123,7 +123,25 @@ Para armazenar as fotos comerciais geradas pelas APIs sem expirar URLs temporár
 
 ---
 
-## 🚀 Como fazer Deploy na Vercel
+## 🤖 Importação Automática de Produtos Kalodata (Opcional - Windows/Homologação)
+
+Para automatizar a busca de produtos em alta no **Kalodata** utilizando sua própria sessão local do Opera Browser (evitando assim bloqueios de IP de datacenter):
+
+1. **Instalar Dependências e Navegador Chromium localmente**:
+   ```bash
+   npx playwright install chromium
+   ```
+
+2. **Rodar Script de Teste**:
+   ```bash
+   npx ts-node scripts/importar-kalodata.ts
+   ```
+
+3. **Agendar Atualização Diária Automática (No Windows)**:
+   Abra a pasta `scripts/` e clique duas vezes sobre o arquivo `agendar-importacao.bat`. 
+   Isso criará uma tarefa diária no seu Windows às **08:00 AM** para extrair os produtos top e sobrescrever os dados, atualizando todo o seu painel do ViralForge de forma invisível.
+
+---
 
 ### Passo 1: Preparar o Repositório
 Certifique-se de realizar o commit de todos os arquivos relevantes para um repositório privado ou público no GitHub.

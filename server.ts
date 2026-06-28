@@ -1709,6 +1709,44 @@ async function syncWriteToSupabase(key: string, data: any, action: "insert" | "u
 
 
 // GET Trending Products (supporting both alias /api/trending-products and standard /api/products, with live TikTok Shop integration)
+app.get("/api/produtos", (req, res) => {
+  try {
+    const produtosPath = path.join(process.cwd(), "src", "data", "produtos.json");
+    if (fs.existsSync(produtosPath)) {
+      const data = fs.readFileSync(produtosPath, "utf8");
+      res.json(JSON.parse(data));
+    } else {
+      res.json([]);
+    }
+  } catch (error) {
+    console.error("Erro ao ler produtos.json:", error);
+    res.status(500).json({ error: "Erro ao ler produtos" });
+  }
+});
+
+app.post("/api/admin/importar-kalodata", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const child = require("child_process").spawn("npx", ["ts-node", "scripts/importar-kalodata.ts"], {
+    cwd: process.cwd(),
+  });
+
+  child.stdout.on("data", (data: any) => {
+    res.write(`data: ${JSON.stringify({ log: data.toString() })}\n\n`);
+  });
+
+  child.stderr.on("data", (data: any) => {
+    res.write(`data: ${JSON.stringify({ log: data.toString() })}\n\n`);
+  });
+
+  child.on("close", (code: number) => {
+    res.write(`data: ${JSON.stringify({ done: true, code })}\n\n`);
+    res.end();
+  });
+});
+
 app.get("/api/trending-products", async (req, res) => {
   const sync = req.query.sync === 'true';
   const apiKey = process.env.TIKTOK_DATA_API_KEY;

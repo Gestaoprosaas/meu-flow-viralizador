@@ -47,7 +47,7 @@ interface ScreenAdminProps {
 
 export default function ScreenAdmin({ onNavigate, onRefreshProjectState, profile }: ScreenAdminProps) {
   // Navigation tabs
-  type TabType = 'users' | 'subscriptions' | 'generations' | 'products' | 'library' | 'payouts' | 'settings' | 'avatars';
+  type TabType = 'users' | 'subscriptions' | 'generations' | 'products' | 'kalodata' | 'library' | 'payouts' | 'settings' | 'avatars';
   const [activeTab, setActiveTab ] = useState<TabType>('users');
 
   // adminFetch helper to automatically inject user session headers
@@ -121,6 +121,11 @@ export default function ScreenAdmin({ onNavigate, onRefreshProjectState, profile
     supabase_url: '',
     supabase_anon_key: ''
   });
+
+  // Kalodata State
+  const [kalodataProducts, setKalodataProducts] = useState<any[]>([]);
+  const [isImportingKalodata, setIsImportingKalodata] = useState(false);
+  const [kalodataLog, setKalodataLog] = useState<string[]>([]);
 
   // 8. Custom Avatars CRUD state
   const [avatars, setAvatars] = useState<any[]>([]);
@@ -207,6 +212,9 @@ export default function ScreenAdmin({ onNavigate, onRefreshProjectState, profile
       } else if (tab === 'payouts') {
         const res = await adminFetch('/api/admin/payouts');
         if (res.ok) setPayouts(await res.json());
+      } else if (tab === 'kalodata') {
+        const res = await fetch('/api/produtos');
+        if (res.ok) setKalodataProducts(await res.json());
       } else if (tab === 'settings') {
         const res = await adminFetch('/api/admin/settings');
         if (res.ok) setSettings(await res.json());
@@ -431,6 +439,57 @@ export default function ScreenAdmin({ onNavigate, onRefreshProjectState, profile
     }
   };
 
+  const handleImportKalodata = async () => {
+    setIsImportingKalodata(true);
+    setKalodataLog([]);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const response = await fetch('/api/admin/importar-kalodata', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao iniciar importação");
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.substring(6));
+                if (data.log) {
+                  setKalodataLog(prev => [...prev, data.log.trim()]);
+                }
+                if (data.done) {
+                  setSuccessMsg('Importação finalizada!');
+                  loadTabData('kalodata');
+                  setIsImportingKalodata(false);
+                }
+              } catch (e) {
+                // ignore parse error
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      setErrorMsg('Erro na conexão SSE de importação.');
+      setIsImportingKalodata(false);
+    }
+  };
+
   // 4. Save API keys
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -572,6 +631,24 @@ export default function ScreenAdmin({ onNavigate, onRefreshProjectState, profile
               Curadoria & Conteúdo
             </div>
             <div className="space-y-0.5">
+              <button
+                onClick={() => setActiveTab('kalodata')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
+                  activeTab === 'kalodata'
+                    ? 'bg-gradient-to-r from-purple-950/40 to-purple-800/15 text-white border-l-2 border-purple-500'
+                    : 'text-[#8888AA] hover:text-white hover:bg-[#1E1E2D]/55'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 text-left">
+                  <RefreshCw className={`w-4 h-4 shrink-0 ${activeTab === 'kalodata' ? 'text-purple-500' : 'text-[#8888AA]'}`} />
+                  <div>
+                    <span className="block font-bold">Importação Kalodata</span>
+                    <span className="text-[9px] text-[#8888AA] font-normal hidden xl:block">Atualização TikTok Shop</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-3 h-3 text-[#555577] shrink-0" />
+              </button>
+
               <button
                 onClick={() => setActiveTab('products')}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
@@ -1473,6 +1550,48 @@ export default function ScreenAdmin({ onNavigate, onRefreshProjectState, profile
               )}
             </div>
           </div>
+          )}
+
+          {/* Module 6.5: Kalodata */}
+          {activeTab === 'kalodata' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-blue-900/10 via-cyan-950/5 to-transparent border border-cyan-500/20 rounded-2xl p-4 flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shrink-0">
+                  <RefreshCw className="w-5 h-5 text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-lg mb-1">Integração TikTok Kalodata</h3>
+                  <p className="text-[#8888AA] text-sm leading-relaxed max-w-3xl">
+                    Importe automaticamente os produtos em alta do TikTok Shop via script local do Kalodata. 
+                    Certifique-se de que o computador local possui a integração configurada ou clique abaixo para iniciar via servidor (apenas para ambiente de homologação).
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-[#111118] border border-[#1E1E2E] rounded-2xl p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h4 className="text-white font-bold text-lg">Produtos Atuais: {kalodataProducts.length}</h4>
+                  </div>
+                  <button
+                    onClick={handleImportKalodata}
+                    disabled={isImportingKalodata}
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isImportingKalodata ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    {isImportingKalodata ? 'Sincronizando...' : 'Atualizar Agora'}
+                  </button>
+                </div>
+
+                {kalodataLog.length > 0 && (
+                  <div className="bg-black border border-[#1E1E2E] rounded-lg p-4 font-mono text-xs text-[#25F4EE] h-64 overflow-y-auto whitespace-pre-wrap">
+                    {kalodataLog.map((log, i) => (
+                      <div key={i}>{log}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
 
           {/* Module 7: Settings Setup */}
