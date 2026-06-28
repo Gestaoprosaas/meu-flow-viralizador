@@ -56,12 +56,12 @@ export const influencerTemplates: InfluencerTemplate[] = [
   },
   {
     id: 6,
-    name: "Moreno Casual em Nova York",
-    category: "Masculino Lifestyle",
-    description: "Visual masculino urbano casual, modelo de jaqueta jeans caminhando nas ruas estéticas de Nova York.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600",
-    tags: ["Masculino", "Lifestyle", "Morena"],
-    prompt: `Candid street style photograph of a handsome 25-year-old male Brazilian influencer walking down a cobblestone street in SoHo, New York. He is wearing an authentic vintage denim jacket over a white tee, carrying a leather backpack. Afternoon overcast daylight creating incredibly soft shadows. Beautiful urban depth, historic brick buildings and classic fire escapes blurred elegantly in the background. Captured on Hasselblad, hyper realistic textures, photorealistic facial details and hair, rich cool color grading.`
+    name: "Loira Na Academia",
+    category: "Feminino Lifestyle",
+    description: "Loira em ambiente acadêmico moderno.",
+    image: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Loira%20Na%20Academia.PNG",
+    tags: ["Feminino", "Lifestyle", "Loira"],
+    prompt: `Ultra-realistic 8K photo, Brazilian woman around 23 years old, extremely beautiful, natural and healthy fitness look, proportional athletic female physique, defined waist, toned legs, long voluminous slightly wavy hair, realistic skin with natural texture, no exaggerated filters. The influencer is in a modern, high-end gym, surrounded by premium equipment and elegant lighting. She is standing near the machines, looking at the camera with a confident and friendly expression, conveying energy, discipline, and a healthy lifestyle. Premium fitness outfit consisting of a fitted sports bra and high-waisted leggings in sophisticated neutral tones. Natural fabric drape, nothing exaggerated. Authentic fitness lifestyle influencer look. Natural lighting mixed with ambient gym light, creating depth and realism. Slightly blurred background, keeping full focus on the influencer. Professional editorial fitness photography, magazine quality, 9:16 vertical composition. Extremely photogenic, successful fitness content creator look, elegant posture, soft natural smile, no artificial poses. Ultra-realistic, hyper-detailed, DSLR photography, natural skin texture, realistic hair strands, authentic gym environment, premium lifestyle photography, high-end fitness influencer aesthetic, professional composition, shallow depth of field, cinematic realism, 8K quality. NEGATIVE: No AI look, no exaggerated beauty filters, no plastic skin, no distorted anatomy, no masculinized muscles, no excessive makeup, no low resolution, no text, no logos, no watermarks. Very realistic and human-like.`
   },
   {
     id: 7,

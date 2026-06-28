@@ -34,7 +34,7 @@ interface ScreenLandingProps {
 
 export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
   // Configured gateway urls from public-settings
-  const [supabaseUrl, setSupabaseUrl] = useState<string>('https://vitalprojeto-saas.supabase.co');
+  const [supabaseUrl, setSupabaseUrl] = useState<string>('');
   const [supabaseKey, setSupabaseKey] = useState<string>('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSJ9.vit_proj_777_vendedor_key');
   const [appflyMonthly, setAppflyMonthly] = useState<string>('https://appfly.com/checkout/monthly-placeholder');
   const [appflyLifetime, setAppflyLifetime] = useState<string>('https://appfly.com/checkout/lifetime-placeholder');
