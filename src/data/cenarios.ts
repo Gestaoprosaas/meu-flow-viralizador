@@ -88,57 +88,57 @@ export const SCENARIOS_PRESETS: ScenarioPreset[] = [
 
 export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
   {
-    id: 'curated_quarto_gamer',
-    name: 'Quarto Gamer Neon',
+    id: 'Fundo Espelho + Porta',
+    name: 'Fundo Espelho + Porta',
     type: 'Pronto',
-    description: 'Estilo gamer moderno com luzes de LED neon azul e rosa, cadeira ergonômica premium ao fundo.',
-    imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=300',
-    referenceImageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800',
+    description: 'Ambiente interno de quarto com fundo de espelho e porta, iluminação natural suave.',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.04.13.jpeg',
+    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.04.13.jpeg',
     isCurated: true
   },
   {
-    id: 'curated_estudio_podcast',
-    name: 'Estúdio Podcast Pro',
+    id: 'Guarda Roupa Com Luminária Atrás',
+    name: 'Guarda Roupa Com Luminária Atrás',
     type: 'Pronto',
-    description: 'Estúdio profissional acústico com microfone de mesa premium e iluminação indireta quente.',
-    imageUrl: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=300',
-    referenceImageUrl: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=800',
+    description: 'Ambiente interno de quarto com guarda-roupa e luminária atrás, iluminação suave e aconchegante.',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.18.04.jpeg',
+    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.18.04.jpeg',
     isCurated: true
   },
   {
-    id: 'curated_cafe_paris',
-    name: 'Varanda Café Paris',
+    id: 'Sala + Cortina feixe de luz',
+    name: 'Sala + Cortina feixe de luz',
     type: 'Pronto',
-    description: 'Ambiente externo de uma cafeteria europeia clássica com mesas de metal e calçada charmosa.',
-    imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=300',
-    referenceImageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800',
+    description: 'Ambiente interno de sala com cortina e feixe de luz, iluminação suave e aconchegante.',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21.jpeg',
+    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21.jpeg',
     isCurated: true
   },
   {
-    id: 'curated_cozinha_chef',
-    name: 'Cozinha Gourmet Luxo',
+    id: 'Quarto Rústico',
+    name: 'Quarto Rústico',
     type: 'Pronto',
-    description: 'Cozinha de luxo moderna com ilha de mármore branco e armários planejados de tom sóbrio.',
-    imageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&q=80&w=300',
-    referenceImageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&q=80&w=800',
+    description: 'Ambiente interno de quarto rústico com elementos de madeira e texturas naturais.',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21%20(1).jpeg',
+    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21%20(1).jpeg',
     isCurated: true
   },
   {
-    id: 'curated_escritorio_executivo',
-    name: 'Escritório Faria Lima',
+    id: 'Parede Com Piso',
+    name: 'Parede Com Piso',
     type: 'Pronto',
-    description: 'Escritório corporativo moderno em andar alto de vidro, vista para a cidade e luz do dia abundante.',
-    imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=300',
-    referenceImageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800',
+    description: 'Ambiente interno com parede e piso em materiais naturais, criando um espaço acolhedor e rústico.',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22.jpeg',
+    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22.jpeg',
     isCurated: true
   },
   {
-    id: 'curated_academia_fit',
-    name: 'Espaço Crossfit / Musculação',
+    id: 'Meio Da Cozinha Entre a Sala',
+    name: 'Meio Da Cozinha Entre a Sala',
     type: 'Pronto',
-    description: 'Ambiente fitness de alto padrão com halteres, barras e paredes de concreto rústico industrial.',
-    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=300',
-    referenceImageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
+    description: 'Ambiente interno com cozinha e sala conectadas, criando um espaço funcional e aconchegante.',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.42.14.jpeg',
+    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.42.14.jpeg',
     isCurated: true
   }
 ];

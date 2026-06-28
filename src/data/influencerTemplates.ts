@@ -65,20 +65,38 @@ export const influencerTemplates: InfluencerTemplate[] = [
   },
   {
     id: 7,
-    name: "Influenciadora Morena Minimalista",
-    category: "Feminino Lifestyle",
-    description: "Retrato clean e minimalista de morena com maquiagem soft-glow em ambiente contemporâneo iluminado.",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600",
-    tags: ["Feminino", "Lifestyle", "Morena", "Premium"],
-    prompt: `Minimalist high-fashion editorial portrait of a stunning 23-year-old brunette female influencer. Soft makeup, luminous clean skin with natural pores and fine details, wearing a simple silk white tank top. Set against a textured warm plaster wall with a soft artistic shadow cast from a monstera leaf. High contrast soft studio light, elegant side profile, highly detailed dark brown eyes, realistic fabric texture, 8K, commercial quality.`
+    name: "Homem Carro Premium",
+    category: "Masculino Lifestyle",
+    description: "Homem elegante em um carro premium.",
+    image: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Homem%20Carro%20Premium.png",
+    tags: ["Masculino", "Lifestyle","Premium"],
+    prompt: `Ultra-realistic 8K photo, young Brazilian man, elegant and confident look, sitting in a modern premium car with a sophisticated interior, wearing understated sunglasses, natural light, premium men's lifestyle photography, high definition, realistic appearance, no exaggerated filters.`
   },
   {
     id: 8,
-    name: "Ruiva em Estilo Casual Street",
+    name: "Homem Na Academia",
+    category: "Masculino Lifestyle",
+    description: "Homem fitness em ambiente acadêmico moderno.",
+    image: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Homem%20Academia.png",
+    tags: ["Masculino", "Lifestyle"],
+    prompt: `Ultra-realistic 8K photo, athletic Brazilian man in a premium modern gym, natural lighting, stylish sportswear, realistic fitness photography; highly realistic and lifelike.`
+  },
+  {
+    id: 9,
+    name: "Empresário Jovem",
+    category: "Masculino Lifestyle",
+    description: "Empresário jovem em ambiente corporativo moderno.",
+    image: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Empresario%20Jovem.png",
+    tags: ["Masculino"],
+    prompt: `Ultra-realistic 8K photo, Brazilian man around 28 years old, naturally attractive appearance, sitting in a high-end contemporary office, open laptop, soft lighting, digital entrepreneur style.`
+  },
+  {
+    id: 10,
+    name: "Mulher Cobertura Moderna",
     category: "Feminino Lifestyle",
-    description: "Look de rua ruiva estilosa com jaqueta de couro e acessórios modernos de prata.",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=600",
-    tags: ["Feminino", "Lifestyle", "Ruiva"],
-    prompt: `Cinematic urban portrait of a trendy 24-year-old redhead female influencer wearing a classic black leather motorcycle jacket and silver hoop earrings. Nighttime street scene with colorful neon signs of Tokyo creating vivid pink and cyan highlights on her skin and hair. Wet asphalt reflection in the background, cinematic bokeh, captured on anamorphic lens, masterpiece of realistic shadows, dramatic mood, deep dark levels, highly detailed hair, photorealistic 8k.`
+    description: "Mulher jovem em uma cobertura moderna com vista panorâmica da cidade.",
+    image: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Mulher%20Cobertura%20Moderna.png",
+    tags: ["Feminino", "Lifestyle"],
+    prompt: `Ultra-realistic 8K photo, Brazilian influencer in a high-end modern penthouse, sophisticated setting, contemporary décor, premium editorial photography; highly realistic and natural-looking.`
   }
 ];

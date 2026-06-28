@@ -39,7 +39,6 @@ import ScreenBiblioteca from './components/ScreenBiblioteca';
 import ScreenProdutos from './components/ScreenProdutos';
 import ScreenTreinamentos from './components/ScreenTreinamentos';
 import ScreenViralizarPerfil from './components/ScreenViralizarPerfil';
-import ScreenConfiguracoes from './components/ScreenConfiguracoes';
 import ScreenUpgrade from './components/ScreenUpgrade';
 import ScreenAdmin from './components/ScreenAdmin';
 import TemplateGallery from './components/TemplateGallery';
@@ -541,70 +540,6 @@ export default function App() {
       const tRes = await fetch('/api/trending-products');
       if (tRes.ok) {
         let tData = await tRes.json();
-
-        // Tentativa de sincronização e busca direta via Supabase no lado do cliente (Client-Side)
-        try {
-          const supabase = getSupabase();
-          if (supabase) {
-            console.log("[Client Supabase] Buscando produtos em alta diretamente no Supabase do cliente...");
-            const { data: sData, error: sErr } = await supabase
-              .from('trending_products')
-              .select('*');
-
-            if (sErr) {
-              console.error("[Client Supabase Products Fetch Error]:", sErr.message);
-            } else if (sData && sData.length > 0) {
-              console.log("[Client Supabase Success] Produtos carregados do cliente:", sData.length);
-              const mappedSData = sData.map((item: any) => {
-                let affLinks = item.affiliate_links;
-                if (typeof affLinks === 'string') {
-                  try { affLinks = JSON.parse(affLinks); } catch { affLinks = null; }
-                }
-                if (!affLinks) {
-                  affLinks = {
-                    shopee: item.shopee_link || `https://shopee.com.br/search?keyword=${encodeURIComponent(item.name)}`,
-                    mercadolivre: item.ml_link || `https://lista.mercadolivre.com.br/${encodeURIComponent(item.name)}`
-                  };
-                }
-                return {
-                  id: item.id || `trend-${Date.now()}`,
-                  name: item.name || "Sem Nome",
-                  description: item.description || "",
-                  niche: item.niche || "Geral",
-                  image_url: item.image_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600",
-                  opportunity_score: typeof item.opportunity_score === 'number' ? item.opportunity_score : (Number(item.opportunity_score) || 85),
-                  competition_level: item.competition_level || item.competition || "média",
-                  trend_reason: item.trend_reason || "Demanda crescente detectada pelas redes sociais.",
-                  affiliate_links: affLinks,
-                  avatar_prompt: item.avatar_prompt,
-                  scenario_prompt: item.scenario_prompt,
-                  movement_prompt: item.movement_prompt,
-                  speech_script: item.speech_script,
-                  is_featured: !!item.is_featured,
-                  created_at: item.created_at || new Date().toISOString(),
-                  sales_30d: item.sales_30d || 1200,
-                  revenue_30d: item.revenue_30d || 54000,
-                  average_price: item.average_price || 49.90,
-                  commission_percentage: item.commission_percentage || 15,
-                  viral_videos_count: item.viral_videos_count || 120,
-                  total_views: item.total_views || "1.2M",
-                  trend_score_fastmoss: item.trend_score_fastmoss || 85
-                };
-              });
-
-              tData = mappedSData;
-
-              // Sincronizar em lote de volta ao Express
-              fetch('/api/trending-products/sync-bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ products: mappedSData })
-              }).catch(err => console.warn("[Sync Bulk Express Error]:", err));
-            }
-          }
-        } catch (clientSyncErr) {
-          console.error("[Client Supabase Sync Exception]:", clientSyncErr);
-        }
 
         setTrendingProducts(tData);
       }
@@ -1151,41 +1086,15 @@ export default function App() {
             </button>
           )}
 
-          <div className="flex items-center gap-2">
-            {profile.role === 'admin' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleNavigate('/configuracoes')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-2xl text-xs font-semibold border transition ${
-                    currentPath === '/configuracoes'
-                      ? 'bg-[#1C1C30] text-white border-[#2B2B47]'
-                      : 'bg-[#090911] border-[#1C1C35] text-[#8888AA] hover:text-white hover:bg-[#131324]'
-                  }`}
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>Configurações</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsLanding(true)}
-                  className="flex items-center justify-center p-2.5 rounded-2xl bg-[#090911] border border-[#1C1C35] text-[#8888AA] hover:text-red-400 hover:bg-[#1A0B11] hover:border-red-950/40 transition shrink-0"
-                  title="Sair do Dashboard"
-                >
-                  <LogOut className="w-4.5 h-4.5" />
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsLanding(true)}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 hover:bg-[#1A0B11] transition font-semibold text-xs"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sair do Dashboard</span>
-              </button>
-            )}
+          <div className="flex items-center gap-2 w-full">
+            <button
+              type="button"
+              onClick={() => setIsLanding(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 hover:bg-[#1A0B11] transition font-semibold text-xs"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sair do Dashboard</span>
+            </button>
           </div>
 
           {/* Quick quotas metrics */}
@@ -1357,30 +1266,6 @@ export default function App() {
                   <ScreenViralizarPerfil
                     profile={profile}
                     onRefresh={refreshFullState}
-                  />
-                )}
-
-                {currentPath === '/configuracoes' && (
-                  <ScreenConfiguracoes
-                    profile={profile}
-                    onUpdateProfile={handleUpdateProfile}
-                    onResetDatabase={handleResetDatabase}
-                    onNavigate={handleNavigate}
-                    trendingProducts={trendingProducts}
-                    onSetTrendingProducts={setTrendingProducts}
-                    theme={theme}
-                    onToggleTheme={setTheme}
-                    simulatedSalesEnabled={simulatedSalesEnabled}
-                    onSetSimulatedSalesEnabled={setSimulatedSalesEnabled}
-                    simulatedSalesMinMin={simulatedSalesMinMin}
-                    onSetSimulatedSalesMinMin={setSimulatedSalesMinMin}
-                    simulatedSalesMaxMin={simulatedSalesMaxMin}
-                    onSetSimulatedSalesMaxMin={setSimulatedSalesMaxMin}
-                    simulatedSalesSound={simulatedSalesSound}
-                    onSetSimulatedSalesSound={setSimulatedSalesSound}
-                    simulatedSalesSoundUrl={simulatedSalesSoundUrl}
-                    onSetSimulatedSalesSoundUrl={setSimulatedSalesSoundUrl}
-                    onForceTriggerSale={forceTriggerSimulatedSale}
                   />
                 )}
 

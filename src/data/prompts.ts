@@ -16,49 +16,290 @@ export const MOVEMENTS_PRESETS: MovementPreset[] = [
     type: 'Movimentos',
     format: 'Video',
     description: 'A avatar manda beijo para a câmera com gesto suave e simpático',
-    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://www.youtube.com/watch?v=qgzQu8s0BiQ',
-    promptText: 'UGC style, beautiful female presenter looking into camera, smiling warmly and blowing a gentle kiss with a soft hand gesture, highly natural, aesthetic framing, 9:16 vertical.'
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Beijo%20+%20CTA.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Beijo%20+%20CTA.mp4',
+    promptText: `Versão 3.1. Aspect ratio 9:16. Duração de 8 segundos. Seed 12345.
+
+Usar a imagem enviada como âncora de identidade, mantendo exatamente as mesmas feições, tom de pele, cor de cabelo, mesma textura, mesmo volume e mesmo comprimento durante TODO o vídeo, sem qualquer alteração em nenhum momento.
+
+Estilo de referência: realismo cinematográfico natural, interação direta com a câmera estilo gravação em celular.
+
+Prompt negativo: sem falas, sem áudio vocal, sem movimento labial articulando palavras, sem legendas, sem texto na tela, sem logos, sem marcas d'água, sem deformações corporais, sem dedos extras, sem distorção de mãos, sem artefatos de IA, sem mudança de cor do cabelo, sem mudança de textura do cabelo, sem mudança de estilo do cabelo, sem alteração de iluminação que modifique a cor do cabelo, sem movimentos exagerados, sem câmera lenta, sem sorriso travado, sem movimentos robóticos.
+
+Segurança: não permitir violência contra menores. Não permitir nudez.
+
+Cena: ambiente interno residencial com moldura de madeira e iluminação quente natural.
+
+Ação: ela dá um passo natural para frente e inclina levemente o tronco entre 30 e 40 graus em direção à câmera. Mantém contato visual constante com um sorriso suave, simpático e vendedor. Sem falar absolutamente nada e sem articular palavras com os lábios. Logo após se inclinar, ela leva uma mão naturalmente até a boca e faz um gesto delicado de mandar um beijo para a câmera, soltando a mão suavemente para frente de forma feminina e natural. O gesto do beijo é rápido, elegante e casual, sem exagero e sem teatralidade. Após o beijo, ela naturalmente abaixa a mão e aponta claramente o dedo indicador para baixo, direção inferior da tela, realizando um pequeno movimento visual de chamada para ação. O sorriso permanece natural e envolvente durante toda a cena. O cabelo permanece visualmente idêntico durante toda a ação, sem qualquer alteração de cor, brilho, forma ou volume.
+
+Câmera: dolly-in sutil acompanhando o passo. Lente 50 mm. 24 fps. Obturador 1/120. Foco contínuo no rosto. Profundidade de campo rasa mantendo o fundo levemente desfocado.
+
+Iluminação: luz quente lateral suave com leve preenchimento frontal. Iluminação estável e constante, sem variação de temperatura de cor ao longo do vídeo.
+
+Ambiente: fundo levemente desfocado. Movimento natural dos cabelos ao inclinar. Leve sensação de profundidade realista. Mãos anatomicamente corretas. Sem distorção dos dedos. Manter consistência total da aparência do cabelo do início ao fim.`,
   },
   {
     id: 'hook_tapar_camera',
     name: 'Hook Tapar Câmera',
-    type: 'POV',
-    format: 'Video',
-    description: 'A avatar leva a mão até a lente, como se fosse “tapar a câmera” para criar transição',
-    imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://www.youtube.com/watch?v=HlwNLwmq16c',
-    promptText: '9:16 portrait video, a young woman steps forward and brings her hand directly towards the lens to cover it, creating a perfect smooth slide transition effect, realistic movement.'
-  },
-  {
-    id: 'hook_andando_pacote',
-    name: 'Hook Andando com Pacote TikTok',
     type: 'Movimentos',
     format: 'Video',
-    description: 'A avatar anda segurando pacote, com movimento de entrada natural e dinâmica social',
-    imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-smiling-at-sunset-41712-large.mp4',
-    promptText: 'UGC fashion vlog, a young cheerful woman walking towards the camera holding a delivery package, smiling in natural golden hour lighting, social media influencer style.'
+    description: 'A avatar leva a mão até a lente, como se fosse “tapar a câmera” para criar transição',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Tapar%20Camera.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Tapar%20Camera.mp4',
+    promptText: `START OF ANIMATION: The subject starts standing naturally at a comfortable distance from the camera. She calmly takes two small natural steps forward toward the camera with relaxed posture, soft feminine body sway and realistic timing. While approaching: she lightly touches or adjusts a visible clothing detail naturally and casually. The movement must feel spontaneous and realistic. No exaggerated posing. No runway behavior. No robotic timing. As she gets closer to the camera: the subject softly smiles and naturally raises one hand toward the lens. The hand slowly moves closer until it softly covers the entire camera view for a smooth transition effect.
+IMPORTANT:
+– The hand movement must feel calm and natural
+– No aggressive motion
+– No fast movement
+– No hard impact on the lens
+– Smooth realistic pacing only
+
+After covering the camera briefly: the subject naturally steps backward again to a comfortable distance with relaxed body flow. As she returns backward: one hand gradually moves to the waist naturally. At the final position: the subject slightly shifts her hip, softly lifts one leg forward in a feminine relaxed pose, keeps one hand on the waist, and gives a warm natural smile.
+
+GENERAL MOTION: Natural fluid movement. Continuous body micro-adjustments. Relaxed shoulders. Gentle hip sway. Real human timing. No stiff motion.
+
+FACIAL EXPRESSION: Soft neutral expression most of the time. Subtle natural smiles. No frozen smile. No exaggerated facial tension.
+
+BODY LANGUAGE: Natural posture. Soft feminine energy. No dancing. No exaggerated influencer posing.
+
+CAMERA: Stable casual phone-style recording. Very subtle handheld micro-movement only. No zoom. No camera shake. Chest-height framing.
+
+REALISM: Preserve original identity. Natural skin texture. Natural hair movement. Natural fabric physics. No beauty filters. No smoothing. No stylization.
+
+RESTRICTIONS: No talking. No text. No UI. No effects. No exaggerated movement. No robotic motion.
+
+FINAL RESULT: A hyper-realistic casual fashion transition video where the subject naturally walks toward the camera, softly covers the lens with one hand for a transition, then steps back into a relaxed feminine final pose.`,
   },
   {
-    id: 'hook_roupa_passinho',
-    name: 'Hook Roupa Passinho Frente',
-    type: 'Look',
+    id: 'Mexendo no Cabelo',
+    name: 'Mexendo no Cabelo',
+    type: 'Movimentos',
     format: 'Video',
-    description: 'A avatar segura ou mostra a roupa na frente do corpo com leve passinho',
-    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-showing-look-of-the-day-fashion-video-41584-large.mp4',
-    promptText: '9:16 video, stylish influencer steps forward showcasing her trendy outfit, holding the fabric gently, doing a cute little front step to display the clothing folds and fit, high definition.'
+    description: 'A avatar mexe no cabelo de forma natural e sedutora, com leve sorriso',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Person_presenting_clothing_POV_202606281521.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Person_presenting_clothing_POV_202606281521.mp4',
+    promptText: `Animate the subject as a REAL person presenting clothing in a POV-style video.
+
+⸻
+
+🔥 START OF ANIMATION (UPDATED):
+
+– The subject starts at a natural distance from the camera
+
+– She calmly takes two small, natural steps forward toward the camera
+
+– While approaching, she gently touches and lightly holds the bow/lace detail on the chest area
+
+– The gesture is delicate, subtle and realistic, like naturally showing a clothing detail
+
+– No emphasis, no posing, no exaggeration
+
+– The movement feels spontaneous and casual
+
+– After briefly touching the bow, she naturally releases it
+
+– She takes a small step back to her original position
+
+– Smooth transition into the rest of the animation
+
+⸻
+
+GENERAL MOTION STYLE:
+
+– Natural, confident, fluid movements  
+
+– Not static  
+
+– Not exaggerated  
+
+– Not robotic  
+
+– Real human timing  
+
+⸻
+
+BODY MOVEMENTS:
+
+– One hand naturally rests on the waist  
+
+– Gentle hip movement (side-to-side, very subtle)  
+
+– One foot forward, the other relaxed behind  
+
+– Natural posture, relaxed shoulders  
+
+⸻
+
+CLOTHING PRESENTATION:
+
+– Small, natural movements to highlight the outfit  
+
+– Slight torso rotation to show fit and fabric  
+
+– No aggressive posing  
+
+– No fashion runway exaggeration  
+
+– Movements feel spontaneous and casual  
+
+⸻
+
+ADDITIONAL NATURAL GESTURE (VERY SUBTLE):
+
+– After the main body movement sequence:
+
+  • The subject briefly raises one hand
+
+  • Lightly brushes her hair backward near the side of the head
+
+  • The gesture lasts approximately one second
+
+  • The motion is casual and unintentional, like a natural self-adjustment
+
+  • No emphasis, no posing
+
+  • The hand immediately returns to a relaxed neutral position
+
+⸻
+
+FACIAL EXPRESSION (VERY IMPORTANT – REAL HUMAN TIMING):
+
+– The subject does NOT smile continuously
+
+– Facial expression alternates naturally throughout the video
+
+– While approaching the camera:
+
+  • Neutral, relaxed expression
+
+  • Lips softly closed
+
+  • Calm, confident look
+
+– During the bow/lace touch:
+
+  • A brief, subtle smile appears
+
+  • Smile is soft and natural, not exaggerated, não falar, no fala, só executar o movimento.`
   },
   {
-    id: 'hook_apresentacao_fashion',
-    name: 'Hook Apresentação Fashion',
-    type: 'Look',
+    id: 'Giro 360 Controlado',
+    name: 'Giro 360 Controlado',
+    type: 'Movimentos',
     format: 'Video',
-    description: 'Pose de apresentação de look, com postura elegante e destaque para a roupa',
-    imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-turning-around-showing-her-look-41587-large.mp4',
-    promptText: 'Editorial fashion presentation, elegant model strikes confident poses, full body showcase, highlighting the textures, seams, and fit of a high-end luxury streetwear outfit.'
+    description: 'A avatar faz giro completo de 360 graus, mostrando corpo e roupa em rotação controlada',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Woman_rotating_360_degrees_202606281542.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Woman_rotating_360_degrees_202606281542.mp4',
+    promptText: `{
+  "version": "3.1",
+  "aspectRatio": "9:16",
+  "durationSeconds": 8,
+  "seed": 12345,
+  "subjectRef": "usar a imagem enviada como âncora de identidade, mantendo exatamente as mesmas feições, tom de pele",
+  "referenceStyle": "realismo cinematográfico natural, apresentação de moda com movimento corporal suave",
+  "negativePrompt": "sem falas, sem áudio vocal, sem movimento labial, sem texto na tela, sem logos, sem marcas d'água",
+  "safety": { "allowMinorViolence": false, "allowNudity": false },
+  "shots": [
+    {
+      "scene": "ambiente interno residencial com moldura de madeira e iluminação quente natural",
+      "action": "ela permanece no mesmo lugar e realiza uma rotação completa de 360° de forma lenta, suave e segmentada, mostrando o look de todos os ângulos.",
+      "camera": "fixa; 50mm; 24fps; sem movimento de câmera; foco contínuo; profundidade de campo leve",
+      "lighting": "luz quente lateral suave com preenchimento frontal; iluminação constante sem variação",
+      "environment": "fundo levemente desfocado; movimento natural do cabelo acompanhando o giro; sem distorções"
+    }
+  ],
+  "motionControl": {
+    "rotation_speed": "slow",
+    "rotation_style": "segmented_smooth_turn",
+    "no_fast_spin": true,
+    "no_instant_360": true
+  },
+  "rules": {
+    "stay_in_same_position": true,
+    "no_forward_movement": true,
+    "no_backward_movement": true,
+    "no_fast_rotation": true,
+    "must_be_slow_turn": true,
+    "preserve_identity": true
+  }
+}`
+  },
+  {
+    id: 'Segurando a Roupa e Andando Para Frente',
+    name: 'Segurando a Roupa e Andando Para Frente',
+    type: 'Movimentos',
+    format: 'Video',
+    description: 'A avatar segura a roupa com uma mão e caminha para frente, mostrando o look em movimento',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Girl_stepping_forward_with_clothing_202606281557.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Girl_stepping_forward_with_clothing_202606281557.mp4',
+    promptText: `HOOK MOVEMENT REFINEMENT (CRITICAL):
+
+The subject must move naturally and calmly.
+
+Do NOT rush aggressively toward the camera.
+Do NOT run.
+Do NOT lunge forward.
+Do NOT create chaotic movement.
+Do NOT create exaggerated fast motion.
+
+The hook should feel smooth and controlled like a real casual influencer recording.
+
+CORRECT MOVEMENT FLOW:
+– The subject starts already holding the clothing/product naturally
+– She takes ONE natural small step forward
+– While stepping forward, she smoothly raises the clothing toward the camera
+– The movement is fluid and continuous
+– Calm natural pacing
+– No sudden acceleration
+
+The clothing should reach the camera naturally within around 1–2 seconds.
+
+IMPORTANT:
+– The subject body movement stays relaxed
+– Natural shoulder movement
+– Natural arm motion
+– Natural posture balance
+– No exaggerated hip movement
+– No dramatic motion
+
+FACIAL BEHAVIOR FIX (VERY IMPORTANT):
+– Mouth must remain naturally closed most of the time
+– Do NOT generate talking behavior
+– Do NOT simulate speech
+– Do NOT create lip-sync motion
+– No random mouth opening
+– No exaggerated facial animation
+
+Expression should remain:
+* soft
+* neutral
+* relaxed
+* natural
+
+A very subtle smile is allowed briefly, but:
+– lips mostly closed
+– no visible talking motion
+– no exaggerated grin
+
+MOTION QUALITY:
+– Real-time natural motion
+– No slow motion
+– No delay
+– No laggy movement
+– No robotic timing
+– No jitter
+– No frame skipping
+– No looping behavior
+
+CAMERA:
+– Stable POV camera
+– Very subtle handheld micro movement only
+– No zoom
+– No cinematic motion
+– No shake
+
+FINAL FEELING:
+The animation should feel like a real girl casually stepping forward and softly placing the clothing in front of the phone camera for a natural TikTok-style transition.`
   },
   {
     id: 'selfie_cabelo',

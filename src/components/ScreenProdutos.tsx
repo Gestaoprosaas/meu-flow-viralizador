@@ -241,9 +241,10 @@ interface ScenarioCardProps {
   isSelected: boolean;
   onSelect: () => void;
   key?: string;
+  isLarge?: boolean;
 }
 
-function ScenarioCard({ sc, isSelected, onSelect }: ScenarioCardProps) {
+function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -273,7 +274,7 @@ function ScenarioCard({ sc, isSelected, onSelect }: ScenarioCardProps) {
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-300 relative ${
+      className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-300 relative w-full ${
         isSelected 
           ? 'ring-2 ring-[#FE1E4E] border-[#FE1E4E] scale-[0.98]' 
           : 'border-[#1E1E2E] hover:border-[#FE1E4E]/40'
@@ -285,13 +286,13 @@ function ScenarioCard({ sc, isSelected, onSelect }: ScenarioCardProps) {
         </div>
       )}
 
-      <div className="relative h-20 xs:h-24 sm:h-36 overflow-hidden bg-zinc-900">
+      <div className={`relative ${isLarge ? 'aspect-[2/3] min-h-[420px] sm:min-h-[480px]' : 'h-20 xs:h-24 sm:h-36'} overflow-hidden bg-zinc-900 w-full`}>
         {sc.videoUrl ? (
           <>
             <img 
               src={sc.imageUrl} 
               alt={sc.name} 
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+              className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 ${
                 isHovered ? 'opacity-0' : 'opacity-100'
               }`}
               referrerPolicy="no-referrer"
@@ -302,7 +303,7 @@ function ScenarioCard({ sc, isSelected, onSelect }: ScenarioCardProps) {
               loop
               muted
               playsInline
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
+              className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
                 isHovered ? 'opacity-100' : 'opacity-0'
               }`}
             />
@@ -311,7 +312,7 @@ function ScenarioCard({ sc, isSelected, onSelect }: ScenarioCardProps) {
           <img 
             src={sc.imageUrl} 
             alt={sc.name} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-all duration-500"
             referrerPolicy="no-referrer"
           />
         )}
@@ -1157,9 +1158,20 @@ export default function ScreenProdutos({
   const [allInteractions, setAllInteractions] = useState<{ id: string; name: string; description: string; englishText: string }[]>([]);
 
   // Helper to merge loaded lists with default presets to prevent losing custom items or software-updated defaults
-  const mergePresetsWithDefaults = <T extends { id: string }>(loadedList: T[] | null, defaults: T[]): T[] => {
+  const mergePresetsWithDefaults = <T extends { id: string; videoUrl?: string; imageUrl?: string }>(loadedList: T[] | null, defaults: T[]): T[] => {
     if (!loadedList || loadedList.length === 0) return defaults;
-    const merged = [...loadedList];
+    const merged = loadedList.map(item => {
+      const def = defaults.find(d => d.id === item.id);
+      if (def) {
+        return {
+          ...def,
+          ...item,
+          videoUrl: item.videoUrl || def.videoUrl,
+          imageUrl: item.imageUrl || def.imageUrl,
+        };
+      }
+      return item;
+    });
     defaults.forEach(def => {
       if (!merged.some(item => item.id === def.id)) {
         merged.push(def);
@@ -1169,103 +1181,10 @@ export default function ScreenProdutos({
   };
 
   useEffect(() => {
-    // Carregar avatares, cenários, movimentos e interações customizados de forma sincronizada com o servidor
-    const fetchAllSharedPresets = async () => {
-      // 1. CARREGAR AVATARES
-      let localAvatars: AvatarPreset[] = AVATARS_PRESETS;
-      try {
-        const savedAvs = localStorage.getItem('local_avatars_presets');
-        if (savedAvs) {
-          localAvatars = JSON.parse(savedAvs);
-        }
-      } catch (e) {
-        console.warn("Erro ao ler avatares do localStorage:", e);
-      }
-
-      try {
-        const avRes = await fetch('/api/avatars');
-        if (avRes.ok) {
-          const avData = await avRes.json();
-          if (avData && avData.length > 0) {
-            setAllAvatars(mergePresetsWithDefaults(avData, AVATARS_PRESETS));
-          } else {
-            setAllAvatars(mergePresetsWithDefaults(localAvatars, AVATARS_PRESETS));
-          }
-        } else {
-          setAllAvatars(mergePresetsWithDefaults(localAvatars, AVATARS_PRESETS));
-        }
-      } catch (err) {
-        console.error("Erro ao carregar avatares do servidor:", err);
-        setAllAvatars(mergePresetsWithDefaults(localAvatars, AVATARS_PRESETS));
-      }
-
-      // 2. CARREGAR CENÁRIOS
-      let localScenarios: ScenarioPreset[] = SCENARIOS_PRESETS;
-      try {
-        const savedScenarios = localStorage.getItem('local_scenarios_presets');
-        if (savedScenarios) {
-          localScenarios = JSON.parse(savedScenarios);
-        }
-      } catch (e) {
-        console.warn("Erro ao ler cenários do localStorage:", e);
-      }
-
-      try {
-        const scRes = await fetch('/api/scenarios');
-        if (scRes.ok) {
-          const scData = await scRes.json();
-          if (scData && scData.length > 0) {
-            setAllScenarios(mergePresetsWithDefaults(scData, SCENARIOS_PRESETS));
-          } else {
-            setAllScenarios(mergePresetsWithDefaults(localScenarios, SCENARIOS_PRESETS));
-          }
-        } else {
-          setAllScenarios(mergePresetsWithDefaults(localScenarios, SCENARIOS_PRESETS));
-        }
-      } catch (err) {
-        console.error("Erro ao carregar cenários do servidor:", err);
-        setAllScenarios(mergePresetsWithDefaults(localScenarios, SCENARIOS_PRESETS));
-      }
-
-      // 3. CARREGAR MOVIMENTOS
-      let localMovements: MovementPreset[] = MOVEMENTS_PRESETS;
-      try {
-        const savedMovements = localStorage.getItem('local_movements_presets');
-        if (savedMovements) {
-          localMovements = JSON.parse(savedMovements);
-        }
-      } catch (e) {
-        console.warn("Erro ao ler movimentos do localStorage:", e);
-      }
-
-      try {
-        const mvRes = await fetch('/api/movements');
-        if (mvRes.ok) {
-          const mvData = await mvRes.json();
-          if (mvData && mvData.length > 0) {
-            setAllMovements(mergePresetsWithDefaults(mvData, MOVEMENTS_PRESETS));
-          } else {
-            setAllMovements(mergePresetsWithDefaults(localMovements, MOVEMENTS_PRESETS));
-          }
-        } else {
-          setAllMovements(mergePresetsWithDefaults(localMovements, MOVEMENTS_PRESETS));
-        }
-      } catch (err) {
-        console.error("Erro ao carregar movimentos do servidor:", err);
-        setAllMovements(mergePresetsWithDefaults(localMovements, MOVEMENTS_PRESETS));
-      }
-    };
-
-    fetchAllSharedPresets();
-
-    const handleRealtimeUpdate = (event: any) => {
-      const { type } = event.detail || {};
-      if (type === 'AVATARS_UPDATE' || type === 'SCENARIOS_UPDATE' || type === 'MOVEMENTS_UPDATE' || type === 'SETTINGS_UPDATE' || type === 'FULL_RESET') {
-        fetchAllSharedPresets();
-      }
-    };
-
-    window.addEventListener('realtime-db-update' as any, handleRealtimeUpdate);
+    // Definir presets de forma estática, importando diretamente dos arquivos de dados
+    setAllAvatars(AVATARS_PRESETS);
+    setAllScenarios(SCENARIOS_PRESETS);
+    setAllMovements(MOVEMENTS_PRESETS);
 
     // Carregar interações configuradas
     const savedInteractions = localStorage.getItem('local_interactions_presets');
@@ -1298,10 +1217,6 @@ export default function ScreenProdutos({
     } else {
       setAllInteractions(defaultInteractions);
     }
-
-    return () => {
-      window.removeEventListener('realtime-db-update' as any, handleRealtimeUpdate);
-    };
   }, []);
 
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('');
@@ -2025,130 +1940,134 @@ ${videoPromptMain}${annexInstructions}`;
   const scenarioSuggestions = activeWizardProduct ? getScenarioSuggestions(activeWizardProduct, interactionSelected) : [];
   const movementSuggestions = activeWizardProduct ? getMovementSuggestions(activeWizardProduct, interactionSelected) : [];
 
+  const isStep3Movimento = wizardStep === 3 && videoMode === 'MOVIMENTO';
+
   return (
-    <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-12 select-none">
+    <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-12 select-none w-full">
       
       {/* Live Auto-Updating Trending Products TikTok Banner */}
-      <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-6 relative overflow-hidden shadow-2xl">
-        {/* Glow Effects in corners */}
-        <div className="absolute top-0 left-0 w-48 h-48 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-48 h-48 bg-[#FE2C55]/5 rounded-full blur-3xl pointer-events-none" />
-        
-        {/* Main Header Layout: Left and Right */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#1E1E2E]/60">
-          {/* Left Side: Title & Badge Status */}
-          <div className="space-y-3">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
-                <Flame className="w-7 h-7 text-[#FE2C55] animate-bounce shrink-0" />
-                Produtos Virais
-              </h1>
-              <p className="text-xs sm:text-sm text-[#8888AA] mt-1 font-medium">
-                Identifique tendências antes dos concorrentes
-              </p>
-            </div>
-            
-            {/* Badges/Selo */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-black tracking-wider text-emerald-400 uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Sistema Online • Minerando
-              </span>
+      {!isStep3Movimento && (
+        <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+          {/* Glow Effects in corners */}
+          <div className="absolute top-0 left-0 w-48 h-48 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-[#FE2C55]/5 rounded-full blur-3xl pointer-events-none" />
+          
+          {/* Main Header Layout: Left and Right */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#1E1E2E]/60">
+            {/* Left Side: Title & Badge Status */}
+            <div className="space-y-3">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                  <Flame className="w-7 h-7 text-[#FE2C55] animate-bounce shrink-0" />
+                  Produtos Virais
+                </h1>
+                <p className="text-xs sm:text-sm text-[#8888AA] mt-1 font-medium">
+                  Identifique tendências antes dos concorrentes
+                </p>
+              </div>
               
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-[#FE2C55]/10 to-[#25F4EE]/10 border border-[#FE2C55]/25 text-[10px] font-black tracking-wider text-[#F0F0FF] uppercase shadow-sm">
-                <Link2 className="w-3.5 h-3.5 text-[#25F4EE] shrink-0" />
-                Sincronizado com TikTok Shop
-              </span>
+              {/* Badges/Selo */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-black tracking-wider text-emerald-400 uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Sistema Online • Minerando
+                </span>
+                
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-[#FE2C55]/10 to-[#25F4EE]/10 border border-[#FE2C55]/25 text-[10px] font-black tracking-wider text-[#F0F0FF] uppercase shadow-sm">
+                  <Link2 className="w-3.5 h-3.5 text-[#25F4EE] shrink-0" />
+                  Sincronizado com TikTok Shop
+                </span>
+              </div>
+            </div>
+
+            {/* Right Side: Big Statistics Blocks + Countdown */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 lg:text-right">
+              {/* Stat 1: Novos Produtos */}
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-[9px] font-black uppercase tracking-widest text-[#8888AA]">NOVOS PRODUTOS</span>
+                <span className="block text-3xl sm:text-4xl font-black text-white leading-tight mt-0.5">{items.length}</span>
+              </div>
+
+              {/* Divider Line */}
+              <div className="hidden sm:block w-px h-10 bg-[#1E1E2E]" />
+
+              {/* Stat 2: Receita Detectada */}
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-[9px] font-black uppercase tracking-widest text-[#25F4EE]">RECEITA DETECTADA</span>
+                <span className="block text-3xl sm:text-4xl font-black text-[#25F4EE] leading-tight mt-0.5">
+                  {formatCompactValue(totalRevenue)}
+                </span>
+              </div>
+
+              {/* Divider Line */}
+              <div className="hidden sm:block w-px h-10 bg-[#1E1E2E]" />
+
+              {/* Stat 3: Timer */}
+              <div className="bg-[#0A0A0F] border border-[#1E1E2E] rounded-xl px-4 py-2 flex flex-col justify-center min-w-[150px] shrink-0">
+                <span className="block text-[8px] font-black uppercase tracking-widest text-[#8888AA] leading-none mb-1">
+                  PRÓXIMA ATUALIZAÇÃO EM
+                </span>
+                <span className="block font-mono text-xl sm:text-2xl font-black text-white leading-none tracking-wider text-center">
+                  {countdownStr}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Right Side: Big Statistics Blocks + Countdown */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 lg:text-right">
-            {/* Stat 1: Novos Produtos */}
-            <div className="flex-1 sm:flex-none">
-              <span className="block text-[9px] font-black uppercase tracking-widest text-[#8888AA]">NOVOS PRODUTOS</span>
-              <span className="block text-3xl sm:text-4xl font-black text-white leading-tight mt-0.5">{items.length}</span>
-            </div>
-
-            {/* Divider Line */}
-            <div className="hidden sm:block w-px h-10 bg-[#1E1E2E]" />
-
-            {/* Stat 2: Receita Detectada */}
-            <div className="flex-1 sm:flex-none">
-              <span className="block text-[9px] font-black uppercase tracking-widest text-[#25F4EE]">RECEITA DETECTADA</span>
-              <span className="block text-3xl sm:text-4xl font-black text-[#25F4EE] leading-tight mt-0.5">
-                {formatCompactValue(totalRevenue)}
-              </span>
-            </div>
-
-            {/* Divider Line */}
-            <div className="hidden sm:block w-px h-10 bg-[#1E1E2E]" />
-
-            {/* Stat 3: Timer */}
-            <div className="bg-[#0A0A0F] border border-[#1E1E2E] rounded-xl px-4 py-2 flex flex-col justify-center min-w-[150px] shrink-0">
-              <span className="block text-[8px] font-black uppercase tracking-widest text-[#8888AA] leading-none mb-1">
-                PRÓXIMA ATUALIZAÇÃO EM
-              </span>
-              <span className="block font-mono text-xl sm:text-2xl font-black text-white leading-none tracking-wider text-center">
-                {countdownStr}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Timeline representation section */}
-        <div className="pt-6 pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Madrugada (00:00 - 06:00)', index: 0 },
-              { label: 'Manhã (06:00 - 12:00)', index: 1 },
-              { label: 'Tarde (12:00 - 18:00)', index: 2 },
-              { label: 'Noite (18:00 - 00:00)', index: 3 }
-            ].map((period) => {
-              const isCurrent = activeBlockIndex === period.index;
-              return (
-                <div key={period.index} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[10px] uppercase tracking-wider font-black ${isCurrent ? 'text-white' : 'text-[#555577]'}`}>
-                      {period.label}
-                    </span>
-                    {isCurrent && (
-                      <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-[#FE2C55]/10 border border-[#FE2C55]/20 text-[#FE2C55] uppercase animate-pulse">
-                        ATIVO
+          {/* Timeline representation section */}
+          <div className="pt-6 pb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Madrugada (00:00 - 06:00)', index: 0 },
+                { label: 'Manhã (06:00 - 12:00)', index: 1 },
+                { label: 'Tarde (12:00 - 18:00)', index: 2 },
+                { label: 'Noite (18:00 - 00:00)', index: 3 }
+              ].map((period) => {
+                const isCurrent = activeBlockIndex === period.index;
+                return (
+                  <div key={period.index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] uppercase tracking-wider font-black ${isCurrent ? 'text-white' : 'text-[#555577]'}`}>
+                        {period.label}
                       </span>
-                    )}
+                      {isCurrent && (
+                        <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-[#FE2C55]/10 border border-[#FE2C55]/20 text-[#FE2C55] uppercase animate-pulse">
+                          ATIVO
+                        </span>
+                      )}
+                    </div>
+                    {/* Timeline Bar */}
+                    <div className="h-1.5 w-full bg-[#111118] border border-[#1E1E2E] rounded-full overflow-hidden relative">
+                      {isCurrent && (
+                        <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#FE2C55] to-[#25F4EE] w-full rounded-full animate-pulse shadow-[0_0_10px_rgba(254,44,85,0.4)]" />
+                      )}
+                    </div>
                   </div>
-                  {/* Timeline Bar */}
-                  <div className="h-1.5 w-full bg-[#111118] border border-[#1E1E2E] rounded-full overflow-hidden relative">
-                    {isCurrent && (
-                      <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#FE2C55] to-[#25F4EE] w-full rounded-full animate-pulse shadow-[0_0_10px_rgba(254,44,85,0.4)]" />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Footer of the banner */}
-        <div className="flex items-center justify-between text-[10px] text-[#8888AA] font-semibold mt-2 pt-2 border-t border-[#1E1E2E]/30">
-          <div className="flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5 text-[#25F4EE]" />
-            <span>↗ <strong className="text-white">{items.length}</strong> produtos validados — vitrine reorganizada a cada hora</span>
-          </div>
-          <div className="hidden sm:block text-[8px] text-[#555577] uppercase tracking-wider font-black">
-            TikTok Miner Engine v3.2
+          {/* Footer of the banner */}
+          <div className="flex items-center justify-between text-[10px] text-[#8888AA] font-semibold mt-2 pt-2 border-t border-[#1E1E2E]/30">
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5 text-[#25F4EE]" />
+              <span>↗ <strong className="text-white">{items.length}</strong> produtos validados — vitrine reorganizada a cada hora</span>
+            </div>
+            <div className="hidden sm:block text-[8px] text-[#555577] uppercase tracking-wider font-black">
+              TikTok Miner Engine v3.2
+            </div>
           </div>
         </div>
-      </div>
+      )}
       
 
 
       {/* ACTIVE WIZARD STEP LAYOUTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
         {/* Main Wizard Form Column: full width (col-span-3) on Step 1, or col-span-2 on others */}
-        <div className={`${wizardStep === 1 || !activeWizardProduct ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden flex flex-col justify-between min-h-[400px] sm:min-h-[480px]`}>
+        <div className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden flex flex-col justify-between min-h-[400px] sm:min-h-[480px] w-full`}>
           
           {/* Ambient Background subtle colors */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
@@ -3065,7 +2984,7 @@ ${videoPromptMain}${annexInstructions}`;
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[300px] overflow-y-auto pr-1">
+                      <div className={`grid gap-4 ${isStep3Movimento ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} ${isStep3Movimento ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto pr-1`}>
                         {activeScenarioCategory === 'standard' ? (
                           allScenarios.map((sc) => {
                             const isSelected = !isCuratedScenario && selectedScenarioId === sc.id;
@@ -3074,6 +2993,7 @@ ${videoPromptMain}${annexInstructions}`;
                                 key={sc.id}
                                 sc={sc}
                                 isSelected={isSelected}
+                                isLarge={isStep3Movimento}
                                 onSelect={() => {
                                   setIsCuratedScenario(false);
                                   setSelectedScenarioId(sc.id);
@@ -3090,6 +3010,7 @@ ${videoPromptMain}${annexInstructions}`;
                                 key={sc.id}
                                 sc={sc}
                                 isSelected={isSelected}
+                                isLarge={isStep3Movimento}
                                 onSelect={() => {
                                   setIsCuratedScenario(true);
                                   setSelectedScenarioId(sc.id);
@@ -4145,7 +4066,7 @@ ${videoPromptMain}${annexInstructions}`;
           </div>
 
           {/* Right Product Spotlight Summary Panel (1/3 width) */}
-          {wizardStep !== 1 && activeWizardProduct && (
+          {wizardStep !== 1 && activeWizardProduct && !isStep3Movimento && (
             <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-5 flex flex-col justify-between hover:border-cyan-500/20 transition relative">
               <div className="space-y-4">
                 <span className="text-[10px] text-[#A0A0C0] font-black uppercase tracking-wider block border-b border-[#1E1E2E] pb-2.5">
