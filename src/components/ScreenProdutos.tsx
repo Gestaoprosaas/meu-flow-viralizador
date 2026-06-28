@@ -345,33 +345,23 @@ function extractYoutubeId(url: string): string | null {
 }
 
 function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    if (mv.videoUrl && videoRef.current) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("Autoplay was prevented or postponed:", err);
-        });
-      }
-    }
-  }, [mv.videoUrl]);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (mv.videoUrl) {
-      if (videoRef.current) {
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.warn("Play on hover was prevented:", err);
-          });
-        }
-      }
+    if (!isMobile) {
+      setIsHovered(true);
     }
   };
 
@@ -438,7 +428,8 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
       {/* Media container: Image or Video */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-zinc-950">
         {(() => {
-          if (!mv.videoUrl) {
+          // If no video, or on mobile, or not currently hovered, show only the static poster image
+          if (!mv.videoUrl || isMobile || !isHovered) {
             return (
               <img
                 src={mv.imageUrl}
@@ -449,6 +440,7 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
             );
           }
 
+          // Active desktop hover playing video or youtube iframe
           const ytId = extractYoutubeId(mv.videoUrl);
           if (ytId) {
             return (
@@ -472,13 +464,24 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                 referrerPolicy="no-referrer"
               />
               <video
-                ref={videoRef}
                 src={mv.videoUrl}
                 autoPlay
                 loop
                 muted
                 playsInline
                 className="absolute inset-0 w-full h-full object-cover z-10"
+                onCanPlay={(e) => {
+                  try {
+                    const playPromise = e.currentTarget.play();
+                    if (playPromise !== undefined) {
+                      playPromise.catch((err) => {
+                        console.warn("Autoplay was prevented on hover:", err);
+                      });
+                    }
+                  } catch (err) {
+                    console.error("Error playing hover video:", err);
+                  }
+                }}
               />
             </>
           );
@@ -666,14 +669,14 @@ function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) 
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative flex flex-col justify-between rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none aspect-[9/16] ${
+      className={`group relative flex flex-row sm:flex-col justify-start sm:justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none h-20 sm:h-auto sm:aspect-[9/16] w-full ${
         isSelected
           ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
           : 'border-[#1E1E2E] hover:border-[#FE2C55]/50 hover:scale-[1.02] shadow-lg hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]'
       }`}
     >
-      {/* Absolute top section: Badges */}
-      <div className="absolute top-3 left-3 right-3 z-20 flex flex-wrap gap-1.5 items-center">
+      {/* Absolute top section: Badges (Desktop Only) */}
+      <div className="hidden sm:flex absolute top-3 left-3 right-3 z-20 flex-wrap gap-1.5 items-center">
         {/* Format Badge (Video) */}
         <span className="backdrop-blur-md bg-black/55 text-[9px] font-extrabold uppercase tracking-widest text-[#25F4EE] px-2 py-1 rounded-xl border border-[#25F4EE]/25 flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-[#25F4EE] animate-pulse" />
@@ -688,13 +691,13 @@ function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) 
 
       {/* Selected indicator overlay */}
       {isSelected && (
-        <div className="absolute top-3 right-3 z-30 w-5 h-5 rounded-full bg-[#FE2C55] flex items-center justify-center border border-white/20 shadow-md">
+        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-30 w-5 h-5 rounded-full bg-[#FE2C55] flex items-center justify-center border border-white/20 shadow-md">
           <Check className="w-3 h-3 text-white stroke-[3.5]" />
         </div>
       )}
 
       {/* Media container: Image or Video */}
-      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-zinc-950">
+      <div className="relative sm:absolute w-20 sm:w-full h-full sm:inset-0 z-0 overflow-hidden bg-zinc-950 shrink-0">
         {media.videoUrl ? (
           <>
             {/* Fallback image when not hovered */}
@@ -728,27 +731,33 @@ function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) 
         )}
 
         {/* Ambient Dark Gradient Bottom Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/55 to-black/5 z-10 pointer-events-none" />
+        <div className="hidden sm:block absolute inset-0 bg-gradient-to-t from-black/100 via-black/55 to-black/5 z-10 pointer-events-none" />
       </div>
 
-      {/* Empty space to push text overlay to bottom */}
-      <div className="flex-1 pointer-events-none" />
-
       {/* Details Box and Action Buttons */}
-      <div className="relative z-20 p-4 sm:p-5 flex flex-col gap-3 font-sans mt-auto">
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5 mb-1">
+      <div className="relative z-20 p-3 sm:p-5 flex-1 flex flex-col justify-center sm:justify-end gap-1 sm:gap-3 font-sans min-w-0">
+        {/* Mobile-only Badges */}
+        <div className="flex sm:hidden items-center gap-1.5 mb-0.5">
+          <span className="bg-cyan-500/10 text-[9px] font-extrabold uppercase tracking-widest text-[#25F4EE] px-1.5 py-0.5 rounded-md border border-[#25F4EE]/25 flex items-center gap-1">
+            <span className="w-1 h-1 rounded-full bg-[#25F4EE] animate-pulse" />
+            {media.format}
+          </span>
+          <span className="bg-white/5 text-[9px] font-black uppercase tracking-widest text-[#F0F0FF] px-1.5 py-0.5 rounded-md border border-white/10">
+            {media.category}
+          </span>
+        </div>
+
+        <div className="space-y-0.5 sm:space-y-1">
+          <div className="hidden sm:flex items-center gap-1.5 mb-1">
             <span className="text-[10px] font-black uppercase text-cyan-400">Opção {inter.id}</span>
           </div>
-          <h4 className="text-[13px] sm:text-sm font-black text-white tracking-wide leading-tight group-hover:text-[#FE2C55] transition-colors leading-snug">
+          <h4 className="text-xs sm:text-sm font-black text-white tracking-wide leading-tight group-hover:text-[#FE2C55] transition-colors truncate">
             {inter.name}
           </h4>
-          <p className="text-[10px] sm:text-xs font-medium text-[#8888AA] line-clamp-2 leading-relaxed">
+          <p className="text-[10px] sm:text-xs font-medium text-[#8888AA] line-clamp-1 sm:line-clamp-2 leading-relaxed">
             {inter.description}
           </p>
         </div>
-
-
       </div>
     </div>
   );
@@ -1261,7 +1270,7 @@ export default function ScreenProdutos({
     } catch (e) {
       console.error(e);
     }
-  }, [trendingProducts]);
+  }, []);
 
   // Generation status
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
@@ -2067,7 +2076,7 @@ ${videoPromptMain}${annexInstructions}`;
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
         {/* Main Wizard Form Column: full width (col-span-3) on Step 1, or col-span-2 on others */}
-        <div className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden flex flex-col justify-between min-h-[400px] sm:min-h-[480px] w-full`}>
+        <div className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}>
           
           {/* Ambient Background subtle colors */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
@@ -3120,7 +3129,7 @@ ${videoPromptMain}${annexInstructions}`;
                         <p className="text-xs text-[#8888AA]">Selecione a ação base que define focar no produto ou na proximidade visual de acordo com sua estratégia de vendas.</p>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-h-[350px] overflow-y-auto pr-1 pt-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-h-[220px] xs:max-h-[280px] sm:max-h-[350px] overflow-y-auto pr-1 pt-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                         {allInteractions.map((inter) => {
                           const isSelected = interactionSelected === inter.id;
                           return (
@@ -3295,7 +3304,7 @@ ${videoPromptMain}${annexInstructions}`;
                       </div>
 
                       {/* Movements visual presets grid list with pre-visualization hover cards */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-h-[260px] xs:max-h-[320px] sm:max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                         {allMovements.map((mv) => {
                           const isSelected = movementSelectedMode === mv.id;
                           return (
@@ -3323,7 +3332,7 @@ ${videoPromptMain}${annexInstructions}`;
                       </div>
 
                       {/* Movements visuals grid presets list matching photo 3 */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-h-[550px] sm:max-h-[680px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-h-[260px] xs:max-h-[320px] sm:max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                         {allMovements.map((mv) => {
                           const isSelected = selectedMovementId === mv.id;
                           return (
