@@ -145,24 +145,20 @@ interface AvatarCardProps {
 }
 
 function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    if (av.videoUrl && videoRef.current) {
+    if (!isMobile && av.videoUrl && videoRef.current) {
       const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("Autoplay was prevented or postponed:", err);
-        });
-      }
+      if (playPromise !== undefined) playPromise.catch(() => {});
     }
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (av.videoUrl && videoRef.current) {
+    if (!isMobile && av.videoUrl && videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
@@ -170,11 +166,12 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
 
   return (
     <button
+      ref={containerRef}
       type="button"
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-300 relative ${
+      className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-100 ease-out active:scale-95 relative ${
         isSelected 
           ? 'ring-2 ring-[#FE1E4E] border-[#FE1E4E] scale-[0.98]' 
           : 'border-[#1E1E2E] hover:border-[#FE1E4E]/40'
@@ -199,12 +196,14 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
             />
             <video
               ref={videoRef}
-              src={av.videoUrl}
+              src={isMobile && !isInView ? "" : av.videoUrl}
+              preload={isMobile ? "none" : "auto"}
               loop
               muted
               playsInline
+              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
+                isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
               }`}
             />
           </>
@@ -244,24 +243,20 @@ interface ScenarioCardProps {
 }
 
 function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    if (sc.videoUrl && videoRef.current) {
+    if (!isMobile && sc.videoUrl && videoRef.current) {
       const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("Autoplay was prevented or postponed:", err);
-        });
-      }
+      if (playPromise !== undefined) playPromise.catch(() => {});
     }
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (sc.videoUrl && videoRef.current) {
+    if (!isMobile && sc.videoUrl && videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
@@ -269,11 +264,12 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
 
   return (
     <button
+      ref={containerRef}
       type="button"
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-300 relative w-full ${
+      className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-100 ease-out active:scale-95 relative w-full ${
         isSelected 
           ? 'ring-2 ring-[#FE1E4E] border-[#FE1E4E] scale-[0.98]' 
           : 'border-[#1E1E2E] hover:border-[#FE1E4E]/40'
@@ -298,12 +294,14 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
             />
             <video
               ref={videoRef}
-              src={sc.videoUrl}
+              src={isMobile && !isInView ? "" : sc.videoUrl}
+              preload={isMobile ? "none" : "auto"}
               loop
               muted
               playsInline
+              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
               className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
+                isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
               }`}
             />
           </>
@@ -344,19 +342,10 @@ function extractYoutubeId(url: string): string | null {
 }
 
 function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const [isHovered, setIsHovered] = useState(false);
+  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
   const handleMouseEnter = () => {
     if (!isMobile) {
@@ -394,10 +383,11 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
 
   return (
     <div
+      ref={containerRef}
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none h-40 xs:h-44 sm:h-auto sm:aspect-[9/16] ${
+      className={`group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-100 ease-out active:scale-95 cursor-pointer select-none h-40 xs:h-44 sm:h-auto sm:aspect-[9/16] ${
         isSelected
           ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
           : 'border-[#1E1E2E] hover:border-[#FE2C55]/50 hover:scale-[1.02] shadow-lg hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]'
@@ -427,8 +417,8 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
       {/* Media container: Image or Video */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-zinc-950">
         {(() => {
-          // If no video, or on mobile, or not currently hovered, show only the static poster image
-          if (!mv.videoUrl || isMobile || !isHovered) {
+          // If no video, or on mobile not in view, or desktop not hovered, show poster
+          if (!mv.videoUrl || (isMobile && !isInView) || (!isMobile && !isHovered)) {
             return (
               <img
                 src={mv.imageUrl}
@@ -463,11 +453,14 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                 referrerPolicy="no-referrer"
               />
               <video
-                src={mv.videoUrl}
+                ref={videoRef}
+                src={isMobile && !isInView ? "" : mv.videoUrl}
+                preload={isMobile ? "none" : "auto"}
                 autoPlay
                 loop
                 muted
                 playsInline
+                onError={(e) => { e.currentTarget.style.opacity = '0'; }}
                 className="absolute inset-0 w-full h-full object-cover z-10"
                 onCanPlay={(e) => {
                   try {
@@ -622,9 +615,9 @@ interface InteractionCardProps {
 }
 
 function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
   const media = {
     imageUrl: (inter as any).imageUrl || INTERACTION_MEDIA_MAP[inter.id]?.imageUrl || 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400',
@@ -635,25 +628,17 @@ function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCa
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    if (media.videoUrl) {
-      if (videoRef.current) {
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.warn("Autoplay was prevented or postponed:", err);
-          });
-        }
-      }
+    if (!isMobile && media.videoUrl && videoRef.current) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) playPromise.catch(() => {});
     }
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (media.videoUrl) {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-      }
+    if (!isMobile && media.videoUrl && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
     }
   };
 
@@ -666,10 +651,11 @@ function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCa
 
   return (
     <div
+      ref={containerRef}
       onClick={onSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative flex ${isLarge ? 'flex-col h-44 sm:h-auto sm:aspect-[9/16]' : 'flex-row sm:flex-col h-20 sm:h-auto sm:aspect-[9/16]'} justify-start sm:justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-300 ease-out cursor-pointer select-none w-full ${
+      className={`group relative flex ${isLarge ? 'flex-col h-44 sm:h-auto sm:aspect-[9/16]' : 'flex-row sm:flex-col h-20 sm:h-auto sm:aspect-[9/16]'} justify-start sm:justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-100 ease-out active:scale-95 cursor-pointer select-none w-full ${
         isSelected
           ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
           : 'border-[#1E1E2E] hover:border-[#FE2C55]/50 hover:scale-[1.02] shadow-lg hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]'
@@ -712,12 +698,14 @@ function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCa
             {/* HTML5 video preview playing on hover */}
             <video
               ref={videoRef}
-              src={media.videoUrl}
+              src={isMobile && !isInView ? "" : media.videoUrl}
+              preload={isMobile ? "none" : "auto"}
               loop
               muted
               playsInline
+              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
+                isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
               }`}
             />
           </>
@@ -808,6 +796,45 @@ const enrichProduct = (p: any) => {
     views_30d
   };
 };
+
+function useMobileAndIntersection() {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const containerRef = useRef<any>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+        if (entry.isIntersecting && videoRef.current) {
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) playPromise.catch(() => {});
+        } else if (!entry.isIntersecting && videoRef.current) {
+          videoRef.current.pause();
+        }
+      },
+      { rootMargin: '100px' }
+    );
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    return () => observer.disconnect();
+  }, [isMobile]);
+
+  return { isMobile, isInView, containerRef, videoRef };
+}
 
 export default function ScreenProdutos({
   onNavigate,
@@ -2047,7 +2074,10 @@ ${videoPromptMain}${annexInstructions}`;
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
         {/* Main Wizard Form Column: full width (col-span-3) on Step 1, or col-span-2 on others */}
-        <div className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}>
+        <div 
+          id="wizard-container"
+          className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden touch-pan-y flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}
+        >
           
           {/* Ambient Background subtle colors */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
@@ -3968,14 +3998,14 @@ ${videoPromptMain}${annexInstructions}`;
             </div>
 
             {/* Form Footer Action Row (Prev / Next transitions) */}
-            <div className="border-t border-[#1E1E2E] pt-4 mt-6 flex items-center justify-between">
+            <div className="border-t border-[#1E1E2E] pt-3 pb-3 sm:pb-0 sm:pt-4 sm:mt-6 mt-auto flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 sticky bottom-0 bg-[#111118] z-40 -mx-4 px-4 sm:-mx-6 sm:px-6 -mb-4 sm:-mb-6 shadow-[0_-10px_30px_rgba(17,17,24,0.9)]">
               
               {/* Back or Prev inside active wizard */}
               {wizardStep > 2 && wizardStep < 6 ? (
                 <button
                   type="button"
                   onClick={() => setWizardStep(wizardStep - 1)}
-                  className="px-4 py-2 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-black rounded-xl text-[#A0A0C0] hover:text-white flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-black rounded-xl text-[#A0A0C0] hover:text-white flex items-center justify-center gap-1.5 transition-all"
                 >
                   <ArrowLeft className="w-4 h-4" /> Etapa Anterior
                 </button>
@@ -3983,7 +4013,7 @@ ${videoPromptMain}${annexInstructions}`;
                 <button
                   type="button"
                   onClick={handleResetWizard}
-                  className="px-4 py-2 bg-[#1E1E2E] hover:bg-[#26263B] text-xs font-black rounded-xl text-[#F00050] flex items-center gap-1.5 transition"
+                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#26263B] text-xs font-black rounded-xl text-[#F00050] flex items-center justify-center gap-1.5 transition"
                 >
                   <RefreshCw className="w-4 h-4" /> Novo Vídeo / Reiniciar
                 </button>
@@ -3991,7 +4021,7 @@ ${videoPromptMain}${annexInstructions}`;
                 <button
                   type="button"
                   onClick={handleResetWizard}
-                  className="px-4 py-2 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-bold rounded-xl text-[#8888AA] hover:text-white"
+                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-bold rounded-xl text-[#8888AA] hover:text-white flex items-center justify-center"
                 >
                   Cancelar Assistente
                 </button>
@@ -4003,7 +4033,7 @@ ${videoPromptMain}${annexInstructions}`;
                   type="button"
                   disabled={isLoadingPrompt}
                   onClick={() => handleGeneratePrompt()}
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
+                  className="px-5 py-2.5 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
                 >
                   {isLoadingPrompt ? (
                     <>
@@ -4030,8 +4060,11 @@ ${videoPromptMain}${annexInstructions}`;
                       setPovScenarioSelected('🛋️ Sala Moderna');
                     }
                     setWizardStep(wizardStep + 1);
+                    // Scroll to top of the wizard container
+                    const container = document.getElementById('wizard-container');
+                    if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="px-4 py-2 bg-gradient-to-r from-[#FE2C55] to-[#25F4EE] text-white font-black text-xs rounded-xl flex items-center gap-1.5 hover:opacity-90 transition-all shadow-md shadow-[#FE2C55]/10 active:scale-95"
+                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-[#FE2C55] to-[#25F4EE] text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 transition-all shadow-md shadow-[#FE2C55]/10 active:scale-95"
                 >
                   Confirmar e Avançar <ArrowRight className="w-4 h-4" />
                 </button>
@@ -4040,7 +4073,7 @@ ${videoPromptMain}${annexInstructions}`;
                   type="button"
                   disabled={isLoadingPrompt}
                   onClick={() => handleGeneratePrompt()}
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
+                  className="px-5 py-2.5 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
                 >
                   {isLoadingPrompt ? (
                     <>
