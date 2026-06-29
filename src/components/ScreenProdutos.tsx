@@ -2245,7 +2245,7 @@ ${videoPromptMain}${annexInstructions}`;
                 </div>
 
                 {/* Product Cards Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 h-[calc(100vh-200px)] sm:h-auto sm:max-h-[520px] overflow-y-auto pr-1 touch-pan-y">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 h-[calc(100vh-280px)] sm:h-auto sm:max-h-[520px] overflow-y-auto pr-1 touch-pan-y">
                   {filteredItems.map((prod, index) => {
                     const isSelected = activeWizardProduct?.id === prod.id;
                     const pId = prod.id || String(index);
@@ -2277,37 +2277,37 @@ ${videoPromptMain}${annexInstructions}`;
                     return (
                       <div
                         key={prod.id}
-                        className={`group bg-[#0B0B11] border rounded-2xl overflow-hidden transition-all duration-300 relative flex flex-col justify-between p-2 sm:p-3.5 aspect-[3/4] sm:aspect-auto ${
+                        className={`group bg-[#0B0B11] border rounded-2xl overflow-hidden transition-all duration-300 relative flex flex-col p-2 sm:p-3.5 ${
                           isSelected
                             ? 'border-[#FE2C55] shadow-[0_0_15px_rgba(254,44,85,0.15)] bg-[#111118]'
                             : 'border-[#1E1E2E] hover:border-[#FE2C55]/40 hover:shadow-[0_0_12px_rgba(254,44,85,0.05)]'
                         }`}
                       >
                         {/* Upper Badges Block */}
-                        <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-10 flex flex-wrap gap-1">
-                          <span className="text-[8px] sm:text-[9px] bg-[#FE2C55]/15 border border-[#FE2C55]/25 text-[#FE2C55] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
+                        <div className="absolute top-2 left-2 sm:top-5 sm:left-5 z-10 flex flex-wrap gap-1">
+                          <span className="text-[9px] bg-[#FE2C55]/15 border border-[#FE2C55]/25 text-[#FE2C55] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
                             Comissão: {commission}
                           </span>
                         </div>
 
                         {/* Image Container with Aspect Ratio */}
-                        <div className="relative h-[65%] sm:h-auto sm:aspect-video w-full rounded-xl bg-[#030307] border border-[#1E1E2E]/50 overflow-hidden flex items-center justify-center shrink-0">
+                        <div className="relative aspect-square sm:aspect-video w-full rounded-xl bg-[#030307] border border-[#1E1E2E]/50 overflow-hidden flex items-center justify-center shrink-0">
                           <ProductImage
                             src={imageUrl}
                             alt={name}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         </div>
 
                         {/* Title, tags and details */}
-                        <div className="mt-2 sm:mt-3.5 space-y-1 sm:space-y-2 flex-1 flex flex-col justify-between overflow-hidden">
+                        <div className="mt-2 sm:mt-3.5 space-y-1 sm:space-y-2 flex-1 flex flex-col justify-between">
                           <div>
                             <div className="hidden sm:flex items-center justify-between gap-1 text-[9px] text-[#8888AA] font-bold">
                               <span>{prod.niche}</span>
                               {prod.is_realtime && <span className="w-1.5 h-1.5 rounded-full bg-[#FE2C55] animate-pulse" />}
                             </div>
 
-                            <h4 className="text-xs sm:text-sm font-black text-white group-hover:text-[#FE2C55] transition line-clamp-2 sm:line-clamp-1 mt-0.5">
+                            <h4 className="text-sm font-black text-white group-hover:text-[#FE2C55] transition line-clamp-2 sm:line-clamp-1 mt-0.5">
                               {name}
                             </h4>
 
@@ -2324,8 +2324,8 @@ ${videoPromptMain}${annexInstructions}`;
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between text-xs font-black pt-1 sm:pt-3 border-t border-[#1E1E2E]/40 sm:mt-3">
-                            <span className="text-[#FE2C55] text-xs sm:text-sm">{price}</span>
+                          <div className="flex items-center justify-between text-xs font-black pt-1 sm:pt-3 border-t-0 sm:border-t border-[#1E1E2E]/40 mt-1 sm:mt-3">
+                            <span className="text-[#FE2C55] text-sm">{price}</span>
                             <span className="hidden sm:flex text-amber-500 font-sans items-center gap-0.5">★ {prod.rating || '4.5'}</span>
                           </div>
                           
@@ -2343,22 +2343,22 @@ ${videoPromptMain}${annexInstructions}`;
                         </div>
 
                         {/* Horizontal Action Buttons */}
-                        <div className="mt-1.5 sm:mt-4 pt-1.5 sm:pt-3.5 border-t border-[#1E1E2E]/60 flex gap-1 sm:gap-2 w-full">
+                        <div className="mt-2 sm:mt-4 pt-2 sm:pt-3.5 border-t border-[#1E1E2E]/60 flex gap-2 w-full">
                           <button
                             type="button"
                             onClick={() => handleTriggerAffiliation(prod)}
-                            className="flex-1 py-1 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-sm shadow-emerald-500/10 flex items-center justify-center gap-1"
+                            className="flex-1 py-2 sm:py-2 bg-[#111118] border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 font-black text-xs sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-1"
                           >
-                            <Link2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
-                            <span className="hidden sm:inline">Afiliar</span>
+                            <span className="sm:hidden">Afiliar</span>
+                            <span className="hidden sm:flex items-center gap-1"><Link2 className="w-3.5 h-3.5" /> Afiliar</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleTriggerVideoGeneration(prod)}
-                            className="flex-1 py-1 sm:py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
+                            className="flex-1 py-2 sm:py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-xs sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
                           >
-                            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white fill-white" />
-                            Gerar
+                            <span className="sm:hidden">Gerar</span>
+                            <span className="hidden sm:flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-white fill-white" /> Gerar</span>
                           </button>
                         </div>
                       </div>
