@@ -123,6 +123,7 @@ try {
 console.log("[Boot] SUPABASE_URL presente:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
 console.log("[Boot] SUPABASE_ANON_KEY presente:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 console.log("[Boot] SERVICE_ROLE_KEY presente:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+console.log("[Boot] process.cwd():", process.cwd());
 
 // In-Memory Database for SaaS Experience
 const dbState = {
@@ -1711,16 +1712,24 @@ async function syncWriteToSupabase(key: string, data: any, action: "insert" | "u
 // GET Trending Products (supporting both alias /api/trending-products and standard /api/products, with live TikTok Shop integration)
 app.get("/api/produtos", (req, res) => {
   try {
-    const produtosPath = path.join(process.cwd(), "src", "data", "produtos.json");
-    if (fs.existsSync(produtosPath)) {
-      const data = fs.readFileSync(produtosPath, "utf8");
-      res.json(JSON.parse(data));
-    } else {
-      res.json([]);
+    const possiblePaths = [
+      path.join(process.cwd(), 'src', 'data', 'produtos.json'),
+      path.join(process.cwd(), 'produtos.json'),
+    ];
+    
+    const filePath = possiblePaths.find(p => fs.existsSync(p));
+    
+    if (!filePath) {
+      console.error('[produtos] Arquivo não encontrado. Paths tentados:', possiblePaths);
+      return res.status(404).json({ error: 'produtos.json não encontrado' });
     }
+    
+    console.log('[produtos] Lendo de:', filePath);
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    res.json(data);
   } catch (error) {
-    console.error("Erro ao ler produtos.json:", error);
-    res.status(500).json({ error: "Erro ao ler produtos" });
+    console.error('[produtos] Erro:', error);
+    res.status(500).json({ error: String(error) });
   }
 });
 
