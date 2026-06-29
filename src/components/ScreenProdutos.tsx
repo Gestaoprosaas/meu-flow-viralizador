@@ -2245,7 +2245,7 @@ ${videoPromptMain}${annexInstructions}`;
                 </div>
 
                 {/* Product Cards Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 h-[calc(100vh-280px)] sm:h-auto sm:max-h-[520px] overflow-y-auto pr-1 touch-pan-y">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 max-h-[calc(100vh-220px)] sm:max-h-[520px] overflow-y-auto pr-1 touch-pan-y">
                   {filteredItems.map((prod, index) => {
                     const isSelected = activeWizardProduct?.id === prod.id;
                     const pId = prod.id || String(index);
