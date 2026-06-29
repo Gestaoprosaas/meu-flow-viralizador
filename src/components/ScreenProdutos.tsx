@@ -197,14 +197,20 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
             <video
               ref={videoRef}
               src={isMobile && !isInView ? "" : av.videoUrl}
-              preload={isMobile ? "none" : "auto"}
+              poster={av.imageUrl}
+              preload={isMobile ? "none" : "metadata"}
               loop
               muted
               playsInline
-              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
               }`}
+              onCanPlay={(e) => {
+                e.currentTarget.play().catch(() => {});
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </>
         ) : (
@@ -295,14 +301,20 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
             <video
               ref={videoRef}
               src={isMobile && !isInView ? "" : sc.videoUrl}
-              preload={isMobile ? "none" : "auto"}
+              poster={sc.imageUrl}
+              preload={isMobile ? "none" : "metadata"}
               loop
               muted
               playsInline
-              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
               className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
                 isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
               }`}
+              onCanPlay={(e) => {
+                e.currentTarget.play().catch(() => {});
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </>
         ) : (
@@ -449,30 +461,23 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
               <img
                 src={mv.imageUrl}
                 alt={mv.name}
-                className="absolute inset-0 w-full h-full object-cover opacity-30 z-0"
+                className="absolute inset-0 w-full h-full object-cover opacity-50 z-0"
                 referrerPolicy="no-referrer"
               />
               <video
                 ref={videoRef}
                 src={isMobile && !isInView ? "" : mv.videoUrl}
-                preload={isMobile ? "none" : "auto"}
-                autoPlay
+                poster={mv.imageUrl}
+                preload={isMobile ? "none" : "metadata"}
                 loop
                 muted
                 playsInline
-                onError={(e) => { e.currentTarget.style.opacity = '0'; }}
-                className="absolute inset-0 w-full h-full object-cover z-10"
+                className="absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300"
                 onCanPlay={(e) => {
-                  try {
-                    const playPromise = e.currentTarget.play();
-                    if (playPromise !== undefined) {
-                      playPromise.catch((err) => {
-                        console.warn("Autoplay was prevented on hover:", err);
-                      });
-                    }
-                  } catch (err) {
-                    console.error("Error playing hover video:", err);
-                  }
+                  e.currentTarget.play().catch(() => {});
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
                 }}
               />
             </>
@@ -699,14 +704,20 @@ function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCa
             <video
               ref={videoRef}
               src={isMobile && !isInView ? "" : media.videoUrl}
-              preload={isMobile ? "none" : "auto"}
+              poster={media.imageUrl}
+              preload={isMobile ? "none" : "metadata"}
               loop
               muted
               playsInline
-              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
               }`}
+              onCanPlay={(e) => {
+                e.currentTarget.play().catch(() => {});
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </>
         ) : (
@@ -818,10 +829,7 @@ function useMobileAndIntersection() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsInView(entry.isIntersecting);
-        if (entry.isIntersecting && videoRef.current) {
-          const playPromise = videoRef.current.play();
-          if (playPromise !== undefined) playPromise.catch(() => {});
-        } else if (!entry.isIntersecting && videoRef.current) {
+        if (!entry.isIntersecting && videoRef.current) {
           videoRef.current.pause();
         }
       },
@@ -830,7 +838,18 @@ function useMobileAndIntersection() {
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
-    return () => observer.disconnect();
+    
+    // Capture the current ref value for cleanup
+    const currentVideo = videoRef.current;
+    
+    return () => {
+      observer.disconnect();
+      if (currentVideo) {
+        currentVideo.pause();
+        currentVideo.src = '';
+        currentVideo.load();
+      }
+    };
   }, [isMobile]);
 
   return { isMobile, isInView, containerRef, videoRef };
@@ -843,6 +862,14 @@ export default function ScreenProdutos({
   onRefresh,
   initialMovementId
 }: ScreenProdutosProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
@@ -1948,12 +1975,13 @@ ${videoPromptMain}${annexInstructions}`;
 
   const isStep3Movimento = wizardStep === 3 && videoMode === 'MOVIMENTO';
   const isMovimentoWizardStep = videoMode === 'MOVIMENTO' && wizardStep >= 3;
+  const hidePanelsOnMobileMovimento = isMobile && videoMode === 'MOVIMENTO' && wizardStep === 2;
 
   return (
     <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-12 select-none w-full">
       
       {/* Live Auto-Updating Trending Products TikTok Banner */}
-      {!isMovimentoWizardStep && (
+      {!isMovimentoWizardStep && !hidePanelsOnMobileMovimento && (
         <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-6 relative overflow-hidden shadow-2xl">
           {/* Glow Effects in corners */}
           <div className="absolute top-0 left-0 w-48 h-48 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
@@ -2076,7 +2104,7 @@ ${videoPromptMain}${annexInstructions}`;
         {/* Main Wizard Form Column: full width (col-span-3) on Step 1, or col-span-2 on others */}
         <div 
           id="wizard-container"
-          className={`${wizardStep === 1 || !activeWizardProduct || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden touch-pan-y flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}
+          className={`${wizardStep === 1 || !activeWizardProduct || hidePanelsOnMobileMovimento || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden touch-pan-y flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}
         >
           
           {/* Ambient Background subtle colors */}
@@ -2838,7 +2866,7 @@ ${videoPromptMain}${annexInstructions}`;
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[280px] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] sm:max-h-[380px] overflow-y-auto pr-1">
                       {allAvatars.filter((av) => {
                         const currentFilter = (window as any).avatarFilter || 'TODOS';
                         if (currentFilter === 'TODOS') return true;
@@ -4104,7 +4132,7 @@ ${videoPromptMain}${annexInstructions}`;
           </div>
 
           {/* Right Product Spotlight Summary Panel (1/3 width) */}
-          {wizardStep !== 1 && activeWizardProduct && !isStep3Movimento && !(videoMode === 'MOVIMENTO' && wizardStep === 4) && (
+          {wizardStep !== 1 && activeWizardProduct && !hidePanelsOnMobileMovimento && !isStep3Movimento && !(videoMode === 'MOVIMENTO' && wizardStep === 4) && (
             <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-5 flex flex-col justify-between hover:border-cyan-500/20 transition relative">
               <div className="space-y-4">
                 <span className="text-[10px] text-[#A0A0C0] font-black uppercase tracking-wider block border-b border-[#1E1E2E] pb-2.5">
@@ -4506,6 +4534,69 @@ ${videoPromptMain}${annexInstructions}`;
                 </div>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* Fullscreen Movement Preview Modal */}
+        {selectedMovementForModal && (
+          <div 
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col justify-center items-center animate-fade-in"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setSelectedMovementForModal(null);
+            }}
+            ref={(node) => {
+              if (node) {
+                // Pause all videos behind the modal
+                document.querySelectorAll('video').forEach(v => {
+                  if (!node.contains(v)) {
+                    v.pause();
+                  }
+                });
+              }
+            }}
+          >
+            <button 
+              onClick={() => setSelectedMovementForModal(null)}
+              className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-full max-w-[320px] mx-auto px-4 sm:px-0 flex flex-col items-center z-10">
+              <div className="w-full aspect-[9/16] bg-black rounded-2xl overflow-hidden border border-[#25F4EE]/30 shadow-[0_0_40px_rgba(37,244,238,0.15)] mb-6 relative">
+                {selectedMovementForModal.videoUrl ? (
+                  <video 
+                    src={selectedMovementForModal.videoUrl}
+                    poster={selectedMovementForModal.imageUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img 
+                    src={selectedMovementForModal.imageUrl}
+                    alt={selectedMovementForModal.name}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <h3 className="text-lg font-black text-white text-center mb-2">{selectedMovementForModal.name}</h3>
+              <p className="text-sm text-zinc-400 text-center leading-relaxed mb-6 px-2">{selectedMovementForModal.description}</p>
+              
+              <button
+                onClick={() => {
+                  setSelectedMovementId(selectedMovementForModal.id);
+                  setMovementText(selectedMovementForModal.description);
+                  setMovementSelectedMode(selectedMovementForModal.id);
+                  setSelectedMovementForModal(null);
+                }}
+                className="w-full min-h-[52px] bg-gradient-to-r from-[#FE2C55] to-[#FE1E4E] text-white font-black text-sm uppercase tracking-widest rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-[#FE2C55]/20 flex items-center justify-center gap-2"
+              >
+                <Check className="w-5 h-5" /> Usar este Movimento
+              </button>
             </div>
           </div>
         )}
