@@ -188,8 +188,8 @@ FACIAL EXPRESSION (VERY IMPORTANT – REAL HUMAN TIMING):
     type: 'Movimentos',
     format: 'Video',
     description: 'A avatar faz giro completo de 360 graus, mostrando corpo e roupa em rotação controlada',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Woman_rotating_360_degrees_202606281542.mp4',
-    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Woman_rotating_360_degrees_202606281542.mp4',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/360%20CONTROLADO.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/360%20CONTROLADO.mp4',
     promptText: `{
   "version": "3.1",
   "aspectRatio": "9:16",
