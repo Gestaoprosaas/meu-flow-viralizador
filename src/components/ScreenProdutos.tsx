@@ -2067,13 +2067,6 @@ ${videoPromptMain}${annexInstructions}`;
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setShowAdd(!showAdd)}
-                      className="px-3.5 py-1.5 bg-[#11111E] hover:bg-[#1E1E2F] text-white border border-[#2F2F4E]/60 text-[10px] font-black rounded-xl flex items-center gap-1 transition"
-                    >
-                      <Plus className="w-3.5 h-3.5 text-[#25F4EE]" /> Adicionar Produto
-                    </button>
-                    <button
-                      type="button"
                       disabled={isSyncingTikTok}
                       onClick={handleTikTokSync}
                       className="px-3.5 py-1.5 bg-[#1E1E2E] hover:bg-[#25253A] border border-[#2F2F4E]/60 text-[#25F4EE] hover:text-white text-[10px] font-black rounded-xl flex items-center gap-1 transition"
@@ -2083,112 +2076,120 @@ ${videoPromptMain}${annexInstructions}`;
                   </div>
                 </div>
 
+                {/* Custom Product Prominent Block */}
+                {!showAdd && (
+                  <div className="bg-[#030307] border border-[#1E1E2E] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-white flex items-center gap-2">
+                        <Package className="w-4 h-4 text-[#FE2C55]" /> Não encontrou seu produto?
+                      </h4>
+                      <p className="text-xs text-[#8888AA]">Adicione e use qualquer produto seu no fluxo de geração.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAdd(true)}
+                      className="px-4 py-2.5 bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white text-[11px] font-black rounded-xl flex items-center justify-center gap-1.5 transition whitespace-nowrap shadow-[0_0_15px_rgba(254,44,85,0.25)]"
+                    >
+                      <Plus className="w-4 h-4" /> Usar meu próprio produto
+                    </button>
+                  </div>
+                )}
+
                 {/* Collapsible Add Product Form */}
                 {showAdd && (
-                  <div className="bg-[#030307] border border-[#1E1E2E] rounded-2xl p-4 sm:p-5 space-y-4 animate-fade-in">
+                  <div className="bg-[#030307] border border-[#FE2C55]/30 shadow-[0_0_20px_rgba(254,44,85,0.1)] rounded-2xl p-4 sm:p-5 space-y-4 animate-fade-in relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdd(false)}
+                      className="absolute top-4 right-4 text-[#5C5C7A] hover:text-white transition"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                     <h4 className="text-xs font-black text-white uppercase tracking-wider border-b border-[#1E1E2E]/60 pb-2 flex items-center gap-1.5">
-                      <Package className="w-4 h-4 text-[#FE2C55]" /> Cadastrar Novo Produto para Análise
+                      <Package className="w-4 h-4 text-[#FE2C55]" /> Cadastrar Meu Produto
                     </h4>
-                    <form onSubmit={handleAdd} className="space-y-3">
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const newItem = {
+                        id: `p${Math.random().toString(36).substr(2, 9)}`,
+                        name,
+                        niche,
+                        image_url: imgUrl || "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=300",
+                        price: score.toString(),
+                        product_url: reason
+                      };
+                      const enriched = enrichProduct(newItem);
+                      setItems([enriched, ...items]);
+                      
+                      setName('');
+                      setImgUrl('');
+                      setScore(0);
+                      setReason('');
+                      setShowAdd(false);
+                    }} className="space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Nome Comercial do Artigo</label>
+                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Nome do Produto</label>
                           <input
                             type="text"
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Ex: Escovador de Pelos para Gatos"
+                            placeholder="Ex: Escovador de Pelos"
                             className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none transition"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Nicho Temático</label>
+                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Link do Produto (Opcional)</label>
+                          <input
+                            type="url"
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder="Ex: https://meusite.com/produto"
+                            className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none transition"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Preço (R$)</label>
+                          <input
+                            type="text"
+                            value={score || ''}
+                            onChange={(e) => setScore(e.target.value as any)}
+                            placeholder="Ex: 59,90"
+                            className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none transition"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">URL da Imagem</label>
+                          <input
+                            type="url"
+                            value={imgUrl}
+                            onChange={(e) => setImgUrl(e.target.value)}
+                            placeholder="https://sua-imagem.com/img.jpg"
+                            className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none transition"
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Categoria</label>
                           <select
                             value={niche}
                             onChange={(e) => setNiche(e.target.value)}
                             className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none"
                           >
-                            <option value="Beleza e Cosméticos">Beleza e Cosméticos 💄</option>
+                            <option value="Beleza">Beleza e Cosméticos 💄</option>
                             <option value="Tecnologia">Tecnologia & Eletrônicos 💻</option>
-                            <option value="Casa e Organização">Casa e Organização 🏠</option>
-                            <option value="Saúde e Fitness">Saúde e Bem-estar 🌿</option>
+                            <option value="Casa">Casa e Organização 🏠</option>
+                            <option value="Saúde">Saúde e Bem-estar 🌿</option>
                             <option value="Pet care">Pet Care 🐾</option>
                           </select>
                         </div>
                       </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Descrição dos Benefícios</label>
-                        <textarea
-                          value={description}
-                          onChange={(e) => setDescription(e.target.value)}
-                          rows={2}
-                          placeholder="Ex: Escova com autolimpeza por botão que remove 95% de pelos soltos de cachorros..."
-                          className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none resize-none transition"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Score de Oportunidade (0-100)</label>
-                          <input
-                            type="number"
-                            min="30"
-                            max="100"
-                            value={score}
-                            onChange={(e) => setScore(Number(e.target.value))}
-                            className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Grau de Concorrência</label>
-                          <select
-                            value={competition}
-                            onChange={(e: any) => setCompetition(e.target.value)}
-                            className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none"
-                          >
-                            <option value="baixa">Baixa</option>
-                            <option value="média">Média</option>
-                            <option value="alta">Alta</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Link da Foto (Unsplash/Opcional)</label>
-                          <input
-                            type="text"
-                            value={imgUrl}
-                            onChange={(e) => setImgUrl(e.target.value)}
-                            placeholder="https://images.unsplash.com/..."
-                            className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Por que está viralizando agora? (Trend Reason)</label>
-                        <input
-                          type="text"
-                          value={reason}
-                          onChange={(e) => setReason(e.target.value)}
-                          placeholder="Ex: Vídeos de unboxing estéticos gerando mais de 500 mil visualizações semanais de gatinhos."
-                          className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none"
-                        />
-                      </div>
-
-                      <div className="flex justify-end gap-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowAdd(false)}
-                          className="px-4 py-1.5 bg-[#1E1E2E] text-[#8888AA] text-xs font-semibold rounded-xl"
-                        >
-                          Cancelar
-                        </button>
+                      <div className="flex justify-end pt-2">
                         <button
                           type="submit"
-                          className="px-4 py-1.5 bg-[#25F4EE] text-black font-black text-xs rounded-xl transition hover:opacity-90"
+                          className="px-5 py-2.5 bg-[#FE2C55] hover:bg-[#FE2C55]/90 text-white text-[11px] font-black rounded-xl transition flex items-center gap-1.5 shadow-[0_0_15px_rgba(254,44,85,0.25)]"
                         >
-                          Adicionar Produto
+                          <Check className="w-4 h-4" /> Cadastrar e Usar Produto
                         </button>
                       </div>
                     </form>
@@ -2244,7 +2245,7 @@ ${videoPromptMain}${annexInstructions}`;
                 </div>
 
                 {/* Product Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[520px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 h-[calc(100vh-200px)] sm:h-auto sm:max-h-[520px] overflow-y-auto pr-1 touch-pan-y">
                   {filteredItems.map((prod, index) => {
                     const isSelected = activeWizardProduct?.id === prod.id;
                     const pId = prod.id || String(index);
@@ -2276,21 +2277,21 @@ ${videoPromptMain}${annexInstructions}`;
                     return (
                       <div
                         key={prod.id}
-                        className={`group bg-[#0B0B11] border rounded-2xl overflow-hidden transition-all duration-300 relative flex flex-col justify-between p-3.5 ${
+                        className={`group bg-[#0B0B11] border rounded-2xl overflow-hidden transition-all duration-300 relative flex flex-col justify-between p-2 sm:p-3.5 aspect-[3/4] sm:aspect-auto ${
                           isSelected
                             ? 'border-[#FE2C55] shadow-[0_0_15px_rgba(254,44,85,0.15)] bg-[#111118]'
                             : 'border-[#1E1E2E] hover:border-[#FE2C55]/40 hover:shadow-[0_0_12px_rgba(254,44,85,0.05)]'
                         }`}
                       >
                         {/* Upper Badges Block */}
-                        <div className="absolute top-5 left-5 z-10 flex flex-wrap gap-1">
-                          <span className="text-[9px] bg-[#FE2C55]/15 border border-[#FE2C55]/25 text-[#FE2C55] font-black uppercase px-2 py-0.5 rounded-md backdrop-blur-sm shadow-md">
+                        <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-10 flex flex-wrap gap-1">
+                          <span className="text-[8px] sm:text-[9px] bg-[#FE2C55]/15 border border-[#FE2C55]/25 text-[#FE2C55] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
                             Comissão: {commission}
                           </span>
                         </div>
 
                         {/* Image Container with Aspect Ratio */}
-                        <div className="relative aspect-video w-full rounded-xl bg-[#030307] border border-[#1E1E2E]/50 overflow-hidden flex items-center justify-center">
+                        <div className="relative h-[65%] sm:h-auto sm:aspect-video w-full rounded-xl bg-[#030307] border border-[#1E1E2E]/50 overflow-hidden flex items-center justify-center shrink-0">
                           <ProductImage
                             src={imageUrl}
                             alt={name}
@@ -2299,19 +2300,19 @@ ${videoPromptMain}${annexInstructions}`;
                         </div>
 
                         {/* Title, tags and details */}
-                        <div className="mt-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                        <div className="mt-2 sm:mt-3.5 space-y-1 sm:space-y-2 flex-1 flex flex-col justify-between overflow-hidden">
                           <div>
-                            <div className="flex items-center justify-between gap-1 text-[9px] text-[#8888AA] font-bold">
+                            <div className="hidden sm:flex items-center justify-between gap-1 text-[9px] text-[#8888AA] font-bold">
                               <span>{prod.niche}</span>
                               {prod.is_realtime && <span className="w-1.5 h-1.5 rounded-full bg-[#FE2C55] animate-pulse" />}
                             </div>
 
-                            <h4 className="text-sm font-black text-white group-hover:text-[#FE2C55] transition line-clamp-1 mt-0.5">
+                            <h4 className="text-xs sm:text-sm font-black text-white group-hover:text-[#FE2C55] transition line-clamp-2 sm:line-clamp-1 mt-0.5">
                               {name}
                             </h4>
 
-                            {/* Tags list rendering */}
-                            <div className="flex flex-wrap gap-1 mt-2">
+                            {/* Tags list rendering - hidden on mobile to save space */}
+                            <div className="hidden sm:flex flex-wrap gap-1 mt-2">
                               {tags.map((tag: string, tid: number) => (
                                 <span 
                                   key={tid}
@@ -2323,13 +2324,13 @@ ${videoPromptMain}${annexInstructions}`;
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between text-xs font-black pt-3 border-t border-[#1E1E2E]/40 mt-3">
-                            <span className="text-[#FE2C55] text-sm">{price}</span>
-                            <span className="text-amber-500 font-sans flex items-center gap-0.5">★ {prod.rating || '4.5'}</span>
+                          <div className="flex items-center justify-between text-xs font-black pt-1 sm:pt-3 border-t border-[#1E1E2E]/40 sm:mt-3">
+                            <span className="text-[#FE2C55] text-xs sm:text-sm">{price}</span>
+                            <span className="hidden sm:flex text-amber-500 font-sans items-center gap-0.5">★ {prod.rating || '4.5'}</span>
                           </div>
                           
-                          {/* Sales and Views counter */}
-                          <div className="flex items-center gap-3 mt-1.5 text-[10px] text-zinc-400 font-bold uppercase tracking-wide">
+                          {/* Sales and Views counter - hidden on mobile */}
+                          <div className="hidden sm:flex items-center gap-3 mt-1.5 text-[10px] text-zinc-400 font-bold uppercase tracking-wide">
                             <div className="flex items-center gap-1">
                               <span className="text-orange-500">🔥</span>
                               {prod.sales_30d?.toLocaleString('pt-BR') || 1000} Vendas nos últimos 30 dias
@@ -2342,22 +2343,22 @@ ${videoPromptMain}${annexInstructions}`;
                         </div>
 
                         {/* Horizontal Action Buttons */}
-                        <div className="mt-4 pt-3.5 border-t border-[#1E1E2E]/60 flex gap-2 w-full">
+                        <div className="mt-1.5 sm:mt-4 pt-1.5 sm:pt-3.5 border-t border-[#1E1E2E]/60 flex gap-1 sm:gap-2 w-full">
                           <button
                             type="button"
                             onClick={() => handleTriggerAffiliation(prod)}
-                            className="flex-1 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-95 shadow-sm shadow-emerald-500/10 flex items-center justify-center gap-1"
+                            className="flex-1 py-1 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-sm shadow-emerald-500/10 flex items-center justify-center gap-1"
                           >
-                            <Link2 className="w-3.5 h-3.5 stroke-[3]" />
-                            Afiliar
+                            <Link2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                            <span className="hidden sm:inline">Afiliar</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleTriggerVideoGeneration(prod)}
-                            className="flex-1 py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
+                            className="flex-1 py-1 sm:py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
                           >
-                            <Sparkles className="w-3.5 h-3.5 text-white fill-white" />
-                            Gerar Vídeo
+                            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white fill-white" />
+                            Gerar
                           </button>
                         </div>
                       </div>
