@@ -4,7 +4,7 @@ import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
-import { sendWelcomeEmail, sendPaymentOverdueEmail } from "./lib/resend";
+import { sendWelcomeEmail, sendPaymentOverdueEmail } from "./lib/resend.js";
 import { AsyncLocalStorage } from "async_hooks";
 import crypto from "crypto";
 

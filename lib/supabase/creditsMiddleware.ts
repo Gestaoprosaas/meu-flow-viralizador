@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from './server';
+import { createClient } from './server.js';
 
 export type CreditType = 'text' | 'image' | 'video';
 
