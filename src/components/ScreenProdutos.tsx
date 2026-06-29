@@ -2291,7 +2291,7 @@ ${videoPromptMain}${annexInstructions}`;
                         </div>
 
                         {/* Image Container with Aspect Ratio */}
-                        <div className="relative aspect-square sm:aspect-video w-full rounded-xl bg-[#030307] border border-[#1E1E2E]/50 overflow-hidden flex items-center justify-center shrink-0">
+                        <div className="relative aspect-[4/3] sm:aspect-video w-full rounded-xl bg-[#030307] border border-[#1E1E2E]/50 overflow-hidden flex items-center justify-center shrink-0">
                           <ProductImage
                             src={imageUrl}
                             alt={name}
@@ -2307,16 +2307,16 @@ ${videoPromptMain}${annexInstructions}`;
                               {prod.is_realtime && <span className="w-1.5 h-1.5 rounded-full bg-[#FE2C55] animate-pulse" />}
                             </div>
 
-                            <h4 className="text-sm font-black text-white group-hover:text-[#FE2C55] transition line-clamp-2 sm:line-clamp-1 mt-0.5">
+                            <h4 className="text-xs sm:text-sm font-black text-white group-hover:text-[#FE2C55] transition line-clamp-2 sm:line-clamp-1 mt-0.5">
                               {name}
                             </h4>
 
-                            {/* Tags list rendering - hidden on mobile to save space */}
-                            <div className="hidden sm:flex flex-wrap gap-1 mt-2">
+                            {/* Tags list rendering */}
+                            <div className="flex flex-wrap gap-1 mt-1 sm:mt-2">
                               {tags.map((tag: string, tid: number) => (
                                 <span 
                                   key={tid}
-                                  className="text-[9px] font-black bg-[#161622] text-zinc-300 border border-[#2F2F4E]/30 rounded-md px-1.5 py-0.5 uppercase tracking-wider"
+                                  className="text-[8px] sm:text-[9px] font-black bg-[#161622] text-zinc-300 border border-[#2F2F4E]/30 rounded-md px-1.5 py-0.5 uppercase tracking-wider"
                                 >
                                   {tag}
                                 </span>
@@ -2324,41 +2324,41 @@ ${videoPromptMain}${annexInstructions}`;
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between text-xs font-black pt-1 sm:pt-3 border-t-0 sm:border-t border-[#1E1E2E]/40 mt-1 sm:mt-3">
-                            <span className="text-[#FE2C55] text-sm">{price}</span>
-                            <span className="hidden sm:flex text-amber-500 font-sans items-center gap-0.5">★ {prod.rating || '4.5'}</span>
+                          <div className="flex items-center justify-between text-xs font-black pt-1 sm:pt-3 border-t border-[#1E1E2E]/40 mt-1 sm:mt-3">
+                            <span className="text-[#FE2C55] text-xs sm:text-sm">{price}</span>
+                            <span className="text-amber-500 font-sans flex items-center gap-0.5 text-[9px] sm:text-xs">★ {prod.rating || '4.5'}</span>
                           </div>
                           
-                          {/* Sales and Views counter - hidden on mobile */}
-                          <div className="hidden sm:flex items-center gap-3 mt-1.5 text-[10px] text-zinc-400 font-bold uppercase tracking-wide">
-                            <div className="flex items-center gap-1">
-                              <span className="text-orange-500">🔥</span>
-                              {prod.sales_30d?.toLocaleString('pt-BR') || 1000} Vendas nos últimos 30 dias
+                          {/* Sales and Views counter */}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[8px] sm:text-[10px] text-zinc-400 font-bold uppercase tracking-wide">
+                            <div className="flex items-center gap-0.5">
+                              <span className="text-orange-500 text-[9px] sm:text-xs">🔥</span>
+                              <span>{prod.sales_30d?.toLocaleString('pt-BR') || 1000} Vendas</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-blue-400">👀</span>
-                              {prod.views_30d?.toLocaleString('pt-BR') || 15000} Views
+                            <div className="flex items-center gap-0.5">
+                              <span className="text-blue-400 text-[9px] sm:text-xs">👀</span>
+                              <span>{prod.views_30d?.toLocaleString('pt-BR') || 15000} Views</span>
                             </div>
                           </div>
                         </div>
 
                         {/* Horizontal Action Buttons */}
-                        <div className="mt-2 sm:mt-4 pt-2 sm:pt-3.5 border-t border-[#1E1E2E]/60 flex gap-2 w-full">
+                        <div className="mt-2 sm:mt-4 pt-2 sm:pt-3.5 border-t border-[#1E1E2E]/60 flex gap-1.5 sm:gap-2 w-full">
                           <button
                             type="button"
                             onClick={() => handleTriggerAffiliation(prod)}
-                            className="flex-1 py-2 sm:py-2 bg-[#111118] border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 font-black text-xs sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-1"
+                            className="flex-1 py-1.5 sm:py-2 bg-[#111118] border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-1"
                           >
-                            <span className="sm:hidden">Afiliar</span>
-                            <span className="hidden sm:flex items-center gap-1"><Link2 className="w-3.5 h-3.5" /> Afiliar</span>
+                            <Link2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                            <span>Afiliar</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleTriggerVideoGeneration(prod)}
-                            className="flex-1 py-2 sm:py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-xs sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
+                            className="flex-1 py-1.5 sm:py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
                           >
-                            <span className="sm:hidden">Gerar</span>
-                            <span className="hidden sm:flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-white fill-white" /> Gerar</span>
+                            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white fill-white" />
+                            <span>Gerar</span>
                           </button>
                         </div>
                       </div>
