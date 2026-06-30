@@ -45,9 +45,10 @@ import { SCENARIOS_PRESETS, CURATED_SCENARIOS_PRESETS, ScenarioPreset, CuratedSc
 import { MOVEMENTS_PRESETS, MovementPreset } from '../data/prompts';
 
 
-const FIXED_MERGE_PROMPT_CURATED_SCENARIOS = `( Use the first image ONLY as an environment + pose reference.
+const PROMPT_CENARIO_PRONTO_FIXO = `Use the first image ONLY as an environment + pose reference.
 Use the second image as the ONLY avatar identity reference.
 Use the third image as the ONLY clothing reference (if provided).
+
 ⚠️ IDENTITY ISOLATION RULE (ABSOLUTE):
 The first image is used ONLY for:
 - Camera angle
@@ -59,6 +60,7 @@ The first image is used ONLY for:
 - EXACT subject size in frame (CRITICAL LOCK)
 - Framing
 - Perspective
+
 The first image MUST NOT influence:
 - Skin tone
 - Face structure
@@ -71,7 +73,9 @@ The first image MUST NOT influence:
 - Body proportions
 - Weight
 - Age appearance
+
 ZERO IDENTITY TRANSFER FROM IMAGE 1.
+
 ────────────────────────
 ENVIRONMENT EXTRACTION (STRICT)
 ────────────────────────
@@ -81,6 +85,7 @@ ENVIRONMENT EXTRACTION (STRICT)
 - The environment must look originally empty
 - Preserve exact camera framing and perspective
 - Preserve exact camera-to-subject distance reference
+
 ────────────────────────
 AVATAR IDENTITY LOCK (CRITICAL)
 ────────────────────────
@@ -94,9 +99,11 @@ ABSOLUTE LOCK:
 - Preserve exact hair color
 - Preserve exact hair texture
 - Preserve realism level
+
 DO NOT reinterpret.
 DO NOT blend identities.
 DO NOT adapt to Image 1 body type.
+
 ────────────────────────
 POSE + DISTANCE MATCHING (CRITICAL)
 ────────────────────────
@@ -104,19 +111,23 @@ POSE + DISTANCE MATCHING (CRITICAL)
 - Match arm positioning exactly
 - Match shoulder alignment
 - Match hip orientation
+
 🚨 DISTANCE RULE (HARD LOCK):
 - The avatar MUST be placed at the EXACT same distance from the camera as the original model in Image 1
 - The avatar MUST occupy the SAME scale in the frame (same height proportion)
 - The avatar MUST NOT appear closer or further than the original reference
 - DO NOT zoom in or out to fit
 - DO NOT resize subject artificially
+
 The placement must be a 1:1 spatial replacement.
+
 ────────────────────────
 CLOTHING
 ────────────────────────
 - Apply clothing from Image 3 exactly
 - No redesign
 - No reinterpretation
+
 ────────────────────────
 LIGHTING
 ────────────────────────
@@ -124,10 +135,14 @@ LIGHTING
 - Do NOT recolor skin tone
 - Do NOT change complexion
 - Do NOT adapt tone to background
+
 ────────────────────────
 STRICT PROHIBITIONS
-─────────────────�
-`;
+────────────────────────
+- NO background bleed into subject
+- NO blending of face shapes
+- NO halo effects
+- NO glowing edges around subject outline`;
 
 interface ScreenProdutosProps {
   onNavigate: (path: string, payload?: any) => void;
@@ -145,32 +160,20 @@ interface AvatarCardProps {
 }
 
 function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (!isMobile && av.videoUrl && videoRef.current) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) playPromise.catch(() => {});
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
     }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    if (!isMobile && av.videoUrl && videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
+  }, [videoRef, av.videoUrl, isInView]);
 
   return (
     <button
       ref={containerRef}
       type="button"
       onClick={onSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-100 ease-out active:scale-95 relative ${
         isSelected 
           ? 'ring-2 ring-[#FE1E4E] border-[#FE1E4E] scale-[0.98]' 
@@ -185,34 +188,21 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
 
       <div className="relative h-28 xs:h-36 sm:h-48 md:h-56 lg:h-64 overflow-hidden bg-zinc-900">
         {av.videoUrl ? (
-          <>
-            <img 
-              src={av.imageUrl} 
-              alt={av.name} 
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                isHovered ? 'opacity-0' : 'opacity-100'
-              }`}
-              referrerPolicy="no-referrer"
-            />
-            <video
-              ref={videoRef}
-              src={isMobile && !isInView ? "" : av.videoUrl}
-              poster={av.imageUrl}
-              preload={isMobile ? "none" : "metadata"}
-              loop
-              muted
-              playsInline
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
-                isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
-              onCanPlay={(e) => {
-                e.currentTarget.play().catch(() => {});
-              }}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          </>
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            poster={av.imageUrl}
+            className="w-full h-full object-cover"
+            onLoadedData={(e) => {
+              e.currentTarget.play().catch(() => {});
+            }}
+          >
+            <source src={av.videoUrl} type="video/mp4" />
+          </video>
         ) : (
           <img 
             src={av.imageUrl} 
@@ -249,32 +239,20 @@ interface ScenarioCardProps {
 }
 
 function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (!isMobile && sc.videoUrl && videoRef.current) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) playPromise.catch(() => {});
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
     }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    if (!isMobile && sc.videoUrl && videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
+  }, [videoRef, sc.videoUrl, isInView]);
 
   return (
     <button
       ref={containerRef}
       type="button"
       onClick={onSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-100 ease-out active:scale-95 relative w-full ${
         isSelected 
           ? 'ring-2 ring-[#FE1E4E] border-[#FE1E4E] scale-[0.98]' 
@@ -289,34 +267,21 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
 
       <div className={`relative ${isLarge ? 'aspect-[2/3] min-h-[420px] sm:min-h-[480px]' : 'h-20 xs:h-24 sm:h-36'} overflow-hidden bg-zinc-900 w-full`}>
         {sc.videoUrl ? (
-          <>
-            <img 
-              src={sc.imageUrl} 
-              alt={sc.name} 
-              className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 ${
-                isHovered ? 'opacity-0' : 'opacity-100'
-              }`}
-              referrerPolicy="no-referrer"
-            />
-            <video
-              ref={videoRef}
-              src={isMobile && !isInView ? "" : sc.videoUrl}
-              poster={sc.imageUrl}
-              preload={isMobile ? "none" : "metadata"}
-              loop
-              muted
-              playsInline
-              className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
-                isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
-              onCanPlay={(e) => {
-                e.currentTarget.play().catch(() => {});
-              }}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          </>
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            poster={sc.imageUrl}
+            className="w-full h-full object-cover object-center"
+            onLoadedData={(e) => {
+              e.currentTarget.play().catch(() => {});
+            }}
+          >
+            <source src={sc.videoUrl} type="video/mp4" />
+          </video>
         ) : (
           <img 
             src={sc.imageUrl} 
@@ -356,18 +321,14 @@ function extractYoutubeId(url: string): string | null {
 function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
-  const handleMouseEnter = () => {
-    if (!isMobile) {
-      setIsHovered(true);
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
     }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
+  }, [videoRef, mv.videoUrl, isInView]);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -397,8 +358,6 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
     <div
       ref={containerRef}
       onClick={onSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className={`group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-100 ease-out active:scale-95 cursor-pointer select-none h-40 xs:h-44 sm:h-auto sm:aspect-[9/16] ${
         isSelected
           ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
@@ -428,61 +387,47 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
 
       {/* Media container: Image or Video */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-zinc-950">
-        {(() => {
-          // If no video, or on mobile not in view, or desktop not hovered, show poster
-          if (!mv.videoUrl || (isMobile && !isInView) || (!isMobile && !isHovered)) {
-            return (
-              <img
-                src={mv.imageUrl}
-                alt={mv.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                referrerPolicy="no-referrer"
-              />
-            );
-          }
+        {mv.videoUrl ? (
+          (() => {
+            const ytId = extractYoutubeId(mv.videoUrl);
+            if (ytId) {
+              return (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`}
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none scale-[1.35]"
+                  allow="autoplay; encrypted-media"
+                  title={mv.name}
+                  frameBorder="0"
+                />
+              );
+            }
 
-          // Active desktop hover playing video or youtube iframe
-          const ytId = extractYoutubeId(mv.videoUrl);
-          if (ytId) {
             return (
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`}
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none scale-[1.35]"
-                allow="autoplay; encrypted-media"
-                title={mv.name}
-                frameBorder="0"
-              />
-            );
-          }
-
-          return (
-            <>
-              {/* Fallback background image while video loads */}
-              <img
-                src={mv.imageUrl}
-                alt={mv.name}
-                className="absolute inset-0 w-full h-full object-cover opacity-50 z-0"
-                referrerPolicy="no-referrer"
-              />
               <video
                 ref={videoRef}
-                src={isMobile && !isInView ? "" : mv.videoUrl}
-                poster={mv.imageUrl}
-                preload={isMobile ? "none" : "metadata"}
+                autoPlay
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300"
-                onCanPlay={(e) => {
+                preload="auto"
+                poster={mv.imageUrl}
+                className="w-full h-full object-cover"
+                onLoadedData={(e) => {
                   e.currentTarget.play().catch(() => {});
                 }}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </>
-          );
-        })()}
+              >
+                <source src={mv.videoUrl} type="video/mp4" />
+              </video>
+            );
+          })()
+        ) : (
+          <img
+            src={mv.imageUrl}
+            alt={mv.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            referrerPolicy="no-referrer"
+          />
+        )}
 
         {/* Ambient Dark Gradient Bottom Vignette for perfect text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/55 to-black/5 z-10 pointer-events-none" />
@@ -620,7 +565,6 @@ interface InteractionCardProps {
 }
 
 function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
   const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
 
@@ -631,21 +575,12 @@ function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCa
     format: INTERACTION_MEDIA_MAP[inter.id]?.format || 'Video'
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (!isMobile && media.videoUrl && videoRef.current) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) playPromise.catch(() => {});
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
     }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    if (!isMobile && media.videoUrl && videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
+  }, [videoRef, media.videoUrl, isInView]);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -658,8 +593,6 @@ function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCa
     <div
       ref={containerRef}
       onClick={onSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className={`group relative flex ${isLarge ? 'flex-col h-44 sm:h-auto sm:aspect-[9/16]' : 'flex-row sm:flex-col h-20 sm:h-auto sm:aspect-[9/16]'} justify-start sm:justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-100 ease-out active:scale-95 cursor-pointer select-none w-full ${
         isSelected
           ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
@@ -690,36 +623,21 @@ function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCa
       {/* Media container: Image or Video */}
       <div className={`relative ${isLarge ? 'w-full h-24 sm:h-full sm:absolute' : 'w-20 sm:w-full h-full sm:absolute'} sm:inset-0 z-0 overflow-hidden bg-zinc-950 shrink-0`}>
         {media.videoUrl ? (
-          <>
-            {/* Fallback image when not hovered */}
-            <img
-              src={media.imageUrl}
-              alt={inter.name}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                isHovered ? 'opacity-0' : 'opacity-100'
-              }`}
-              referrerPolicy="no-referrer"
-            />
-            {/* HTML5 video preview playing on hover */}
-            <video
-              ref={videoRef}
-              src={isMobile && !isInView ? "" : media.videoUrl}
-              poster={media.imageUrl}
-              preload={isMobile ? "none" : "metadata"}
-              loop
-              muted
-              playsInline
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
-                isMobile ? "opacity-100" : isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
-              onCanPlay={(e) => {
-                e.currentTarget.play().catch(() => {});
-              }}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          </>
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            poster={media.imageUrl}
+            className="w-full h-full object-cover"
+            onLoadedData={(e) => {
+              e.currentTarget.play().catch(() => {});
+            }}
+          >
+            <source src={media.videoUrl} type="video/mp4" />
+          </video>
         ) : (
           <img
             src={media.imageUrl}
@@ -1913,9 +1831,8 @@ ${videoPromptMain}${annexInstructions}`;
 
   const handleDownloadImage = async (url: string, filename: string) => {
     try {
-      const res = await fetch(url, { mode: 'cors' });
-      if (!res.ok) throw new Error("CORS fail");
-      const blob = await res.blob();
+      const response = await fetch(url);
+      const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
@@ -1925,7 +1842,15 @@ ${videoPromptMain}${annexInstructions}`;
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      window.open(url, '_blank');
+      console.error("Download failed:", err);
+      // Fallback: direct download link if possible, or window.open
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 

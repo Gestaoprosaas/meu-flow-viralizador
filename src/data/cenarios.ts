@@ -128,8 +128,8 @@ export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
     name: 'Parede Com Piso',
     type: 'Pronto',
     description: 'Ambiente interno com parede e piso em materiais naturais, criando um espaço acolhedor e rústico.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22.jpeg',
-    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22.jpeg',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22%20(1).jpeg',
+    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22%20(1).jpeg',
     isCurated: true
   },
   {
