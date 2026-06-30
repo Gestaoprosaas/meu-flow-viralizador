@@ -3,7 +3,7 @@
   "kling_api_key": "kl-**********************",
   "elevenlabs_api_key": "el-**********************",
   "resend_api_key": "re_**********************",
-  "supabase_url": "https://bjwxsbcohqcpfftylovq.supabase.co",
-  "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqd3hzYmNvaHFjcGZmdHlsb3ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NjY1NjAsImV4cCI6MjA5NzU0MjU2MH0.89C7EPJBj22fpQoyErWH-oNhdhCJL6OWcpt4L0Sw1pU",
+  "supabase_url": "",
+  "supabase_anon_key": "",
   "simulated_sales_sound_url": null
 }

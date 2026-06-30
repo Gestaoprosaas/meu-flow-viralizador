@@ -249,13 +249,14 @@ export default function App() {
           .eq('id', session.user.id)
           .single()
           .then(({ data: userProfile }) => {
-            if (userProfile && userProfile.ativo) {
+            const isAtivo = userProfile ? userProfile.ativo : true;
+            if (isAtivo) {
               setProfile(prev => ({
                 ...prev,
-                name: userProfile.nome || session.user.email,
+                name: userProfile?.nome || userProfile?.name || session.user.email?.split('@')[0] || 'Usuário',
                 email: session.user.email || '',
-                plan: userProfile.plano || 'starter',
-                role: userProfile.role || 'client',
+                plan: userProfile?.plano || userProfile?.plan || 'starter',
+                role: userProfile?.role || 'client',
                 ativo: true,
               }));
               setIsLanding(false);
@@ -264,7 +265,16 @@ export default function App() {
             }
             setIsCheckingAuth(false);
           }).catch(() => {
-            setIsLanding(true);
+            // Se der erro ou perfil não existir ainda, usar dados básicos do auth
+            setProfile(prev => ({
+              ...prev,
+              name: session.user.email?.split('@')[0] || 'Usuário',
+              email: session.user.email || '',
+              plan: 'starter',
+              role: 'client',
+              ativo: true,
+            }));
+            setIsLanding(false);
             setIsCheckingAuth(false);
           });
       } else {

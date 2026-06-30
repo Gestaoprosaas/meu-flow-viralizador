@@ -121,37 +121,34 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
         throw new Error("Credencial inválida.");
       }
 
-      let profileRow: any = null;
+      // Tentar buscar perfil na tabela profiles
+      let profileData: any = null;
       try {
-        const { data: profData, error: profErr } = await client
+        const { data: profData } = await client
           .from('profiles')
           .select('*')
           .eq('id', userObj.id)
-          .maybeSingle();
-        if (profData) {
-          profileRow = profData;
-          console.log("[Client Supabase] Perfil recuperado com sucesso:", profileRow);
-        } else {
-          console.log("[Client Supabase] Perfil não encontrado, usando padrões...");
-        }
-      } catch (err) {
-        console.warn("[Client Supabase] Erro ao carregar tabela profiles:", err);
+          .single();
+        profileData = profData;
+      } catch (e) {
+        // perfil não existe ainda — criar com dados básicos
       }
 
-      const verifiedPlan = profileRow?.plano || profileRow?.plan || 'free';
-      const verifiedRole = profileRow?.role || (loginEmail === "gestaoprosaas@gmail.com" ? "admin" : "client");
-      const verifiedName = profileRow?.name || loginEmail.split('@')[0];
-      const verifiedAtivo = profileRow?.ativo !== undefined ? profileRow.ativo : true;
-      const verifiedCreditos = typeof profileRow?.creditos === 'number' ? profileRow.creditos : undefined;
+      // Se não tiver perfil, usar dados básicos do auth
+      const verifiedPlan = profileData?.plano || profileData?.plan || 'starter';
+      const verifiedRole = profileData?.role || (loginEmail === "gestaoprosaas@gmail.com" ? "admin" : "client");
+      const verifiedName = profileData?.nome || profileData?.name || loginEmail.split('@')[0] || 'Usuário';
+      const verifiedAtivo = profileData?.ativo !== undefined ? profileData.ativo : true;
+      const verifiedCreditos = typeof profileData?.creditos === 'number' ? profileData.creditos : undefined;
 
-      const creditsText = typeof profileRow?.credits_text === 'number' 
-        ? profileRow.credits_text 
+      const creditsText = typeof profileData?.credits_text === 'number' 
+        ? profileData.credits_text 
         : (verifiedPlan === 'pro' ? 200 : verifiedPlan === 'starter' ? 50 : 10);
-      const creditsImage = typeof profileRow?.credits_image === 'number' 
-        ? profileRow.credits_image 
+      const creditsImage = typeof profileData?.credits_image === 'number' 
+        ? profileData.credits_image 
         : (verifiedPlan === 'pro' ? 100 : verifiedPlan === 'starter' ? 30 : 5);
-      const creditsVideo = typeof profileRow?.credits_video === 'number' 
-        ? profileRow.credits_video 
+      const creditsVideo = typeof profileData?.credits_video === 'number' 
+        ? profileData.credits_video 
         : (verifiedPlan === 'pro' ? 15 : verifiedPlan === 'starter' ? 3 : 0);
 
       // Sync active session with express server
@@ -184,6 +181,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
           name: verifiedName,
           email: loginEmail,
           plan: verifiedPlan as any,
+          role: verifiedRole,
           ativo: verifiedAtivo,
           creditos: verifiedCreditos,
           credits_text: creditsText,
