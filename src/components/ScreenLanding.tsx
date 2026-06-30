@@ -225,23 +225,46 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
         throw new Error("Credencial inválida.");
       }
 
-      // Tentar buscar perfil na tabela profiles
-      let profileData: any = null;
-      try {
-        const { data: profData } = await client
-          .from('profiles')
-          .select('*')
-          .eq('id', userObj.id)
-          .single();
-        profileData = profData;
-      } catch (e) {
-        // perfil não existe ainda — criar com dados básicos
+      // Tentar buscar perfil existente
+      let { data: profileData } = await client
+        .from('profiles')
+        .select('*')
+        .eq('id', userObj.id)
+        .maybeSingle();
+
+      // Se não existir perfil, criar automaticamente
+      if (!profileData) {
+        try {
+          const { data: newProfile, error: insertError } = await client
+            .from('profiles')
+            .insert({
+              id: userObj.id,
+              email: userObj.email,
+              nome: userObj.email?.split('@')[0] || 'Usuário',
+              plano: 'starter',
+              ativo: true,
+              credits_text: 50,
+              credits_image: 30,
+              credits_video: 3,
+              created_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Erro ao criar perfil:', insertError);
+          } else {
+            profileData = newProfile;
+          }
+        } catch (insertErr) {
+          console.error('Exception ao criar perfil:', insertErr);
+        }
       }
 
       // Se não tiver perfil, usar dados básicos do auth
       const verifiedPlan = profileData?.plano || profileData?.plan || 'starter';
       const verifiedRole = profileData?.role || (loginEmail === "gestaoprosaas@gmail.com" ? "admin" : "client");
-      const verifiedName = profileData?.nome || profileData?.name || loginEmail.split('@')[0] || 'Usuário';
+      const verifiedName = profileData?.nome || profileData?.name || userObj.email?.split('@')[0] || 'Usuário';
       const verifiedAtivo = profileData?.ativo !== undefined ? profileData.ativo : true;
       const verifiedCreditos = typeof profileData?.creditos === 'number' ? profileData.creditos : undefined;
 
@@ -262,7 +285,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
         body: JSON.stringify({
           id: userObj.id,
           name: verifiedName,
-          email: loginEmail,
+          email: userObj.email,
           plan: verifiedPlan,
           role: verifiedRole,
           credits_text: creditsText,
@@ -283,7 +306,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
       setTimeout(() => {
         onEnter({
           name: verifiedName,
-          email: loginEmail,
+          email: userObj.email || '',
           plan: verifiedPlan as any,
           role: verifiedRole,
           ativo: verifiedAtivo,
