@@ -36,19 +36,13 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
   // Configured gateway urls from public-settings
   const [supabaseUrl, setSupabaseUrl] = useState<string>('');
   const [supabaseKey, setSupabaseKey] = useState<string>('');
-  const [appflyMonthly, setAppflyMonthly] = useState<string>('https://appfly.com/checkout/monthly-placeholder');
-  const [appflyLifetime, setAppflyLifetime] = useState<string>('https://appfly.com/checkout/lifetime-placeholder');
+  const [appflyMonthly, setAppflyMonthly] = useState<string>(process.env.NEXT_PUBLIC_APPLYFY_URL_STARTER || 'https://applyfy.com.br/checkout/SEU_PRODUTO_STARTER');
+  const [appflyLifetime, setAppflyLifetime] = useState<string>(process.env.NEXT_PUBLIC_APPLYFY_URL_PRO || 'https://applyfy.com.br/checkout/SEU_PRODUTO_PRO');
 
   // Modals state
-  const [showSignup, setShowSignup] = useState<boolean>(false);
   const [showLogin, setShowLogin] = useState<boolean>(false);
-  const [signupPlan, setSignupPlan] = useState<'starter' | 'pro' | 'agency'>('pro');
 
   // Form inputs
-  const [regName, setRegName] = useState<string>('');
-  const [regEmail, setRegEmail] = useState<string>('');
-  const [regPassword, setRegPassword] = useState<string>('');
-
   const [loginEmail, setLoginEmail] = useState<string>('');
   const [loginPassword, setLoginPassword] = useState<string>('');
 
@@ -90,110 +84,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
     }, 700);
   };
 
-  // Helper simulating purchase return
-  const handleSimulateReturn = (plan: 'starter' | 'pro' | 'agency') => {
-    setSignupPlan(plan);
-    setErrorMsg('');
-    setSuccessMsg('');
-    setShowSignup(true);
-  };
-
-  // 2. Realize Sign Up (Auth & Profile persistence)
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) {
-      setErrorMsg('Preencha nome completo, e-mail de acesso e senha.');
-      return;
-    }
-    if (regPassword.length < 6) {
-      setErrorMsg('A senha precisa conter no mínimo 6 caracteres.');
-      return;
-    }
-
-    setLoading(true);
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    try {
-      const client = getSupabaseClient();
-      if (!client) {
-        throw new Error("Cliente Supabase não inicializado. Verifique a Endpoint e Anon Key nas configurações.");
-      }
-
-      // Create login credential
-      const { data, error } = await client.auth.signUp({
-        email: regEmail,
-        password: regPassword,
-        options: {
-          data: {
-            name: regName
-          }
-        }
-      });
-
-      if (error) {
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error('Falha de conexão com o Supabase. Verifique se a URL e Anon Key estão corretas nas Configurações.');
-        } else {
-          throw new Error(`Erro Supabase Auth: ${error.message}`);
-        }
-      }
-
-      const userObj = data.user;
-      if (!userObj) {
-        throw new Error("Erro no retorno de credencial de usuário.");
-      }
-
-      let finalPlan = signupPlan;
-      let finalCredits = {
-        text: signupPlan === 'pro' ? 200 : signupPlan === 'starter' ? 50 : 10,
-        image: signupPlan === 'pro' ? 100 : signupPlan === 'starter' ? 30 : 5,
-        video: signupPlan === 'pro' ? 15 : signupPlan === 'starter' ? 3 : 0,
-      };
-
-      // Supabase table operations bypassed. Local-first session is established and synchronized.
-      const syncResponse = await fetch('/api/profile/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: userObj.id,
-          name: regName,
-          email: regEmail,
-          plan: finalPlan,
-          role: 'client',
-          credits_text: finalCredits.text,
-          credits_image: finalCredits.image,
-          credits_video: finalCredits.video
-        })
-      });
-      if (!syncResponse.ok) {
-        const syncText = await syncResponse.text();
-        console.warn("Back-end synchronization warning:", syncText);
-      }
-
-      setSuccessMsg('Sua conta foi criada e vinculada com sucesso!');
-      
-      // Proceed into dashboard
-      setTimeout(() => {
-        onEnter({
-          name: regName,
-          email: regEmail,
-          plan: signupPlan,
-          supabaseUrl,
-          supabaseKey
-        });
-        setShowSignup(false);
-      }, 1500);
-
-    } catch (err: any) {
-      console.error("Critical Signup Error:", err);
-      setErrorMsg(err.message || 'Houve um erro para criar a conta. Contate o suporte.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 3. Realize Log In for existing accounts
+  // 2. Realize Log In for existing accounts
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail.trim() || !loginPassword.trim()) {
@@ -324,52 +215,6 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
       {/* Premium Dark Glass Frost Overlay for perfect legibility */}
       <div className="fixed inset-0 z-0 bg-[#06060B]/85 backdrop-blur-[2px] pointer-events-none" />
 
-      {/* Developer helper floating HUD for checkout simulation */}
-      <div className="fixed bottom-4 left-4 z-40 bg-slate-950/95 border border-[#813EF6]/30 p-4 rounded-2xl shadow-2xl max-w-sm text-xs backdrop-blur-md">
-        <div className="flex items-center gap-1.5 text-[#69C9D0] font-bold mb-1.5 font-display">
-          <Sparkles className="w-4 h-4 text-purple-400" />
-          <span>Atalho de Configuração / Modo Desenvolvedor</span>
-        </div>
-        <p className="text-[10px] text-gray-400 leading-normal mb-3">
-          Clique abaixo para entrar diretamente no painel administrativo sem precisar de autenticação inicial para que você possa configurar suas chaves do Supabase e APIs reais no menu de <strong>Configurações/Administração</strong>.
-        </p>
-
-        <button 
-          onClick={() => {
-            onEnter({
-              name: 'Administrador Pro',
-              email: 'admin@gestaoprosaas.com',
-              plan: 'agency',
-              role: 'admin',
-              supabaseUrl,
-              supabaseKey
-            });
-          }}
-          className="w-full mb-3 py-2 px-3 bg-[#813EF6] hover:bg-[#9055ff] text-white font-bold rounded-xl active:scale-95 duration-150 text-[10px] cursor-pointer flex items-center justify-center gap-1.5 transition shadow-[0_0_15px_rgba(129,62,246,0.5)]"
-        >
-          <LogIn className="w-3.5 h-3.5" />
-          <span>Ignorar Autenticação & Acessar Painel</span>
-        </button>
-
-        <div className="border-t border-slate-800 pt-2.5">
-          <p className="text-[9px] text-[#8888AA] mb-1.5">Ou simule o fluxo de checkout da plataforma:</p>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => handleSimulateReturn('starter')}
-              className="flex-1 py-1.5 px-2 bg-gradient-to-r from-purple-600/30 to-purple-600/60 border border-purple-500/40 text-[9px] text-white rounded-lg hover:scale-105 active:scale-95 duration-150 font-semibold cursor-pointer"
-            >
-              Plano Mensal
-            </button>
-            <button 
-              onClick={() => handleSimulateReturn('pro')}
-              className="flex-1 py-1.5 px-2 bg-gradient-to-r from-teal-600/30 to-teal-600/60 border border-teal-500/40 text-[9px] text-white rounded-lg hover:scale-105 active:scale-95 duration-150 font-semibold cursor-pointer"
-            >
-              Plano Vitalício
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main content layer */}
       <div className="relative z-10">
       
@@ -417,113 +262,6 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
             }
           }} 
         />
-
-        {/* MODAL 1: ACCOUNT CREATION (POST-CHECKOUT SETUP SCREEN) */}
-        <AnimatePresence>
-          {showSignup && (
-            <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="relative bg-[#09090F]/95 border border-white/[0.08] w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl text-left"
-              >
-                <button
-                  onClick={() => setShowSignup(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-white transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Banner alert showing purchase recognition */}
-                <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl">
-                  <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="space-y-0.5">
-                    <h5 className="font-extrabold text-xs text-white uppercase tracking-wider">Pagamento Confirmado no AppFly!</h5>
-                    <p className="text-[10px] text-emerald-300 leading-normal">
-                      Sua compra do plano <strong className="text-white uppercase font-black">{signupPlan}</strong> foi validada. Complete os dados abaixo para configurar sua conta e liberar o acesso instantaneamente.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <h3 className="text-xl font-black text-white font-display">Configure Seu Acesso</h3>
-                  <p className="text-xs text-slate-400">Insira suas credenciais válidas do sistema.</p>
-                </div>
-
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  {errorMsg && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-[11px] font-bold text-red-400 rounded-xl leading-normal">
-                      ⚠ {errorMsg}
-                    </div>
-                  )}
-                  {successMsg && (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 rounded-xl leading-normal">
-                      ✓ {successMsg}
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <label className="text-slate-400 text-xs font-semibold">Nome Completo</label>
-                    <input
-                      type="text"
-                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition"
-                      placeholder="Seu nome"
-                      value={regName}
-                      disabled={loading}
-                      onChange={(e) => setRegName(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-slate-400 text-xs font-semibold">Seu melhor E-mail</label>
-                    <input
-                      type="email"
-                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition font-mono"
-                      placeholder="nome@dominio.com"
-                      value={regEmail}
-                      disabled={loading}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-slate-400 text-xs font-semibold">Defina uma Senha segura</label>
-                    <input
-                      type="password"
-                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition font-mono"
-                      placeholder="Mínimo 6 caracteres"
-                      value={regPassword}
-                      disabled={loading}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-4.5 bg-gradient-to-r from-[#FE2C55] to-purple-600 hover:opacity-95 text-white font-extrabold text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition shadow-xl"
-                  >
-                    {loading ? (
-                      <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4" />
-                        <span>Criar Conta & Ativar Painel</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                <div className="text-center pt-2">
-                  <p className="text-[10px] text-gray-500">
-                    Ao prosseguir, você aceita nossos termos de uso e faturamento eletrônico.
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
 
         {/* MODAL 2: USER LOGIN (ENTRAR) */}
         <AnimatePresence>

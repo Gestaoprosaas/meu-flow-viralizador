@@ -205,6 +205,12 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
 
         </div>
 
+        <div className="mt-8 text-center max-w-lg mx-auto">
+          <p className="text-[#8888AA] text-sm">
+            Após o pagamento você receberá um email para criar sua senha e acessar a plataforma.
+          </p>
+        </div>
+
       </div>
 
     </section>

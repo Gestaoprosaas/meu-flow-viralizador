@@ -204,7 +204,8 @@ export function CelebrationConfetti({ active }: { active: boolean }) {
 
 export default function App() {
   // Navigation states
-  const [isLanding, setIsLanding] = useState<boolean>(false);
+  const [isLanding, setIsLanding] = useState<boolean>(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [currentPath, setCurrentPath] = useState<string>('/dashboard');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
@@ -230,6 +231,55 @@ export default function App() {
     credits_video_used: 0,
     created_at: new Date().toISOString()
   });
+
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      setIsLanding(true);
+      setIsCheckingAuth(false);
+      return;
+    }
+
+    // Verificar se já tem sessão ativa
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Usuário já logado — buscar perfil e entrar direto
+        supabase.from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: userProfile }) => {
+            if (userProfile && userProfile.ativo) {
+              setProfile(prev => ({
+                ...prev,
+                name: userProfile.nome || session.user.email,
+                email: session.user.email || '',
+                plan: userProfile.plano || 'starter',
+                role: userProfile.role || 'client',
+                ativo: true,
+              }));
+              setIsLanding(false);
+            } else {
+              setIsLanding(true);
+            }
+            setIsCheckingAuth(false);
+          }).catch(() => {
+            setIsLanding(true);
+            setIsCheckingAuth(false);
+          });
+      } else {
+        setIsLanding(true);
+        setIsCheckingAuth(false);
+      }
+    });
+
+    // Escutar mudanças de auth em tempo real
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') setIsLanding(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Simulated sales states
   const [simulatedSalesEnabled, setSimulatedSalesEnabled] = useState<boolean>(() => {
@@ -814,6 +864,14 @@ export default function App() {
     
     return { locked: false };
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#06060B] flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-[#FE2C55] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   if (isLanding) {
     return (

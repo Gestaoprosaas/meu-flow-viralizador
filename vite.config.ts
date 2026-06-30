@@ -10,6 +10,8 @@ export default defineConfig(() => {
       'process.env.NEXT_PUBLIC_FLOWY_URL': JSON.stringify(process.env.NEXT_PUBLIC_FLOWY_URL || 'https://flowy.ai-placeholder.com'),
       'process.env.NEXT_PUBLIC_SUPABASE_URL': JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_URL || ''),
       'process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''),
+      'process.env.NEXT_PUBLIC_APPLYFY_URL_STARTER': JSON.stringify(process.env.NEXT_PUBLIC_APPLYFY_URL_STARTER || ''),
+      'process.env.NEXT_PUBLIC_APPLYFY_URL_PRO': JSON.stringify(process.env.NEXT_PUBLIC_APPLYFY_URL_PRO || ''),
     },
     resolve: {
       alias: {
