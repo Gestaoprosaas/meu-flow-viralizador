@@ -782,9 +782,7 @@ export default function App() {
     { name: 'Produtos em Alta', icon: FolderOpen, path: '/produtos' },
     { name: 'Avatar Studio', icon: Users, path: '/influenciadores' },
     { name: 'Viralizar Perfil', icon: Flame, path: '/afiliados' },
-    { name: 'Movimentos', icon: Sparkles, path: '/movimentos' },
-    { name: 'Hooks/Ganchos', icon: BookOpen, path: '/biblioteca' },
-    { name: 'Aulas', icon: GraduationCap, path: '/treinamentos' }
+    { name: 'Movimentos', icon: Sparkles, path: '/movimentos' }
   ];
 
   // Helper to determine if a menu path is gated for the user's active plan
