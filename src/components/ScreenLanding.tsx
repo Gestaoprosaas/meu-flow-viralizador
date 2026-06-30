@@ -41,10 +41,15 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
   // Modals state
   const [showLogin, setShowLogin] = useState<boolean>(false);
+  const [showSignup, setShowSignup] = useState<boolean>(false);
+  const [signupPlan, setSignupPlan] = useState<'starter' | 'pro' | 'agency'>('pro');
 
   // Form inputs
   const [loginEmail, setLoginEmail] = useState<string>('');
   const [loginPassword, setLoginPassword] = useState<string>('');
+  const [regName, setRegName] = useState<string>('');
+  const [regEmail, setRegEmail] = useState<string>('');
+  const [regPassword, setRegPassword] = useState<string>('');
 
   // Status and feedback
   const [loading, setLoading] = useState<boolean>(false);
@@ -82,6 +87,105 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
         window.location.href = checkoutUrl;
       }
     }, 700);
+  };
+
+  // Helper simulating purchase return
+  const handleSimulateReturn = (plan: 'starter' | 'pro' | 'agency') => {
+    setSignupPlan(plan);
+    setErrorMsg('');
+    setSuccessMsg('');
+    setShowSignup(true);
+  };
+
+  // Realize Sign Up (Auth & Profile persistence)
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim() || !regEmail.trim() || regPassword.trim().length < 6) {
+      setErrorMsg('Preencha nome completo, e-mail de acesso e senha (mínimo 6 caracteres).');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const client = getSupabaseClient();
+      if (!client) {
+        throw new Error("Cliente Supabase não inicializado. Verifique a Endpoint e Anon Key nas configurações.");
+      }
+
+      // Create login credential
+      const { data, error } = await client.auth.signUp({
+        email: regEmail,
+        password: regPassword,
+        options: {
+          data: {
+            name: regName
+          }
+        }
+      });
+
+      if (error) {
+        if (error.message.includes('Failed to fetch')) {
+          throw new Error('Falha de conexão com o Supabase. Verifique se a URL e Anon Key estão corretas nas Configurações.');
+        } else {
+          throw new Error(`Erro Supabase Auth: ${error.message}`);
+        }
+      }
+
+      const userObj = data.user;
+      if (!userObj) {
+        throw new Error("Erro no retorno de credencial de usuário.");
+      }
+
+      let finalPlan = signupPlan;
+      let finalCredits = {
+        text: signupPlan === 'pro' ? 200 : signupPlan === 'starter' ? 50 : 10,
+        image: signupPlan === 'pro' ? 100 : signupPlan === 'starter' ? 30 : 5,
+        video: signupPlan === 'pro' ? 15 : signupPlan === 'starter' ? 3 : 0,
+      };
+
+      // Sync profile
+      const syncResponse = await fetch('/api/profile/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: userObj.id,
+          name: regName,
+          email: regEmail,
+          plan: finalPlan,
+          role: 'client',
+          credits_text: finalCredits.text,
+          credits_image: finalCredits.image,
+          credits_video: finalCredits.video
+        })
+      });
+      if (!syncResponse.ok) {
+        const syncText = await syncResponse.text();
+        console.warn("Back-end synchronization warning:", syncText);
+      }
+
+      setSuccessMsg('Sua conta foi criada e vinculada com sucesso!');
+      
+      // Proceed into dashboard
+      setTimeout(() => {
+        onEnter({
+          name: regName,
+          email: regEmail,
+          plan: signupPlan,
+          supabaseUrl,
+          supabaseKey
+        });
+        setShowSignup(false);
+      }, 1500);
+
+    } catch (err: any) {
+      console.error("Critical Signup Error:", err);
+      setErrorMsg(err.message || 'Houve um erro para criar a conta. Contate o suporte.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 2. Realize Log In for existing accounts
@@ -261,6 +365,107 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
           }} 
         />
 
+        {/* MODAL 1: ACCOUNT CREATION (POST-CHECKOUT SETUP SCREEN) */}
+        <AnimatePresence>
+          {showSignup && (
+            <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative bg-[#09090F]/95 border border-white/[0.08] w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl text-left"
+              >
+                <button
+                  onClick={() => setShowSignup(false)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-white transition animate-none cursor-pointer border-none bg-transparent"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                {/* Banner alert showing purchase recognition */}
+                <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="space-y-0.5">
+                    <h5 className="font-extrabold text-xs text-white uppercase tracking-wider">Simulação de Pagamento Confirmado!</h5>
+                    <p className="text-[10px] text-emerald-300 leading-normal">
+                      A compra do plano <strong className="text-white uppercase font-black">{signupPlan}</strong> foi simulada. Complete os dados abaixo para criar sua conta no Supabase de teste.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-xl font-black text-white font-display">Configure Seu Acesso</h3>
+                  <p className="text-xs text-slate-400">Insira as credenciais para criar seu login real.</p>
+                </div>
+
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  {errorMsg && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-[11px] font-bold text-red-400 rounded-xl leading-normal">
+                      ⚠ {errorMsg}
+                    </div>
+                  )}
+                  {successMsg && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 rounded-xl leading-normal">
+                      ✓ {successMsg}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-400 text-xs font-semibold">Nome Completo</label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition"
+                      placeholder="Seu nome"
+                      value={regName}
+                      disabled={loading}
+                      onChange={(e) => setRegName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-400 text-xs font-semibold">Seu melhor E-mail</label>
+                    <input
+                      type="email"
+                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition font-mono"
+                      placeholder="nome@dominio.com"
+                      value={regEmail}
+                      disabled={loading}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-400 text-xs font-semibold">Defina uma Senha segura</label>
+                    <input
+                      type="password"
+                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition font-mono"
+                      placeholder="Mínimo 6 caracteres"
+                      value={regPassword}
+                      disabled={loading}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-4 bg-gradient-to-r from-[#FE2C55] to-purple-600 hover:opacity-95 text-white font-extrabold text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition shadow-xl border-none"
+                  >
+                    {loading ? (
+                      <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4" />
+                        <span>Criar Conta & Ativar Painel</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* MODAL 2: USER LOGIN (ENTRAR) */}
         <AnimatePresence>
           {showLogin && (
@@ -381,6 +586,32 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
         {/* Floating high-performance Glassmorphic Lens scanning effect */}
         <GlassmorphicLens />
+
+        {/* Developer helper floating HUD for checkout simulation */}
+        <div className="fixed bottom-4 left-4 z-40 bg-slate-950/95 border border-[#FE2C55]/30 p-4 rounded-2xl shadow-2xl max-w-sm text-xs backdrop-blur-md">
+          <div className="flex items-center gap-1.5 text-[#FE2C55] font-bold mb-1.5 font-display">
+            <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+            <span>Atalho de Configuração / Simular Checkout</span>
+          </div>
+          <p className="text-[10px] text-gray-400 leading-normal mb-3">
+            Simule o fluxo de retorno de pagamento aprovado do gateway de checkout para criar um usuário de teste e validar seu Supabase.
+          </p>
+
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleSimulateReturn('starter')}
+              className="flex-1 py-1.5 px-2 bg-[#FE2C55]/20 border border-[#FE2C55]/40 text-[9px] text-white rounded-lg hover:scale-105 active:scale-95 duration-150 font-semibold cursor-pointer"
+            >
+              Simular Plano Mensal
+            </button>
+            <button 
+              onClick={() => handleSimulateReturn('pro')}
+              className="flex-1 py-1.5 px-2 bg-[#FE2C55]/20 border border-[#FE2C55]/40 text-[9px] text-white rounded-lg hover:scale-105 active:scale-95 duration-150 font-semibold cursor-pointer"
+            >
+              Simular Plano Vitalício
+            </button>
+          </div>
+        </div>
 
       </div>
     </div>
