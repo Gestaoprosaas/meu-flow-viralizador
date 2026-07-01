@@ -1609,13 +1609,17 @@ export default function ScreenProdutos({
       // In UGC Mode, we don't have interaction step, so it is just default or empty string
       const engInteraction = translateInteraction(interactionLabels[interactionSelected] || 'B', interactionText || '');
 
-      imgPrompt = `Generate separate individual images, each as its own standalone full-frame photo, showing the interaction between the uploaded product image and the uploaded avatar image.
+      if (isCuratedScenario) {
+        imgPrompt = PROMPT_CENARIO_PRONTO_FIXO;
+      } else {
+        imgPrompt = `Generate separate individual images, each as its own standalone full-frame photo, showing the interaction between the uploaded product image and the uploaded avatar image.
 These instructions are written assuming the user has uploaded their chosen product photo and avatar photo directly into Flow.
 - Avatar Selected: ${engAvatar}
 - Scenario Selected: ${engScenario}
 - Pose Selected: ${engPose}
 Strictly maintain 100% visual and physical consistency utilizing the uploaded product and avatar reference images. Do not introduce any details, styles, colors, characters, clothing, or features not explicitly listed here.
 IMPORTANT: Do not combine multiple images into a single collage, grid, contact sheet, or split-panel layout. Each image must be a complete, independent photo occupying the full frame — no borders, no multi-panel composition, no thumbnails arranged together.`;
+      }
 
       videoPromptMain = `Generate a high-retention UGC review video using the images produced by Prompt 1 as starting reference keyframes.
 The video must strictly and exclusively maintain fidelity to the visual details of these starting images.
@@ -1730,12 +1734,16 @@ ${videoPromptMain}${annexInstructions}`;
         }
       }
 
-      imgPrompt = `Generate separate individual images, each as its own standalone full-frame photo, showing the interaction between the uploaded product image and the uploaded avatar image.
+      if (isCuratedScenario) {
+        imgPrompt = PROMPT_CENARIO_PRONTO_FIXO;
+      } else {
+        imgPrompt = `Generate separate individual images, each as its own standalone full-frame photo, showing the interaction between the uploaded product image and the uploaded avatar image.
 These instructions are written assuming the user has uploaded their chosen product photo and avatar photo directly into Flow.
 - Interaction Selected: ${engInteraction}
 - Scenario Selected: ${engScenario}
 - Pose Selected: ${engPose}
 Strictly maintain 100% visual consistency. Each image must be a complete, independent photo occupying the full frame.`;
+      }
 
       videoPromptMain = `Generate a commercial video with dynamic camera movement in 9:16 vertical format. Reference Image: Prompt 1 images.
 - Dynamic Camera Movement: ${movementSelectedDesc}
@@ -1936,6 +1944,11 @@ ${videoPromptMain}${annexInstructions}`;
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-[#FE2C55]/10 to-[#25F4EE]/10 border border-[#FE2C55]/25 text-[10px] font-black tracking-wider text-[#F0F0FF] uppercase shadow-sm">
                   <Link2 className="w-3.5 h-3.5 text-[#25F4EE] shrink-0" />
                   Sincronizado com TikTok Shop
+                </span>
+
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-[10px] font-black tracking-wider text-indigo-400 uppercase shadow-sm" title="Integração com Kalodata">
+                  <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                  Dados & Tendências: Kalodata
                 </span>
               </div>
             </div>

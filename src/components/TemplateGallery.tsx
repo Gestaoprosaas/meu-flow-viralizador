@@ -876,20 +876,6 @@ Setting and composition:
         </motion.div>
       )}
 
-      {/* Preparação para o futuro info footer */}
-      <div className="bg-[#050508]/40 border border-[#1E1E2E]/60 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1 text-left">
-          <span className="block text-xs font-extrabold text-white flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-[#FE2C55]" /> Conector de Banco de Dados de Prompts
-          </span>
-          <span className="block text-[11px] text-[#8888AA]">
-            Este módulo consome uma lista padronizada. Futuramente, você poderá vincular à tabela correspondente do Supabase sem alterar os cartões.
-          </span>
-        </div>
-        <div className="text-xs font-mono text-[#555577] bg-black/40 px-3 py-1.5 border border-[#1E1E2E] rounded-lg">
-          Data Model: InfluencerTemplate[]
-        </div>
-      </div>
     </div>
   );
 }
