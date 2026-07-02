@@ -777,23 +777,62 @@ export default function HowItWorksSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             
             {[
-              { id: 1, title: 'Gancho Vestuário Brasil', views: '1.2M views', imgUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=350', tag: 'Moda' },
-              { id: 2, title: 'Lifestyle Fit Selfie', views: '984K views', imgUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=350', tag: 'Academia' },
-              { id: 3, title: 'Checked Dress Review', views: '1.4M views', imgUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=350', tag: 'Dicas' },
-              { id: 4, title: 'Estilo Premium OOTD', views: '870K views', imgUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=350', tag: 'Review' }
+              { 
+                id: 1, 
+                title: 'Gancho Vestuário Brasil', 
+                views: '1.2M views', 
+                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Beijo%20+%20CTA.mp4',
+                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Beijo%20+%20CTA.mp4',
+                tag: 'Moda' 
+              },
+              { 
+                id: 2, 
+                title: 'Lifestyle Fit Selfie', 
+                views: '984K views', 
+                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Girl_stepping_forward_with_clothing_202606281557.mp4',
+                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Girl_stepping_forward_with_clothing_202606281557.mp4',
+                tag: 'Academia' 
+              },
+              { 
+                id: 3, 
+                title: 'Checked Dress Review', 
+                views: '1.4M views', 
+                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Person_presenting_clothing_POV_202606281521.mp4',
+                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Person_presenting_clothing_POV_202606281521.mp4',
+                tag: 'Dicas' 
+              },
+              { 
+                id: 4, 
+                title: 'Estilo Premium OOTD', 
+                views: '870K views', 
+                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Tapar%20Camera.mp4',
+                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Tapar%20Camera.mp4',
+                tag: 'Review' 
+              }
             ].map((rc) => (
               <div 
                 key={rc.id}
                 className="group relative aspect-[9/16] rounded-3xl overflow-hidden bg-slate-900 border border-white/[0.04] transition duration-500 hover:border-[#FE2C55]/40 hover:scale-[1.02] shadow-[0_15px_30px_rgba(0,0,0,0.4)] flex flex-col justify-between p-5"
               >
-                {/* Background image cover */}
+                {/* Background image/video cover */}
                 <div className="absolute inset-0 z-0">
-                  <img 
-                    src={rc.imgUrl} 
-                    alt={rc.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
-                    referrerPolicy="no-referrer"
-                  />
+                  {rc.videoUrl ? (
+                    <video 
+                      src={rc.videoUrl} 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline
+                      className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                    />
+                  ) : (
+                    <img 
+                      src={rc.imgUrl} 
+                      alt={rc.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-black/25 z-10" />
                 </div>
 
