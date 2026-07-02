@@ -41,6 +41,7 @@ import ScreenTreinamentos from './components/ScreenTreinamentos';
 import ScreenViralizarPerfil from './components/ScreenViralizarPerfil';
 import ScreenUpgrade from './components/ScreenUpgrade';
 import ScreenAdmin from './components/ScreenAdmin';
+import ScreenIndiqueAmigos from './components/ScreenIndiqueAmigos';
 import TemplateGallery from './components/TemplateGallery';
 import { getSupabase } from './lib/supabaseClient';
 
@@ -241,42 +242,45 @@ export default function App() {
     }
 
     // Verificar se já tem sessão ativa
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         // Usuário já logado — buscar perfil e entrar direto
-        supabase.from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: userProfile }) => {
-            const isAtivo = userProfile ? userProfile.ativo : true;
-            if (isAtivo) {
-              setProfile(prev => ({
-                ...prev,
-                name: userProfile?.nome || userProfile?.name || session.user.email?.split('@')[0] || 'Usuário',
-                email: session.user.email || '',
-                plan: userProfile?.plano || userProfile?.plan || 'starter',
-                role: userProfile?.role || 'client',
-                ativo: true,
-              }));
-              setIsLanding(false);
-            } else {
-              setIsLanding(true);
-            }
-            setIsCheckingAuth(false);
-          }).catch(() => {
-            // Se der erro ou perfil não existir ainda, usar dados básicos do auth
+        try {
+          const { data: userProfile, error } = await supabase.from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error) throw error;
+
+          const isAtivo = userProfile ? userProfile.ativo : true;
+          if (isAtivo) {
             setProfile(prev => ({
               ...prev,
-              name: session.user.email?.split('@')[0] || 'Usuário',
+              name: userProfile?.nome || userProfile?.name || session.user.email?.split('@')[0] || 'Usuário',
               email: session.user.email || '',
-              plan: 'starter',
-              role: 'client',
+              plan: userProfile?.plano || userProfile?.plan || 'starter',
+              role: userProfile?.role || 'client',
               ativo: true,
             }));
             setIsLanding(false);
-            setIsCheckingAuth(false);
-          });
+          } else {
+            setIsLanding(true);
+          }
+        } catch (err) {
+          // Se der erro ou perfil não existir ainda, usar dados básicos do auth
+          setProfile(prev => ({
+            ...prev,
+            name: session.user.email?.split('@')[0] || 'Usuário',
+            email: session.user.email || '',
+            plan: 'starter',
+            role: 'client',
+            ativo: true,
+          }));
+          setIsLanding(false);
+        } finally {
+          setIsCheckingAuth(false);
+        }
       } else {
         setIsLanding(true);
         setIsCheckingAuth(false);
@@ -976,7 +980,7 @@ export default function App() {
             Acesso Suspenso
           </h2>
           <p className="text-[#8888AA] text-sm leading-relaxed mb-6">
-            O seu plano ou período de testes na plataforma <strong className="text-white">AI Flow</strong> expirou, foi cancelado ou não teve o pagamento confirmado pelo gateway.
+            O seu plano ou período de testes na plataforma <strong className="text-white">ViralSeller</strong> expirou, foi cancelado ou não teve o pagamento confirmado pelo gateway.
           </p>
 
           <div className="bg-[#0E0E1B] border border-white/5 rounded-2xl p-4 mb-6 text-left">
@@ -1070,7 +1074,7 @@ export default function App() {
                 </div>
               </div>
               <span className="font-black text-white text-sm tracking-widest uppercase font-display bg-gradient-to-r from-white via-zinc-100 to-[#813EF6]/80 bg-clip-text text-transparent">
-                AI FLOW
+                VIRALSELLER
               </span>
             </div>
             
@@ -1125,12 +1129,9 @@ export default function App() {
             </div>
             <button
               type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(`https://aiflow.com/?ref=${profile.affiliate_code || 'viral777'}`);
-                alert("Link de indicação copiado para sua área de transferência! Compartilhe com amigos para acumular créditos adicionais.");
-              }}
+              onClick={() => handleNavigate('/indique-amigos')}
               className="w-8.5 h-8.5 rounded-xl bg-gradient-to-r from-[#813EF6]/15 to-[#FE2C55]/15 hover:from-[#813EF6]/30 hover:to-[#FE2C55]/30 border border-[#3A3266]/50 flex items-center justify-center transition shrink-0 relative z-10 hover:scale-105 active:scale-95"
-              title="Copiar Link de Indicação"
+              title="Indique Amigos"
             >
               <Gift className="w-4 h-4 text-[#FE2C55]" />
             </button>
@@ -1145,10 +1146,10 @@ export default function App() {
             <button
               type="button"
               onClick={() => handleNavigate('/admin')}
-              className="w-full text-left px-3 py-1 rounded-lg text-[10px] font-bold text-[#64648C] hover:text-amber-400 transition flex items-center gap-2"
+              className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition flex items-center gap-2"
             >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Módulo do Desenvolvedor</span>
+              <ShieldAlert className="w-4 h-4" />
+              <span>Painel Admin & Checkouts</span>
             </button>
           )}
 
@@ -1347,6 +1348,12 @@ export default function App() {
                   <ScreenAdmin
                     onNavigate={handleNavigate}
                     onRefreshProjectState={refreshFullState}
+                    profile={profile}
+                  />
+                )}
+
+                {currentPath === '/indique-amigos' && (
+                  <ScreenIndiqueAmigos
                     profile={profile}
                   />
                 )}

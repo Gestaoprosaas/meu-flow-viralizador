@@ -1,5 +1,5 @@
 {
-  "name": "PROJETO VITÃO",
+  "name": "ViralSeller",
   "description": "Plataforma SaaS premium para afiliados, produtores e vendedores de TikTok Shop no Brasil. Cria campanhas virais completas com roteiros persuasivos, imagens comerciais, narrações profissionais e vídeos por inteligência artificial.",
   "requestFramePermissions": ["camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

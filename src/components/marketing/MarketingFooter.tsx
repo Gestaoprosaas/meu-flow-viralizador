@@ -52,10 +52,10 @@ export default function MarketingFooter({ onStart }: MarketingFooterProps) {
         <div className="md:col-span-5 space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FE2C55] to-[#69C9D0] flex items-center justify-center font-black text-white text-sm">
-              P
+              V
             </div>
             <span className="font-extrabold text-white text-sm tracking-widest uppercase">
-              Projeto <span className="text-[#69C9D0]">Vitão</span>
+              Viral<span className="text-[#69C9D0]">Seller</span>
             </span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed max-w-sm">
@@ -101,7 +101,7 @@ export default function MarketingFooter({ onStart }: MarketingFooterProps) {
       {/* Bottom Footer Credits */}
       <div className="max-w-7xl mx-auto py-8 px-6 md:px-12 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600 relative z-10 font-mono">
         <div>
-          &copy; {currentYear} Projeto Vitão. Todos os direitos reservados.
+          &copy; {currentYear} ViralSeller. Todos os direitos reservados.
         </div>
         <div className="flex gap-4">
           <span>Brasília, DF, Brasil</span>

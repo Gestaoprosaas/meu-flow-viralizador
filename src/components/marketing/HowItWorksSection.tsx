@@ -481,7 +481,7 @@ export default function HowItWorksSection() {
                     {/* Interactive Selector voice catalog list */}
                     <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                       {[
-                        { id: 'vitao', name: 'Vitão - Vendedor Premium', lang: 'Português (BR)', type: 'Entonação Comercial Agressiva', quote: 'Mano, olha o resultado desse produto depois de 3 dias de uso diário!' },
+                        { id: 'vitor', name: 'Vítor - Vendedor Premium', lang: 'Português (BR)', type: 'Entonação Comercial Agressiva', quote: 'Mano, olha o resultado desse produto depois de 3 dias de uso diário!' },
                         { id: 'ju', name: 'Ju - Afiliada Expressiva', lang: 'Português (BR)', type: 'Estilo Recomendação Realista', quote: 'Amiga, eu já testei todas as cintas da vida, mas essa aqui mudou meu look.' },
                         { id: 'renan', name: 'Renan - Urgência Orgânico', lang: 'Português (BR)', type: 'Estilo Entusiasta do TikTok', quote: 'Não compre antes de assistir esse vídeo! O estoque da distribuidora tá zerando!' },
                         { id: 'clara-voz', name: 'Clara - Locutora Soft Clean', lang: 'Português (BR)', type: 'Estilo Comercial Amigável', quote: 'Sua rotina de treinos nunca mais será a mesma com esse kit legging.' }

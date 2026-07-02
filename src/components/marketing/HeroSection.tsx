@@ -66,10 +66,10 @@ export default function HeroSection({ onStart, onLogin }: HeroSectionProps) {
         {/* Brand Logo */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FE2C55] to-[#69C9D0] flex items-center justify-center font-black text-white text-base shadow-[0_0_15px_rgba(254,44,85,0.3)]">
-            P
+            V
           </div>
           <span className="font-extrabold text-white text-sm sm:text-base tracking-wider uppercase">
-            Projeto <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#69C9D0] to-cyan-300">Vitão</span>
+            Viral<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#69C9D0] to-cyan-300">Seller</span>
           </span>
         </div>
 

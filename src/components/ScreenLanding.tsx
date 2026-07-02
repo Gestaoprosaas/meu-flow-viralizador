@@ -75,8 +75,8 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
   };
 
   // 1. Redirect to AppFly gateway URL
-  const handleSelectPlan = (plan: 'starter' | 'pro' | 'agency') => {
-    const checkoutUrl = plan === 'starter' ? appflyMonthly : appflyLifetime;
+  const handleSelectPlan = (plan: 'starter' | 'pro' | 'agency', customCheckoutUrl?: string) => {
+    const checkoutUrl = customCheckoutUrl || (plan === 'starter' ? appflyMonthly : appflyLifetime);
     setSuccessMsg(`Redirecionando de forma blindada para o gateway AppFly...`);
     
     setTimeout(() => {
@@ -511,7 +511,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
                     <Lock className="w-5 h-5" />
                   </div>
                   <h3 className="text-xl font-black text-white font-display">Acesso de Clientes</h3>
-                  <p className="text-xs text-slate-400">Acesse sua conta para entrar na suite AI Flow.</p>
+                  <p className="text-xs text-slate-400">Acesse sua conta para entrar na suite ViralSeller.</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
