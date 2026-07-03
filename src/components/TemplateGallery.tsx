@@ -33,6 +33,7 @@ interface TemplateGalleryProps {
 export default function TemplateGallery({ onNavigate }: TemplateGalleryProps) {
   // Navigation tabs for predefined vs custom manual creator
   const [activeSubTab, setActiveSubTab] = useState<'ready' | 'library' | 'custom'>('library');
+  const [readyFilter, setReadyFilter] = useState<'TODOS' | 'FEMININO' | 'MASCULINO'>('TODOS');
 
   const [allTemplates, setAllTemplates] = useState<InfluencerTemplate[]>(influencerTemplates);
 
@@ -453,27 +454,49 @@ Setting and composition:
 
       {/* TAB CONTENT RENDERING */}
       {activeSubTab === 'ready' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
-           {AVATARS_PRESETS.map(avatar => (
-             <div key={avatar.id} className="bg-[#050508] border border-[#1E1E2E] p-3 rounded-2xl flex flex-col gap-3 group relative overflow-hidden">
-               <div className="aspect-[3/4] rounded-xl overflow-hidden relative bg-[#1E1E2E]">
-                 <img src={avatar.imageUrl || avatar.foto} alt={avatar.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-               </div>
-               <div>
-                 <h4 className="font-bold text-white text-sm truncate">{avatar.nome}</h4>
-                 <p className="text-xs text-zinc-500">{avatar.categoria}</p>
-               </div>
-               <button 
-                 onClick={() => {
-                   localStorage.setItem('viralseller_avatar_pre', JSON.stringify(avatar));
-                   if(onNavigate) onNavigate('/produtos');
-                 }}
-                 className="w-full py-2 bg-[#1E1E2E] hover:bg-[#FE2C55] text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
-               >
-                 Usar Avatar
-               </button>
-             </div>
-           ))}
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setReadyFilter('TODOS')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${readyFilter === 'TODOS' ? 'bg-[#FE2C55] text-white' : 'bg-[#1E1E2E] text-[#8888AA] hover:text-white'}`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setReadyFilter('FEMININO')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${readyFilter === 'FEMININO' ? 'bg-[#FE2C55] text-white' : 'bg-[#1E1E2E] text-[#8888AA] hover:text-white'}`}
+            >
+              Feminino
+            </button>
+            <button
+              onClick={() => setReadyFilter('MASCULINO')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${readyFilter === 'MASCULINO' ? 'bg-[#FE2C55] text-white' : 'bg-[#1E1E2E] text-[#8888AA] hover:text-white'}`}
+            >
+              Masculino
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {AVATARS_PRESETS.filter(a => readyFilter === 'TODOS' || a.gender === readyFilter).map(avatar => (
+              <div key={avatar.id} className="bg-[#050508] border border-[#1E1E2E] p-3 rounded-2xl flex flex-col gap-3 group relative overflow-hidden">
+                <div className="aspect-[3/4] rounded-xl overflow-hidden relative bg-[#1E1E2E]">
+                  <img src={avatar.imageUrl || (avatar as any).foto} alt={avatar.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-white text-sm truncate">{avatar.name}</h4>
+                  <p className="text-[10px] text-[#FE2C55] font-mono mt-1 font-bold">Ref: {avatar.name}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    localStorage.setItem('viralseller_avatar_pre', JSON.stringify(avatar));
+                    if(onNavigate) onNavigate('/produtos');
+                  }}
+                  className="w-full py-2 bg-[#1E1E2E] hover:bg-[#FE2C55] text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  Usar Avatar
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       ) : activeSubTab === 'library' ? (
         <>
