@@ -1318,6 +1318,7 @@ export default function App() {
                     onAddProduct={handleAddTrendingProduct}
                     onRefresh={refreshFullState}
                     initialMovementId={initialMovementId}
+                    userRole={profile.role}
                   />
                 )}
 

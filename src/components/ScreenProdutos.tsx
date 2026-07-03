@@ -43,6 +43,8 @@ import ProductImage from './ProductImage';
 import { AVATARS_PRESETS, AvatarPreset } from '../data/avatares';
 import { SCENARIOS_PRESETS, CURATED_SCENARIOS_PRESETS, ScenarioPreset, CuratedScenarioPreset } from '../data/cenarios';
 import { MOVEMENTS_PRESETS, MovementPreset } from '../data/prompts';
+import { getPromptPorMovimento } from '../data/promptsMovimento';
+import { MODOS_GERACAO } from '../data/modosGeracao';
 
 
 const PROMPT_CENARIO_PRONTO_FIXO = `Use the first image ONLY as an environment + pose reference.
@@ -150,6 +152,7 @@ interface ScreenProdutosProps {
   onAddProduct: (prod: any) => void;
   onRefresh?: () => void;
   initialMovementId?: string | null;
+  userRole?: string;
 }
 
 interface AvatarCardProps {
@@ -560,121 +563,35 @@ interface InteractionCardProps {
   };
   isSelected: boolean;
   onSelect: () => void;
-  isLarge?: boolean;
   key?: any;
 }
 
-function InteractionCard({ inter, isSelected, onSelect, isLarge }: InteractionCardProps) {
-  const [copied, setCopied] = useState(false);
-  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
-
-  const media = {
-    imageUrl: (inter as any).imageUrl || INTERACTION_MEDIA_MAP[inter.id]?.imageUrl || 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400',
-    videoUrl: (inter as any).videoUrl || INTERACTION_MEDIA_MAP[inter.id]?.videoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-small-cosmetic-bottle-41598-large.mp4',
-    category: INTERACTION_MEDIA_MAP[inter.id]?.category || 'COMPLETADO',
-    format: INTERACTION_MEDIA_MAP[inter.id]?.format || 'Video'
-  };
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      videoRef.current.play().catch(() => {});
-    }
-  }, [videoRef, media.videoUrl, isInView]);
-
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(inter.englishText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+function InteractionCard({ inter, isSelected, onSelect }: InteractionCardProps) {
+  const badgeText = INTERACTION_MEDIA_MAP[inter.id]?.category || 'VIDEO';
 
   return (
     <div
-      ref={containerRef}
       onClick={onSelect}
-      className={`group relative flex ${isLarge ? 'flex-col h-44 sm:h-auto sm:aspect-[9/16]' : 'flex-row sm:flex-col h-20 sm:h-auto sm:aspect-[9/16]'} justify-start sm:justify-between rounded-2xl sm:rounded-3xl overflow-hidden border bg-[#050508] transition-all duration-100 ease-out active:scale-95 cursor-pointer select-none w-full ${
+      className={`group relative flex flex-col justify-start rounded-2xl overflow-hidden border bg-[#050508] transition-all duration-200 ease-out active:scale-95 cursor-pointer select-none w-full p-4 space-y-3 ${
         isSelected
-          ? 'border-[#FE2C55] shadow-[0_0_20px_rgba(254,44,85,0.25)] scale-[0.99] ring-1 ring-[#FE2C55]'
-          : 'border-[#1E1E2E] hover:border-[#FE2C55]/50 hover:scale-[1.02] shadow-lg hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]'
+          ? 'border-[#FE2C55] shadow-[0_0_15px_rgba(254,44,85,0.20)] bg-[#FE2C55]/5'
+          : 'border-[#1E1E2E] hover:border-[#FE2C55]/50 bg-[#0B0B11]'
       }`}
     >
-      {/* Absolute top section: Badges (Desktop Only) */}
-      <div className="hidden sm:flex absolute top-3 left-3 right-3 z-20 flex-wrap gap-1.5 items-center">
-        {/* Format Badge (Video) */}
-        <span className="backdrop-blur-md bg-black/55 text-[9px] font-extrabold uppercase tracking-widest text-[#25F4EE] px-2 py-1 rounded-xl border border-[#25F4EE]/25 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#25F4EE] animate-pulse" />
-          {media.format}
+      <div className="flex items-center justify-between">
+        <span className="backdrop-blur-md bg-black/55 text-[9px] font-extrabold uppercase tracking-widest text-[#25F4EE] px-2 py-1 rounded-md border border-[#25F4EE]/25 flex items-center gap-1">
+          {badgeText}
         </span>
-        
-        {/* Secondary Category Badge */}
-        <span className="backdrop-blur-md bg-black/60 text-[9px] font-black uppercase tracking-widest text-[#F0F0FF] px-2 py-1 rounded-xl border border-white/10">
-          {media.category}
-        </span>
-      </div>
-
-      {/* Selected indicator overlay */}
-      {isSelected && (
-        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-30 w-5 h-5 rounded-full bg-[#FE2C55] flex items-center justify-center border border-white/20 shadow-md">
-          <Check className="w-3 h-3 text-white stroke-[3.5]" />
-        </div>
-      )}
-
-      {/* Media container: Image or Video */}
-      <div className={`relative ${isLarge ? 'w-full h-24 sm:h-full sm:absolute' : 'w-20 sm:w-full h-full sm:absolute'} sm:inset-0 z-0 overflow-hidden bg-zinc-950 shrink-0`}>
-        {media.videoUrl ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            poster={media.imageUrl}
-            className="w-full h-full object-cover"
-            onLoadedData={(e) => {
-              e.currentTarget.play().catch(() => {});
-            }}
-          >
-            <source src={media.videoUrl} type="video/mp4" />
-          </video>
-        ) : (
-          <img
-            src={media.imageUrl}
-            alt={inter.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            referrerPolicy="no-referrer"
-          />
-        )}
-
-        {/* Ambient Dark Gradient Bottom Vignette */}
-        <div className="hidden sm:block absolute inset-0 bg-gradient-to-t from-black/100 via-black/55 to-black/5 z-10 pointer-events-none" />
-      </div>
-
-      {/* Details Box and Action Buttons */}
-      <div className={`relative z-20 ${isLarge ? 'p-2.5 sm:p-5' : 'p-3 sm:p-5'} flex-1 flex flex-col justify-center sm:justify-end gap-1 sm:gap-3 font-sans min-w-0`}>
-        {/* Mobile-only Badges */}
-        <div className="flex sm:hidden items-center gap-1.5 mb-0.5">
-          <span className="bg-cyan-500/10 text-[9px] font-extrabold uppercase tracking-widest text-[#25F4EE] px-1.5 py-0.5 rounded-md border border-[#25F4EE]/25 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#25F4EE] animate-pulse" />
-            {media.format}
-          </span>
-          <span className="bg-white/5 text-[9px] font-black uppercase tracking-widest text-[#F0F0FF] px-1.5 py-0.5 rounded-md border border-white/10">
-            {media.category}
-          </span>
-        </div>
-
-        <div className="space-y-0.5 sm:space-y-1">
-          <div className={`flex ${isLarge ? 'flex' : 'hidden sm:flex'} items-center gap-1.5 mb-1`}>
-            <span className="text-[10px] font-black uppercase text-cyan-400">Opção {inter.id}</span>
+        {isSelected && (
+          <div className="w-5 h-5 rounded-full bg-[#FE2C55] flex items-center justify-center border border-white/20">
+            <Check className="w-3 h-3 text-white stroke-[3.5]" />
           </div>
-          <h4 className="text-xs sm:text-sm font-black text-white tracking-wide leading-tight group-hover:text-[#FE2C55] transition-colors">
-            {inter.name}
-          </h4>
-          <p className="text-[10px] sm:text-xs font-medium text-[#8888AA] line-clamp-1 sm:line-clamp-2 leading-relaxed">
-            {inter.description}
-          </p>
-        </div>
+        )}
+      </div>
+
+      <div>
+        <h4 className="text-base font-bold text-white leading-tight group-hover:text-[#FE2C55] transition-colors">{inter.name}</h4>
+        <p className="text-sm text-zinc-400 mt-1.5 leading-snug">{inter.description}</p>
       </div>
     </div>
   );
@@ -778,7 +695,8 @@ export default function ScreenProdutos({
   trendingProducts,
   onAddProduct,
   onRefresh,
-  initialMovementId
+  initialMovementId,
+  userRole
 }: ScreenProdutosProps) {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -789,13 +707,83 @@ export default function ScreenProdutos({
   }, []);
 
   const [items, setItems] = useState<any[]>([]);
+  const [isKalodataMode, setIsKalodataMode] = useState<boolean>(false);
+  const [kalodataItems, setKalodataItems] = useState<any[]>([]);
+  const [manualItems, setManualItems] = useState<any[]>([]);
+
+  const loadManualProducts = () => {
+    fetch('/api/produtos-manuais')
+      .then(res => res.json())
+      .then(data => {
+        const activeOnly = data.filter((p: any) => p.ativo !== false);
+        const enriched = activeOnly.map(enrichProduct).filter(Boolean);
+        setManualItems(enriched);
+        setItems(enriched);
+      })
+      .catch(err => console.error("Erro ao carregar produtos manuais:", err));
+  };
 
   useEffect(() => {
-    fetch('/api/produtos')
-      .then(res => res.json())
-      .then(data => setItems(data.map(enrichProduct).filter(Boolean)))
-      .catch(err => console.error("Erro ao carregar produtos:", err));
+    loadManualProducts();
   }, []);
+
+  // Kalodata Search States
+  const [showKalodataOverlay, setShowKalodataOverlay] = useState<boolean>(false);
+  const [kalodataSearchPhase, setKalodataSearchPhase] = useState<number>(1);
+  const [kalodataCounter, setKalodataCounter] = useState<number>(0);
+  const [kalodataTotal, setKalodataTotal] = useState<number>(0);
+
+  const triggerKalodataSearch = async () => {
+    setShowKalodataOverlay(true);
+    setKalodataSearchPhase(1);
+    setKalodataCounter(0);
+    setKalodataTotal(0);
+
+    let fetchedData: any[] = [];
+    try {
+      const res = await fetch('/api/produtos');
+      const data = await res.json();
+      fetchedData = data.map(enrichProduct).filter(Boolean);
+      setKalodataTotal(fetchedData.length);
+    } catch (e) {
+      console.error(e);
+      setKalodataTotal(12);
+    }
+
+    // Phase 1 (0-1s): "🔗 Conectando ao Kalodata..."
+    setTimeout(() => {
+      setKalodataSearchPhase(2);
+    }, 1000);
+
+    // Phase 2 (1-2s): "📊 Analisando produtos em alta no Brasil..."
+    setTimeout(() => {
+      setKalodataSearchPhase(3);
+    }, 2000);
+
+    // Phase 3 (2-3s): "🔥 Identificando tendências TikTok Shop..."
+    setTimeout(() => {
+      setKalodataSearchPhase(4);
+      const total = fetchedData.length || 12;
+      let current = 0;
+      const interval = setInterval(() => {
+        if (current < total) {
+          current += Math.ceil(total / 10) || 1;
+          if (current > total) current = total;
+          setKalodataCounter(current);
+        } else {
+          clearInterval(interval);
+        }
+      }, 80);
+    }, 3000);
+
+    // Phase 4 complete (4s)
+    setTimeout(() => {
+      setItems(fetchedData);
+      setKalodataItems(fetchedData);
+      setIsKalodataMode(true);
+      setShowKalodataOverlay(false);
+    }, 4000);
+  };
 
   const [now, setNow] = useState<Date>(new Date());
 
@@ -956,6 +944,17 @@ export default function ScreenProdutos({
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
 
+  // States for Admin Add Product Modal
+  const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+  const [adminProdName, setAdminProdName] = useState('');
+  const [adminProdImgUrl, setAdminProdImgUrl] = useState('');
+  const [adminProdPrice, setAdminProdPrice] = useState('');
+  const [adminProdCommission, setAdminProdCommission] = useState('');
+  const [adminProdAffiliateLink, setAdminProdAffiliateLink] = useState('');
+  const [adminProdTrend, setAdminProdTrend] = useState('');
+  const [adminProdNiche, setAdminProdNiche] = useState('Beleza e Cosméticos');
+  const [adminAddLoading, setAdminAddLoading] = useState(false);
+
   // Form states for custom add
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -1099,8 +1098,8 @@ export default function ScreenProdutos({
   const [skippingMessage, setSkippingMessage] = useState<string | null>(null);
   const [shouldAutoGenerate, setShouldAutoGenerate] = useState(false);
 // Curated scenarios states
-  const [isCuratedScenario, setIsCuratedScenario] = useState<boolean>(false);
-  const [activeScenarioCategory, setActiveScenarioCategory] = useState<'standard' | 'curated'>('standard');
+  const [isCuratedScenario, setIsCuratedScenario] = useState<boolean>(true);
+  const [activeScenarioCategory, setActiveScenarioCategory] = useState<'standard' | 'curated'>('curated');
 
   // Multi-take scripts states
   const [numTakes, setNumTakes] = useState<number>(1);
@@ -1297,6 +1296,7 @@ export default function ScreenProdutos({
       const res = await fetch('/api/produtos');
       const data = await res.json();
       setItems(data.map(enrichProduct).filter(Boolean));
+      setIsKalodataMode(true);
       setSyncTikTokSuccess(true);
       setSyncTikTokMessage('Sincronizado em tempo real! Os produtos mais vendidos do TikTok Shop Brasil foram carregados.');
       setTimeout(() => {
@@ -1815,25 +1815,14 @@ These instructions are written assuming the user has uploaded their chosen produ
 Strictly maintain 100% visual consistency. Each image must be a complete, independent photo occupying the full frame.`;
       }
 
-      videoPromptMain = `Generate a commercial video with dynamic camera movement in 9:16 vertical format. Reference Image: Prompt 1 images.
-- Dynamic Camera Movement: ${movementSelectedDesc}
-- Interaction & Action: ${engInteraction}
-- Scenario & Pose: ${engScenario} (${engPose})
-- Audio/Speech: ${videoAudioState}
-Smooth cinematic camera stabilization, high-end commercial grading, precise and fluid motion transition, zero overlays.`;
+      const movementSelected = { id: movementSelectedMode };
+      const promptMovimento = getPromptPorMovimento(movementSelected.id);
 
-      formatted = `---
-✅ RESUMO DAS SUAS ESCOLHAS DO VIRALSELLER (MODO MOVIMENTO):
-- Produto: ${activeWizardProduct.name}
-- Avatar Escolhido: ${selectedAvatarId ? allAvatars.find(a => a.id === selectedAvatarId)?.name || 'Customizado' : 'Customizado'}
-- Cenário Escolhido: ${isCuratedScenario ? (CURATED_SCENARIOS_PRESETS.find(s => s.id === selectedScenarioId)?.name || 'Pronto') : (selectedScenarioId ? allScenarios.find(s => s.id === selectedScenarioId)?.name || 'Customizado' : 'Customizado')}
-- Movimento Escolhido: ${matchedMovement?.name || movementSelectedMode}
-- Estado de Áudio: ${hasSpeech ? `Ativado (Locução em PT-BR, ${numTakes} take(s))` : 'Silencioso (Sem Fala)'}
-
----
-Your detailed prompt in English for HighViralSeller Studies.
-
-${videoPromptMain}${annexInstructions}`;
+      if (promptMovimento && promptMovimento.trim() !== "") {
+        formatted = promptMovimento;
+      } else {
+        formatted = "⚠️ Prompt para este movimento ainda não configurado. Entre em contato com o suporte.";
+      }
     }
 
     setGeneratedImagePrompt(imgPrompt);
@@ -2166,6 +2155,35 @@ ${videoPromptMain}${annexInstructions}`;
 
                   {/* Action Ribbon & Filters */}
                   <div className="flex flex-wrap items-center gap-2">
+                    {userRole === 'admin' && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddAdminModal(true)}
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black rounded-xl flex items-center gap-1 transition"
+                      >
+                        <Plus className="w-3 h-3" /> Adicionar Produto
+                      </button>
+                    )}
+                    {isKalodataMode ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsKalodataMode(false);
+                          loadManualProducts();
+                        }}
+                        className="px-3.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-black rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-lg shadow-blue-500/5"
+                      >
+                        ← Voltar aos Meus Produtos
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={triggerKalodataSearch}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-95 text-white text-xs font-black rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-lg shadow-blue-500/20 animate-pulse"
+                      >
+                        🔍 Buscar no Kalodata
+                      </button>
+                    )}
                     <button
                       type="button"
                       disabled={isSyncingTikTok}
@@ -2389,6 +2407,19 @@ ${videoPromptMain}${annexInstructions}`;
                           <span className="text-[9px] bg-[#FE2C55]/15 border border-[#FE2C55]/25 text-[#FE2C55] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
                             Comissão: {commission}
                           </span>
+                          {isKalodataMode ? (
+                            <span className="text-[9px] bg-blue-500/20 border border-blue-500/30 text-blue-400 font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md flex items-center gap-1">
+                              ⚡ KALODATA
+                            </span>
+                          ) : (
+                            prod.tendencia && (
+                              <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
+                                {prod.tendencia === 'em_alta' ? '🔥 Em Alta' :
+                                 prod.tendencia === 'muito_quente' ? '🔥🔥 Muito Quente' :
+                                 prod.tendencia === 'viral' ? '🔥🔥🔥 Viral' : '⭐ Destaque'}
+                              </span>
+                            )
+                          )}
                         </div>
 
                         {/* Image Container with Aspect Ratio */}
@@ -2604,22 +2635,6 @@ ${videoPromptMain}${annexInstructions}`;
                         <button
                           type="button"
                           onClick={() => {
-                            setActiveScenarioCategory('standard');
-                            setIsCuratedScenario(false);
-                            setSelectedScenarioId('');
-                            setScenarioText('');
-                          }}
-                          className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${
-                            activeScenarioCategory === 'standard'
-                              ? 'bg-[#FE2C55]/10 border-[#FE2C55]/20 text-white'
-                              : 'text-[#8888AA] hover:text-white'
-                          }`}
-                        >
-                          Cenários Comuns
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
                             setActiveScenarioCategory('curated');
                             setIsCuratedScenario(true);
                             setSelectedScenarioId('');
@@ -2632,6 +2647,22 @@ ${videoPromptMain}${annexInstructions}`;
                           }`}
                         >
                           Cenários Prontos (Estúdio)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveScenarioCategory('standard');
+                            setIsCuratedScenario(false);
+                            setSelectedScenarioId('');
+                            setScenarioText('');
+                          }}
+                          className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${
+                            activeScenarioCategory === 'standard'
+                              ? 'bg-[#FE2C55]/10 border-[#FE2C55]/20 text-white'
+                              : 'text-[#8888AA] hover:text-white'
+                          }`}
+                        >
+                          Cenários Comuns
                         </button>
                       </div>
 
@@ -3063,22 +3094,6 @@ ${videoPromptMain}${annexInstructions}`;
                         <button
                           type="button"
                           onClick={() => {
-                            setActiveScenarioCategory('standard');
-                            setIsCuratedScenario(false);
-                            setSelectedScenarioId('');
-                            setScenarioText('');
-                          }}
-                          className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${
-                            activeScenarioCategory === 'standard'
-                              ? 'bg-cyan-500/10 border-cyan-500/20 text-white'
-                              : 'text-[#8888AA] hover:text-white'
-                          }`}
-                        >
-                          Cenários Comuns
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
                             setActiveScenarioCategory('curated');
                             setIsCuratedScenario(true);
                             setSelectedScenarioId('');
@@ -3091,6 +3106,22 @@ ${videoPromptMain}${annexInstructions}`;
                           }`}
                         >
                           Cenários Prontos (Estúdio)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveScenarioCategory('standard');
+                            setIsCuratedScenario(false);
+                            setSelectedScenarioId('');
+                            setScenarioText('');
+                          }}
+                          className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${
+                            activeScenarioCategory === 'standard'
+                              ? 'bg-cyan-500/10 border-cyan-500/20 text-white'
+                              : 'text-[#8888AA] hover:text-white'
+                          }`}
+                        >
+                          Cenários Comuns
                         </button>
                       </div>
 
@@ -3150,7 +3181,7 @@ ${videoPromptMain}${annexInstructions}`;
                         <p className="text-xs text-[#8888AA]">Selecione a ação base que define focar no produto ou na proximidade visual de acordo com sua estratégia de vendas.</p>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-h-[550px] sm:max-h-[680px] overflow-y-auto pr-1 pt-2">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[550px] sm:max-h-[680px] overflow-y-auto pr-1 pt-2">
                         {allInteractions.map((inter) => {
                           const isSelected = interactionSelected === inter.id;
                           return (
@@ -3230,7 +3261,7 @@ ${videoPromptMain}${annexInstructions}`;
                         <p className="text-xs text-[#8888AA]">Selecione a ação base que define focar no produto ou na proximidade visual de acordo com sua estratégia de vendas.</p>
                       </div>
 
-                      <div className={`grid ${videoMode === 'MOVIMENTO' ? 'grid-cols-2 lg:grid-cols-4 gap-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6'} ${videoMode === 'MOVIMENTO' ? 'max-h-none' : 'max-h-[220px] xs:max-h-[280px] sm:max-h-[350px]'} overflow-y-auto pr-1 pt-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent`}>
+                      <div className={`grid grid-cols-2 md:grid-cols-3 gap-4 ${videoMode === 'MOVIMENTO' ? 'max-h-none' : 'max-h-[220px] xs:max-h-[280px] sm:max-h-[350px]'} overflow-y-auto pr-1 pt-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent`}>
                         {allInteractions.map((inter) => {
                           const isSelected = interactionSelected === inter.id;
                           return (
@@ -3238,7 +3269,6 @@ ${videoPromptMain}${annexInstructions}`;
                               key={inter.id}
                               inter={inter}
                               isSelected={isSelected}
-                              isLarge={videoMode === 'MOVIMENTO'}
                               onSelect={() => {
                                 setInteractionSelected(inter.id);
                                 setInteractionText(inter.description);
@@ -3276,22 +3306,6 @@ ${videoPromptMain}${annexInstructions}`;
                         <button
                           type="button"
                           onClick={() => {
-                            setActiveScenarioCategory('standard');
-                            setIsCuratedScenario(false);
-                            setSelectedScenarioId('');
-                            setScenarioText('');
-                          }}
-                          className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center flex items-center justify-center gap-2 ${
-                            activeScenarioCategory === 'standard'
-                              ? 'bg-[#FE2C55]/10 border border-[#FE2C55]/30 text-white shadow-md'
-                              : 'text-[#8888AA] hover:text-white'
-                          }`}
-                        >
-                          <Sparkles className="w-4 h-4 text-cyan-400" /> Cenários Padrão
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
                             setActiveScenarioCategory('curated');
                             setIsCuratedScenario(true);
                             setSelectedScenarioId('');
@@ -3304,6 +3318,22 @@ ${videoPromptMain}${annexInstructions}`;
                           }`}
                         >
                           <Zap className="w-4 h-4 text-[#FE2C55]" /> Cenários Prontos
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveScenarioCategory('standard');
+                            setIsCuratedScenario(false);
+                            setSelectedScenarioId('');
+                            setScenarioText('');
+                          }}
+                          className={`flex-1 py-2 text-xs font-black rounded-lg transition-all text-center flex items-center justify-center gap-2 ${
+                            activeScenarioCategory === 'standard'
+                              ? 'bg-[#FE2C55]/10 border border-[#FE2C55]/30 text-white shadow-md'
+                              : 'text-[#8888AA] hover:text-white'
+                          }`}
+                        >
+                          <Sparkles className="w-4 h-4 text-cyan-400" /> Cenários Padrão
                         </button>
                       </div>
 
@@ -4474,6 +4504,102 @@ ${videoPromptMain}${annexInstructions}`;
           </div>
         )}
 
+        {showAddAdminModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+            <div className="bg-[#030307] border border-emerald-500/30 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl shadow-emerald-500/10 flex flex-col relative p-5 sm:p-6 space-y-4 my-8">
+              <div className="flex items-center justify-between border-b border-[#1E1E2E] pb-3">
+                <div className="flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-emerald-400" />
+                  <h3 className="text-base sm:text-lg font-black text-white tracking-wide">
+                    Adicionar Produto (Admin)
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setShowAddAdminModal(false)}
+                  className="w-8 h-8 rounded-full bg-[#1E1E2E] flex items-center justify-center text-[#8888AA] hover:text-white transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                setAdminAddLoading(true);
+                try {
+                  const payload = {
+                    name: adminProdName,
+                    price: adminProdPrice,
+                    trend: adminProdTrend,
+                    tiktok_link: adminProdAffiliateLink,
+                    // If backend accepts it:
+                    niche: adminProdNiche,
+                    image_url: adminProdImgUrl,
+                    commission: adminProdCommission,
+                  };
+                  const res = await fetch('/api/admin/produtos-alta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                  });
+                  if (res.ok) {
+                    if (onRefresh) onRefresh();
+                    setShowAddAdminModal(false);
+                    setAdminProdName('');
+                    setAdminProdPrice('');
+                    setAdminProdTrend('');
+                    setAdminProdAffiliateLink('');
+                    setAdminProdImgUrl('');
+                    setAdminProdCommission('');
+                  } else {
+                    alert('Erro ao adicionar produto');
+                  }
+                } catch (err) {
+                  alert('Erro de rede');
+                } finally {
+                  setAdminAddLoading(false);
+                }
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Nome</label>
+                    <input type="text" required value={adminProdName} onChange={e => setAdminProdName(e.target.value)} className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-emerald-500 outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Preço</label>
+                    <input type="text" required value={adminProdPrice} onChange={e => setAdminProdPrice(e.target.value)} placeholder="Ex: R$ 97,00" className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-emerald-500 outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">URL da Foto</label>
+                    <input type="url" value={adminProdImgUrl} onChange={e => setAdminProdImgUrl(e.target.value)} className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-emerald-500 outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Nicho / Categoria</label>
+                    <input type="text" value={adminProdNiche} onChange={e => setAdminProdNiche(e.target.value)} className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-emerald-500 outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Tendência</label>
+                    <input type="text" required value={adminProdTrend} onChange={e => setAdminProdTrend(e.target.value)} placeholder="Ex: +30%" className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-emerald-500 outline-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Comissão</label>
+                    <input type="text" value={adminProdCommission} onChange={e => setAdminProdCommission(e.target.value)} placeholder="Ex: 10%" className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-emerald-500 outline-none" />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider">Link Afiliado (TikTok/etc)</label>
+                    <input type="text" required value={adminProdAffiliateLink} onChange={e => setAdminProdAffiliateLink(e.target.value)} className="w-full bg-[#111118] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-emerald-500 outline-none" />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end pt-2">
+                  <button type="submit" disabled={adminAddLoading} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-[11px] font-black rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
+                    {adminAddLoading ? 'Adicionando...' : 'Salvar Produto'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {showVideoModal && selectedVideoProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
             <div className="bg-[#030307] border border-[#1E1E2E] hover:border-[#FE2C55]/20 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl shadow-[#FE2C55]/10 flex flex-col relative p-5 sm:p-6 space-y-5 my-8">
@@ -4503,107 +4629,75 @@ ${videoPromptMain}${annexInstructions}`;
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                  {/* UGC Card */}
-                  <div className="bg-[#0B0B11] border border-[#1E1E2E] hover:border-[#FE2C55]/30 rounded-2xl p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:shadow-lg hover:shadow-[#FE2C55]/5 group">
-                    <div className="space-y-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-[#FE2C55]/10 border border-[#FE2C55]/20 flex items-center justify-center text-[#FE2C55]">
-                        <User className="w-5 h-5" />
-                      </div>
-                      <h5 className="text-sm font-black text-white uppercase tracking-wider group-hover:text-[#FE2C55] transition">Modo UGC</h5>
-                      <p className="text-xs text-[#8888AA] leading-relaxed">Formatado como um criador orgânico em selfie vertical (9:16). O avatar fala diretamente para a câmera expressando sentimentos e roteiros estruturados.</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const prod = selectedVideoProduct as any;
-                        setVideoMode('UGC');
-                        setActiveWizardProduct(prod);
-                        setAvatarText('');
-                        setScenarioText('');
-                        setMovementText('');
-                        setHasSpeech(true);
-                        const safeDesc = (prod.description || 'é sensacional').toLowerCase().replace(/\.$/, '');
-                        const defaultScript = `Olha esse produto incrível! O ${prod.nome || prod.name || 'Produto'} é perfeito porque ${safeDesc}. Garanta já o seu no link!`;
-                        setSpeechScript(defaultScript);
-                        setTakeTexts([defaultScript, '', '', '', '']);
-                        
-                        setInteractionSelected('L'); // UGC (Criador Orgânico)
-                        setInteractionText('📱 Celular vertical (9:16) com expressões reais, cenários domésticos e movimentos nativos virais.');
-                        setWizardStep(2);
-                        setShowVideoModal(false);
-                      }}
-                      className="w-full py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-xs uppercase tracking-wider rounded-xl transition"
-                    >
-                      Selecionar UGC
-                    </button>
-                  </div>
+                  {MODOS_GERACAO.map((modo) => {
+                    const isUGC = modo.id === 'ugc';
+                    const isPOV = modo.id === 'pov';
+                    const isMov = modo.id === 'movimento';
 
-                  {/* POV Card */}
-                  <div className="bg-[#0B0B11] border border-[#1E1E2E] hover:border-purple-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5 group">
-                    <div className="space-y-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                        <Tv className="w-5 h-5" />
-                      </div>
-                      <h5 className="text-sm font-black text-white uppercase tracking-wider group-hover:text-purple-400 transition">Modo POV</h5>
-                      <p className="text-xs text-[#8888AA] leading-relaxed">Foque 100% no produto sob a perspectiva de primeira pessoa (POV). Mãos humanas realistas manipulam o item mostrando texturas e acabamento.</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const prod = selectedVideoProduct as any;
-                        setVideoMode('POV');
-                        setActiveWizardProduct(prod);
-                        setAvatarText('');
-                        setScenarioText('');
-                        setMovementText('');
-                        setHasSpeech(true);
-                        const safeDesc = (prod.description || 'é sensacional').toLowerCase().replace(/\.$/, '');
-                        const defaultScript = `Olha esse produto incrível! O ${prod.nome || prod.name || 'Produto'} é perfeito porque ${safeDesc}. Garanta já o seu no link!`;
-                        setSpeechScript(defaultScript);
-                        setTakeTexts([defaultScript, '', '', '', '']);
-                        
-                        setInteractionSelected('E'); // POV: Mãos usando e testando
-                        setInteractionText('Primeira pessoa (POV), apenas as mãos aparecem interagindo com o produto em câmera lenta (sem rosto/avatar).');
-                        setWizardStep(2);
-                        setShowVideoModal(false);
-                      }}
-                      className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition"
-                    >
-                      Selecionar POV
-                    </button>
-                  </div>
+                    let colorTheme = isUGC ? 'text-[#FE2C55] hover:border-[#FE2C55]/30' : isPOV ? 'text-purple-400 hover:border-purple-500/30' : 'text-cyan-400 hover:border-cyan-500/30';
+                    let bgTheme = isUGC ? 'bg-[#FE2C55]/10 border-[#FE2C55]/20' : isPOV ? 'bg-purple-500/10 border-purple-500/20' : 'bg-cyan-500/10 border-cyan-500/20';
 
-                  {/* Movement Card */}
-                  <div className="bg-[#0B0B11] border border-[#1E1E2E] hover:border-cyan-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-4 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/5 group">
-                    <div className="space-y-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                        <Zap className="w-5 h-5" />
+                    return (
+                      <div
+                        key={modo.id}
+                        onClick={() => {
+                          const prod = selectedVideoProduct as any;
+                          setVideoMode(isUGC ? 'UGC' : isPOV ? 'POV' : 'MOVIMENTO');
+                          setActiveWizardProduct(prod);
+                          setAvatarText('');
+                          setScenarioText('');
+                          setMovementText('');
+                          setHasSpeech(true);
+                          const safeDesc = (prod.description || 'é sensacional').toLowerCase().replace(/\.$/, '');
+                          const defaultScript = `Olha esse produto incrível! O ${prod.nome || prod.name || 'Produto'} é perfeito porque ${safeDesc}. Garanta já o seu no link!`;
+                          setSpeechScript(defaultScript);
+                          setTakeTexts([defaultScript, '', '', '', '']);
+                          
+                          if (isUGC) {
+                            setInteractionSelected('L');
+                            setInteractionText('📱 Celular vertical (9:16) com expressões reais, cenários domésticos e movimentos nativos virais.');
+                          } else if (isPOV) {
+                            setInteractionSelected('E');
+                            setInteractionText('Primeira pessoa (POV), apenas as mãos aparecem interagindo com o produto em câmera lenta (sem rosto/avatar).');
+                          } else {
+                            setInteractionSelected('B');
+                            setInteractionText('O avatar segura e manipula o objeto para as lentes, com foco nas texturas.');
+                          }
+                          setWizardStep(2);
+                          setShowVideoModal(false);
+                        }}
+                        className={`bg-[#0B0B11] border border-[#1E1E2E] rounded-2xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg cursor-pointer group ${colorTheme}`}
+                      >
+                        <div className="relative w-full aspect-[9/16] bg-[#030307]">
+                          {modo.videoUrl ? (
+                            <video
+                              src={modo.videoUrl}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#1E1E2E] font-bold text-[10px] uppercase tracking-wider">
+                              Preview Indisponível
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+                          
+                          <div className="absolute bottom-0 left-0 w-full p-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-8 h-8 rounded-lg ${bgTheme} flex items-center justify-center`}>
+                                <span className="text-sm">{modo.icone}</span>
+                              </div>
+                              <h5 className={`text-sm font-black uppercase tracking-wider transition ${colorTheme}`}>{modo.nome}</h5>
+                            </div>
+                            <p className="text-xs text-[#8888AA] leading-relaxed drop-shadow-md">{modo.descricao}</p>
+                          </div>
+                        </div>
                       </div>
-                      <h5 className="text-sm font-black text-white uppercase tracking-wider group-hover:text-cyan-400 transition">Modo Movimento</h5>
-                      <p className="text-xs text-[#8888AA] leading-relaxed">Focado em transições de câmera e produto. Exiba rotações, aproximações rápidas (zoom-in) e movimentos de estúdio fotorrealistas.</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const prod = selectedVideoProduct as any;
-                        setVideoMode('MOVIMENTO');
-                        setActiveWizardProduct(prod);
-                        setAvatarText('');
-                        setScenarioText('');
-                        setMovementText('');
-                        setHasSpeech(true);
-                        const safeDesc = (prod.description || 'é sensacional').toLowerCase().replace(/\.$/, '');
-                        const defaultScript = `Olha esse produto incrível! O ${prod.nome || prod.name || 'Produto'} é perfeito porque ${safeDesc}. Garanta já o seu no link!`;
-                        setSpeechScript(defaultScript);
-                        setTakeTexts([defaultScript, '', '', '', '']);
-                        
-                        setInteractionSelected('B'); // Segurando o produto
-                        setInteractionText('O avatar segura e manipula o objeto para as lentes, com foco nas texturas.');
-                        setWizardStep(2);
-                        setShowVideoModal(false);
-                      }}
-                      className="w-full py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition"
-                    >
-                      Selecionar Movimento
-                    </button>
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -4670,6 +4764,61 @@ ${videoPromptMain}${annexInstructions}`;
               >
                 <Check className="w-5 h-5" /> Usar este Movimento
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Fullscreen Kalodata Search Overlay */}
+        {showKalodataOverlay && (
+          <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md flex flex-col justify-center items-center text-white font-sans p-6 animate-fade-in">
+            <div className="w-full max-w-md text-center space-y-8">
+              {/* Pulsing Kalodata Logo icon */}
+              <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-400 p-0.5 animate-bounce" style={{ animationDuration: '3s' }}>
+                  <div className="w-full h-full bg-[#0B0B11] rounded-[14px] flex flex-col items-center justify-center">
+                    <span className="text-xl font-black text-white tracking-tighter">Kalo</span>
+                    <span className="text-[10px] font-black uppercase text-cyan-400 tracking-widest mt-0.5">data</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Message and Phase Progression */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-black text-white tracking-wide transition-all duration-300">
+                  {kalodataSearchPhase === 1 && "🔗 Conectando ao Kalodata..."}
+                  {kalodataSearchPhase === 2 && "📊 Analisando produtos em alta no Brasil..."}
+                  {kalodataSearchPhase === 3 && "🔥 Identificando tendências TikTok Shop..."}
+                  {kalodataSearchPhase === 4 && `✅ ${kalodataCounter} produtos sincronizados!`}
+                </h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  {kalodataSearchPhase === 1 && "Estabelecendo handshake seguro com servidores do Kalodata BR..."}
+                  {kalodataSearchPhase === 2 && "Varrendo banco de dados do TikTok Shop para identificar produtos quentes..."}
+                  {kalodataSearchPhase === 3 && "Calculando velocidade de vendas e engajamento viral..."}
+                  {kalodataSearchPhase === 4 && "Tudo pronto! Carregando feed de produtos de alta conversão..."}
+                </p>
+              </div>
+
+              {/* Progress Bar Container */}
+              <div className="space-y-2">
+                <div className="w-full bg-[#1E1E2E] h-2.5 rounded-full overflow-hidden border border-zinc-800/80 p-[2px]">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: 
+                        kalodataSearchPhase === 1 ? '25%' :
+                        kalodataSearchPhase === 2 ? '50%' :
+                        kalodataSearchPhase === 3 ? '75%' : '100%'
+                    }}
+                  />
+                </div>
+                
+                {/* Counter indicator */}
+                <div className="flex justify-between items-center text-[11px] font-mono text-zinc-500">
+                  <span>Sincronizando...</span>
+                  <span className="text-cyan-400 font-bold">{kalodataCounter} / {kalodataTotal}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}

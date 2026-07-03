@@ -44,7 +44,7 @@ app.use((req, res, next) => {
         ...dbState._profileFallback, 
         email: userEmail, 
         id: userId || `temp-${Date.now()}`,
-        role: (cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com") ? "admin" : "client"
+        role: (cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com" || cleanEmail === "viralseller@gmail.com") ? "admin" : "client"
       };
     }
   }
@@ -127,6 +127,8 @@ console.log("[Boot] process.cwd():", process.cwd());
 
 // In-Memory Database for SaaS Experience
 const dbState = {
+  produtos_alta: [],
+  produtos_manuais: [],
   _profileFallback: {
     id: "user-123",
     name: "Gestão Pro SaaS",
@@ -155,6 +157,28 @@ const dbState = {
       this._profileFallback = val;
     }
   },
+  coupons: [
+    {
+      id: "coup-1",
+      codigo: "VIRAL40",
+      admin_id: "admin-1",
+      tipo: "indicacao",
+      kit_premium_entregue: false,
+      ativo: true,
+      created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString()
+    }
+  ],
+  sysAdmins: [
+    {
+      id: "admin-1",
+      nome: "Admin Principal",
+      email: "gestaoprosaas@gmail.com",
+      checkout_url: "https://pay.applyfy.com/checkout/123",
+      is_associado: false,
+      status: true,
+      created_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString()
+    }
+  ],
   profiles: [
     {
       id: "user-123",
@@ -1269,7 +1293,7 @@ app.post("/api/profile/sync", (req, res) => {
   }
 
   const cleanEmail = email.trim().toLowerCase();
-  const isEmailAdmin = cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com";
+  const isEmailAdmin = cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com" || cleanEmail === "viralseller@gmail.com";
 
   // Create or find profile
   let userProf = dbState.profiles.find(u => u.id === id);
@@ -1348,13 +1372,13 @@ app.post("/api/profile", async (req, res) => {
   if (email) {
     dbState.profile.email = email;
     const cleanEmail = email.trim().toLowerCase();
-    if (cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com") {
+    if (cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com" || cleanEmail === "viralseller@gmail.com") {
       dbState.profile.role = "admin";
     }
   }
   if (role) {
     const currentEmail = (dbState.profile.email || "").trim().toLowerCase();
-    const isEmailAdmin = currentEmail === "gestaoprosaas@gmail.com" || currentEmail === "admin@gestaoprosaas.com";
+    const isEmailAdmin = currentEmail === "gestaoprosaas@gmail.com" || currentEmail === "admin@gestaoprosaas.com" || currentEmail === "viralseller@gmail.com";
     dbState.profile.role = (role === "admin" && isEmailAdmin) ? "admin" : "client";
   }
   if (applyfy_starter_url !== undefined) dbState.profile.applyfy_starter_url = applyfy_starter_url;
@@ -1370,13 +1394,13 @@ app.post("/api/profile", async (req, res) => {
     if (email) {
       dbState.profiles[uIndex].email = email;
       const cleanEmail = email.trim().toLowerCase();
-      if (cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com") {
+      if (cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com" || cleanEmail === "viralseller@gmail.com") {
         dbState.profiles[uIndex].role = "admin";
       }
     }
     if (role) {
       const cleanEmail = (dbState.profiles[uIndex].email || "").trim().toLowerCase();
-      const isEmailAdmin = cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com";
+      const isEmailAdmin = cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com" || cleanEmail === "viralseller@gmail.com";
       dbState.profiles[uIndex].role = (role === "admin" && isEmailAdmin) ? "admin" : "client";
     }
     if (applyfy_starter_url !== undefined) (dbState.profiles[uIndex] as any).applyfy_starter_url = applyfy_starter_url;
@@ -1662,6 +1686,24 @@ async function syncFromSupabase(key: string) {
       if (!error && data && data.length > 0) {
         dbState.videos = data;
       }
+    } else if (key === "produtos_manuais") {
+      const { data, error } = await supabase.from("produtos_manuais").select("*");
+      if (!error && data) {
+        dbState.produtos_manuais = data;
+      }
+    } else if (key === "produtos_alta") {
+      const { data, error } = await supabase.from("trending_products").select("*").eq("is_featured", true);
+      if (!error && data) {
+        dbState.produtos_alta = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: item.description || "",
+          trend: item.trend_reason || "",
+          tiktok_link: item.affiliate_links?.tiktok || ""
+        }));
+      } else if (error) {
+        console.warn("[Supabase Read Error for produtos_alta from trending_products]:", error);
+      }
     }
   } catch (err) {
     console.warn(`[Supabase Read Error for ${key}]:`, err);
@@ -1675,32 +1717,54 @@ async function syncWriteToSupabase(key: string, data: any, action: "insert" | "u
     let tableName = key;
     if (key === "profile" || key === "profiles") {
       tableName = "profiles";
-    } else if (key === "trending_products" || key === "products") {
+    } else if (key === "trending_products" || key === "products" || key === "produtos_alta") {
       tableName = "trending_products";
     }
 
     if (action === "insert") {
-      const payload = { ...data };
-      if (key === "trending_products" || key === "products") {
+      let payload = { ...data };
+      if (key === "produtos_alta") {
+        payload = {
+          name: data.name,
+          description: data.price || "",
+          niche: "Geral",
+          image_url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=300",
+          opportunity_score: 95,
+          competition_level: "média",
+          trend_reason: data.trend || "",
+          affiliate_links: JSON.stringify({ tiktok: data.tiktok_link }),
+          is_featured: true,
+          created_at: new Date().toISOString()
+        } as any;
+      } else if (key === "trending_products" || key === "products") {
         if (payload.affiliate_links && typeof payload.affiliate_links !== "string") {
           payload.affiliate_links = JSON.stringify(payload.affiliate_links);
         }
       }
       await supabase.from(tableName).insert([payload]);
     } else if (action === "update") {
-      const payload = { ...data };
-      if (key === "trending_products" || key === "products") {
+      let payload = { ...data };
+      if (key === "produtos_alta") {
+        payload = {
+          name: data.name,
+          description: data.price || "",
+          trend_reason: data.trend || "",
+          affiliate_links: JSON.stringify({ tiktok: data.tiktok_link }),
+          is_featured: true
+        } as any;
+      } else if (key === "trending_products" || key === "products") {
         if (payload.affiliate_links && typeof payload.affiliate_links !== "string") {
           payload.affiliate_links = JSON.stringify(payload.affiliate_links);
         }
       }
-      const filterId = idValue || payload.id;
+      const filterId = idValue || data?.id || payload.id;
       if (filterId) {
         await supabase.from(tableName).update(payload).eq("id", filterId);
       }
     } else if (action === "delete") {
-      if (idValue) {
-        await supabase.from(tableName).delete().eq("id", idValue);
+      const filterId = idValue || data?.id;
+      if (filterId) {
+        await supabase.from(tableName).delete().eq("id", filterId);
       }
     }
   } catch (err) {
@@ -1710,7 +1774,7 @@ async function syncWriteToSupabase(key: string, data: any, action: "insert" | "u
 
 
 // GET Trending Products (supporting both alias /api/trending-products and standard /api/products, with live TikTok Shop integration)
-app.get("/api/produtos", (req, res) => {
+app.get("/api/produtos", async (req, res) => {
   try {
     const possiblePaths = [
       path.join(process.cwd(), 'src', 'data', 'produtos.json'),
@@ -1724,9 +1788,26 @@ app.get("/api/produtos", (req, res) => {
       return res.status(404).json({ error: 'produtos.json não encontrado' });
     }
     
+    await syncFromSupabase("produtos_alta");
     console.log('[produtos] Lendo de:', filePath);
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    res.json(data);
+    
+    // Inject Custom Produtos em Alta
+    const customProds = (dbState.produtos_alta || []).map((p: any) => ({
+      id: p.id,
+      nome: p.name,
+      preco: p.price.replace('R$', '').trim(),
+      imagem: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=300",
+      tags: [p.trend, "Destaque"],
+      niche: "Geral",
+      rating: "5.0",
+      afiliado: {
+        link: p.tiktok_link,
+        comissao: "Personalizada"
+      }
+    }));
+    
+    res.json([...customProds, ...data]);
   } catch (error) {
     console.error('[produtos] Erro:', error);
     res.status(500).json({ error: String(error) });
@@ -3553,7 +3634,7 @@ app.use("/api/admin", (req, res, next) => {
     const userId = Array.isArray(userIdRaw) ? userIdRaw[0] : (userIdRaw || "");
 
     const cleanEmail = userEmail.trim().toLowerCase();
-    const isAdminEmail = cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com";
+    const isAdminEmail = cleanEmail === "gestaoprosaas@gmail.com" || cleanEmail === "admin@gestaoprosaas.com" || cleanEmail === "viralseller@gmail.com";
 
     // Secure, dynamic, stateless promotion for our main administrative email
     if (isAdminEmail) {
@@ -3576,6 +3657,131 @@ app.use("/api/admin", (req, res, next) => {
       message: err.message || String(err) 
     });
   }
+});
+
+// GET Admin Sys-Admins
+app.get("/api/admin/sys-admins", (req, res) => {
+  res.json(dbState.sysAdmins || []);
+});
+
+// POST Admin Sys-Admins
+app.post("/api/admin/sys-admins", (req, res) => {
+  const { nome, email, checkout_url, is_associado, status } = req.body;
+  if (!nome || !email || !checkout_url) return res.status(400).json({ error: "Faltam dados." });
+  
+  if (!dbState.sysAdmins) dbState.sysAdmins = [];
+  
+  const newAdmin = {
+    id: "admin-" + Math.random().toString(36).substr(2, 9),
+    nome,
+    email,
+    checkout_url,
+    is_associado: is_associado || false,
+    status: status !== undefined ? status : true,
+    created_at: new Date().toISOString()
+  };
+  
+  dbState.sysAdmins.push(newAdmin);
+  res.json({ success: true, admin: newAdmin });
+});
+
+// PUT Admin Sys-Admins
+app.put("/api/admin/sys-admins/:id", (req, res) => {
+  const { id } = req.params;
+  const { nome, email, checkout_url, is_associado, status } = req.body;
+  
+  const adminIndex = dbState.sysAdmins?.findIndex((a: any) => a.id === id);
+  if (adminIndex === undefined || adminIndex === -1) return res.status(404).json({ error: "Admin não encontrado" });
+  
+  dbState.sysAdmins[adminIndex] = {
+    ...dbState.sysAdmins[adminIndex],
+    nome: nome || dbState.sysAdmins[adminIndex].nome,
+    email: email || dbState.sysAdmins[adminIndex].email,
+    checkout_url: checkout_url || dbState.sysAdmins[adminIndex].checkout_url,
+    is_associado: is_associado !== undefined ? is_associado : dbState.sysAdmins[adminIndex].is_associado,
+    status: status !== undefined ? status : dbState.sysAdmins[adminIndex].status
+  };
+  
+  res.json({ success: true, admin: dbState.sysAdmins[adminIndex] });
+});
+
+// DELETE Admin Sys-Admins
+app.delete("/api/admin/sys-admins/:id", (req, res) => {
+  const { id } = req.params;
+  const adminIndex = dbState.sysAdmins?.findIndex((a: any) => a.id === id);
+  if (adminIndex !== undefined && adminIndex !== -1) {
+    dbState.sysAdmins.splice(adminIndex, 1);
+  }
+  res.json({ success: true });
+});
+
+// GET Admin Coupons
+app.get("/api/admin/coupons", (req, res) => {
+  res.json(dbState.coupons || []);
+});
+
+// POST Admin Coupons
+app.post("/api/admin/coupons", (req, res) => {
+  const { codigo, admin_id, tipo, ativo } = req.body;
+  if (!codigo || !admin_id) return res.status(400).json({ error: "Faltam dados." });
+  
+  if (!dbState.coupons) dbState.coupons = [];
+  
+  const newCoupon = {
+    id: "coup-" + Math.random().toString(36).substr(2, 9),
+    codigo: codigo.toUpperCase().trim(),
+    admin_id,
+    tipo: tipo || 'presente',
+    kit_premium_entregue: false,
+    ativo: ativo !== undefined ? ativo : true,
+    created_at: new Date().toISOString()
+  };
+  
+  dbState.coupons.push(newCoupon);
+  res.json({ success: true, cupom: newCoupon });
+});
+
+// DELETE Admin Coupons
+app.delete("/api/admin/coupons/:id", (req, res) => {
+  const { id } = req.params;
+  const index = dbState.coupons?.findIndex((c: any) => c.id === id);
+  if (index !== undefined && index !== -1) {
+    dbState.coupons.splice(index, 1);
+  }
+  res.json({ success: true });
+});
+
+// POST Check Coupon - Public
+app.post("/api/check-coupon", (req, res) => {
+  const { codigo } = req.body;
+  if (!codigo) {
+    return res.status(400).json({ error: "Código do cupom é obrigatório." });
+  }
+  
+  const cleanCode = codigo.toUpperCase().trim();
+  const coupons = dbState.coupons || [];
+  const coupon = coupons.find((c: any) => c.codigo.toUpperCase() === cleanCode && c.ativo);
+  
+  if (!coupon) {
+    return res.status(404).json({ error: "Cupom inválido ou expirado." });
+  }
+
+  const sysAdmins = dbState.sysAdmins || [];
+  const admin = sysAdmins.find((a: any) => a.id === coupon.admin_id && a.status);
+
+  if (!admin || !admin.checkout_url) {
+    return res.status(404).json({ error: "Cupom inválido no momento." });
+  }
+
+  res.json({
+    success: true,
+    cupom: {
+      id: coupon.id,
+      codigo: coupon.codigo,
+      tipo: coupon.tipo,
+      admin_checkout_url: admin.checkout_url
+    }
+  });
 });
 
 // GET Admin Users
@@ -4374,9 +4580,154 @@ app.delete("/api/viral-hooks/:id", (req, res) => {
   res.json({ success: true, deleted });
 });
 
-// GET Audit Logs
-app.get("/api/audit-logs", (req, res) => {
-  res.json(dbState.audit_logs);
+// ---------------------------------------------------------
+
+// PRODUTOS EM ALTA (ADMIN)
+
+// ---------------------------------------------------------
+
+app.get("/api/admin/produtos-alta", async (req, res) => {
+  await syncFromSupabase("produtos_alta");
+  res.json(dbState.produtos_alta || []);
+});
+
+app.post("/api/admin/produtos-alta", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Apenas administradores podem cadastrar." });
+  }
+
+  const { name, price, trend, tiktok_link } = req.body;
+  if (!name || !tiktok_link) {
+    return res.status(400).json({ error: "Nome e link são obrigatórios." });
+  }
+
+  const newProduto = {
+    id: `prod-alta-${Date.now()}`,
+    name,
+    price: price || "",
+    trend: trend || "",
+    tiktok_link,
+    created_at: new Date().toISOString()
+  };
+
+  if (!dbState.produtos_alta) {
+    dbState.produtos_alta = [];
+  }
+  dbState.produtos_alta.push(newProduto);
+  await syncWriteToSupabase("produtos_alta", newProduto, "insert");
+  logAudit("CRIAR_PRODUTO_ALTA_ADMIN", "produtos_alta", { id: newProduto.id, name });
+  res.json(newProduto);
+});
+
+app.delete("/api/admin/produtos-alta/:id", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Apenas administradores podem deletar." });
+  }
+
+  const { id } = req.params;
+  if (!dbState.produtos_alta) {
+    dbState.produtos_alta = [];
+  }
+  const index = dbState.produtos_alta.findIndex((p: any) => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Produto não encontrado." });
+  }
+
+  const deleted = dbState.produtos_alta.splice(index, 1)[0];
+  await syncWriteToSupabase("produtos_alta", { id }, "delete");
+  logAudit("DELETAR_PRODUTO_ALTA_ADMIN", "produtos_alta", { id, name: deleted.name });
+  res.json({ success: true, deleted });
+});
+
+
+// ---------------------------------------------------------
+// PRODUTOS MANUAIS (SUPABASE)
+// ---------------------------------------------------------
+app.get("/api/produtos-manuais", async (req, res) => {
+  await syncFromSupabase("produtos_manuais");
+  res.json(dbState.produtos_manuais || []);
+});
+
+app.post("/api/produtos-manuais", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Apenas administradores podem cadastrar." });
+  }
+
+  const { nome, imagem_url, preco, comissao, link_afiliado, tendencia, nicho, ativo } = req.body;
+  if (!nome || !preco || !comissao) {
+    return res.status(400).json({ error: "Nome, preço e comissão são obrigatórios." });
+  }
+
+  const newProduto = {
+    id: `prod-${Date.now()}`,
+    nome,
+    imagem_url: imagem_url || "",
+    preco,
+    comissao,
+    link_afiliado: link_afiliado || "",
+    tendencia: tendencia || "em_alta",
+    nicho: nicho || "Geral",
+    ativo: ativo ?? true,
+    criado_em: new Date().toISOString(),
+    atualizado_em: new Date().toISOString()
+  };
+
+  dbState.produtos_manuais.push(newProduto);
+  await syncWriteToSupabase("produtos_manuais", newProduto, "insert");
+  logAudit("CRIAR_PRODUTO_MANUAL_ADMIN", "produtos_manuais", { id: newProduto.id, nome });
+  res.json(newProduto);
+});
+
+app.put("/api/produtos-manuais/:id", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Apenas administradores podem atualizar." });
+  }
+
+  const { id } = req.params;
+  const index = dbState.produtos_manuais.findIndex(p => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Produto não encontrado." });
+  }
+
+  const updates = req.body;
+  const current = dbState.produtos_manuais[index];
+
+  if (updates.nome !== undefined) current.nome = updates.nome;
+  if (updates.imagem_url !== undefined) current.imagem_url = updates.imagem_url;
+  if (updates.preco !== undefined) current.preco = updates.preco;
+  if (updates.comissao !== undefined) current.comissao = updates.comissao;
+  if (updates.link_afiliado !== undefined) current.link_afiliado = updates.link_afiliado;
+  if (updates.tendencia !== undefined) current.tendencia = updates.tendencia;
+  if (updates.nicho !== undefined) current.nicho = updates.nicho;
+  if (updates.ativo !== undefined) current.ativo = !!updates.ativo;
+  
+  current.atualizado_em = new Date().toISOString();
+
+  await syncWriteToSupabase("produtos_manuais", current, "update");
+  logAudit("ATUALIZAR_PRODUTO_MANUAL_ADMIN", "produtos_manuais", { id, nome: current.nome });
+  res.json(current);
+});
+
+app.delete("/api/produtos-manuais/:id", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Apenas administradores podem deletar." });
+  }
+
+  const { id } = req.params;
+  const index = dbState.produtos_manuais.findIndex(p => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Produto não encontrado." });
+  }
+
+  const deleted = dbState.produtos_manuais.splice(index, 1)[0];
+  await syncWriteToSupabase("produtos_manuais", { id }, "delete");
+  logAudit("DELETAR_PRODUTO_MANUAL_ADMIN", "produtos_manuais", { id, nome: deleted.nome });
+  res.json({ success: true, deleted });
 });
 
 // ---------------------------------------------------------
