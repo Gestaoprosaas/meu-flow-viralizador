@@ -17,6 +17,7 @@ import {
   LogOut,
   Zap,
   ShieldAlert,
+  Shield,
   Lock,
   Gift,
   FolderOpen,
@@ -42,6 +43,7 @@ import ScreenViralizarPerfil from './components/ScreenViralizarPerfil';
 import ScreenUpgrade from './components/ScreenUpgrade';
 import ScreenAdmin from './components/ScreenAdmin';
 import ScreenIndiqueAmigos from './components/ScreenIndiqueAmigos';
+import ScreenSeguranca from './components/ScreenSeguranca';
 import TemplateGallery from './components/TemplateGallery';
 import { getSupabase } from './lib/supabaseClient';
 
@@ -846,7 +848,8 @@ export default function App() {
     { name: 'Produtos em Alta', icon: FolderOpen, path: '/produtos' },
     { name: 'Avatar Studio', icon: Users, path: '/influenciadores' },
     { name: 'Viralizar Perfil', icon: Flame, path: '/afiliados' },
-    { name: 'Movimentos', icon: Sparkles, path: '/movimentos' }
+    { name: 'Movimentos', icon: Sparkles, path: '/movimentos' },
+    { name: 'Segurança', icon: Shield, path: '/seguranca' }
   ];
 
   // Helper to determine if a menu path is gated for the user's active plan
@@ -1316,6 +1319,10 @@ export default function App() {
                     onRefresh={refreshFullState}
                     initialMovementId={initialMovementId}
                   />
+                )}
+
+                {currentPath === '/seguranca' && (
+                  <ScreenSeguranca onNavigate={handleNavigate} />
                 )}
 
                 {currentPath === '/treinamentos' && (

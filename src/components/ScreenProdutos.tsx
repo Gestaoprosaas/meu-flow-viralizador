@@ -847,7 +847,7 @@ export default function ScreenProdutos({
         return `Selfie photo of a creator avatar. Avatar description: ${avatarPreset}. Location background: ${scenarioPreset}. The avatar is smiling naturally, holding the ${pName} in their hands. 9:16 vertical aspect ratio, realistic texture, cinematic lighting.`;
       } else {
         const avatarName = allAvatars.find(a => a.id === ugcAvatarId)?.name || 'Giovanna';
-        return `HighFlow Studies video. 9:16 vertical ratio. Animated avatar ${avatarName} speaking directly to the camera with perfect mouth synchronization, reciting the script: "${ugcScriptText}". High retention UGC review, commercial grading, detailed clothing consistency.`;
+        return `HighViralSeller Studies video. 9:16 vertical ratio. Animated avatar ${avatarName} speaking directly to the camera with perfect mouth synchronization, reciting the script: "${ugcScriptText}". High retention UGC review, commercial grading, detailed clothing consistency.`;
       }
     } else if (videoModalMode === 'POV') {
       return `Vídeo POV (primeira pessoa) em 9:16 sobre uma ${povScenario}. Mãos ${povHands} seguram o ${pName}, girando-o para mostrar detalhes. A iluminação é natural e limpa. Um narrador descreve o produto com estilo ${povStyle}.`;
@@ -1049,7 +1049,7 @@ export default function ScreenProdutos({
 
       setAnalysisSuccess(true);
       
-      // Auto-load raw properties inside the Google Flow wizard
+      // Auto-load raw properties inside the ViralSeller wizard
       setTimeout(() => {
         if (analyzedProduct.speech_script) {
           setSpeechScript(analyzedProduct.speech_script);
@@ -1080,7 +1080,7 @@ export default function ScreenProdutos({
     }
   };
 
-  // Step-by-Step Interactive Wizard State (for AI Studios Flow prompt generator)
+  // Step-by-Step Interactive Wizard State (for ViralSeller prompt generator)
   const [activeWizardProduct, setActiveWizardProduct] = useState<TrendingProduct | null>(null);
   const [wizardStep, setWizardStep] = useState<number>(1); // Start directly at Step 1 (Product selection)
   const [videoMode, setVideoMode] = useState<'UGC' | 'POV' | 'MOVIMENTO'>('UGC');
@@ -1096,8 +1096,9 @@ export default function ScreenProdutos({
 
   // Movimento Specific State Variables
   const [movementSelectedMode, setMovementSelectedMode] = useState<string>(MOVEMENTS_PRESETS[0]?.id || 'cta_beijo');
-
-  // Curated scenarios states
+  const [skippingMessage, setSkippingMessage] = useState<string | null>(null);
+  const [shouldAutoGenerate, setShouldAutoGenerate] = useState(false);
+// Curated scenarios states
   const [isCuratedScenario, setIsCuratedScenario] = useState<boolean>(false);
   const [activeScenarioCategory, setActiveScenarioCategory] = useState<'standard' | 'curated'>('standard');
 
@@ -1230,6 +1231,44 @@ export default function ScreenProdutos({
     }
   }, []);
 
+  useEffect(() => {
+    if (wizardStep === 2) {
+      const preAvatarStr = localStorage.getItem('viralseller_avatar_pre');
+      if (preAvatarStr) {
+        try {
+          const preAvatar = JSON.parse(preAvatarStr);
+          setSelectedAvatarId(preAvatar.id);
+          setAvatarText(preAvatar.description || '');
+          setSkippingMessage(`✅ Avatar: ${preAvatar.nome} (pré-selecionado)`);
+          localStorage.removeItem('viralseller_avatar_pre');
+          
+          setTimeout(() => {
+            setSkippingMessage(null);
+            setWizardStep(3);
+          }, 1000);
+        } catch (e) {}
+      }
+    }
+
+    if (wizardStep === 5 && videoMode === 'MOVIMENTO') {
+      const preMovStr = localStorage.getItem('viralseller_movimento_pre');
+      if (preMovStr) {
+        try {
+          const preMov = JSON.parse(preMovStr);
+          setMovementSelectedMode(preMov.id);
+          if (preMov.prompt) setMovementText(preMov.prompt);
+          setSkippingMessage(`✅ Movimento: ${preMov.name || 'Personalizado'} (pré-selecionado)`);
+          localStorage.removeItem('viralseller_movimento_pre');
+          
+          setTimeout(() => {
+            setSkippingMessage(null);
+            setShouldAutoGenerate(true);
+          }, 1000);
+        } catch (e) {}
+      }
+    }
+  }, [wizardStep, videoMode]);
+
   // Generation status
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState('');
@@ -1237,7 +1276,7 @@ export default function ScreenProdutos({
   const [copyStatus, setCopyStatus] = useState(false);
   const [copyImageStatus, setCopyImageStatus] = useState(false);
   const [copyVideoStatus, setCopyVideoStatus] = useState(false);
-  const [showFlowModal, setShowFlowModal] = useState(false);
+  const [showViralSellerModal, setShowViralSellerModal] = useState(false);
   const [copiedAvatarLink, setCopiedAvatarLink] = useState(false);
   const [copiedProductLink, setCopiedProductLink] = useState(false);
   const [copiedScenarioLink, setCopiedScenarioLink] = useState(false);
@@ -1289,6 +1328,37 @@ export default function ScreenProdutos({
 
   const handleTriggerVideoGeneration = (product: any) => {
     setSelectedVideoProduct(product);
+
+    const preSelectedMode = localStorage.getItem('viralseller_video_mode');
+    if (preSelectedMode) {
+      setVideoMode(preSelectedMode as any);
+      setActiveWizardProduct(product);
+      setAvatarText('');
+      setScenarioText('');
+      setMovementText('');
+      setHasSpeech(true);
+      const safeDesc = (product.description || 'é sensacional').toLowerCase().replace(/\.$/, '');
+      const defaultScript = `Olha esse produto incrível! O ${product.nome || product.name || 'Produto'} é perfeito porque ${safeDesc}. Garanta já o seu no link!`;
+      setSpeechScript(defaultScript);
+      setTakeTexts([defaultScript, '', '', '', '']);
+      
+      if (preSelectedMode === 'UGC') {
+        setInteractionSelected('L');
+        setInteractionText('📱 Celular vertical (9:16) com expressões reais, cenários domésticos e movimentos nativos virais.');
+      } else if (preSelectedMode === 'POV') {
+        setInteractionSelected('E');
+        setInteractionText('Primeira pessoa (POV), apenas as mãos aparecem interagindo com o produto em câmera lenta (sem rosto/avatar).');
+      } else if (preSelectedMode === 'MOVIMENTO') {
+        setInteractionSelected('B');
+        setInteractionText('O avatar segura e manipula o objeto para as lentes, com foco nas texturas.');
+      }
+      
+      setWizardStep(2);
+      setShowVideoModal(false);
+      localStorage.removeItem('viralseller_video_mode');
+      return;
+    }
+
     setVideoModalMode(null); // first show choices: UGC, POV, Movimento
     setVideoModalStep(1);
     
@@ -1580,11 +1650,11 @@ export default function ScreenProdutos({
       ? `Speech is enabled. Voice settings: Gender=${selectedGender}, Tonality=${voiceTonality}, Energy=${voiceEnergy}, Tone=${voiceTone}. The avatar speaks directly to the camera with perfect mouth-to-audio synchronization, speaking natively in Brazilian Portuguese (PT-BR) and reciting exactly this spoken dialogue: "${aggregatedSpeech}"`
       : `Completely silent. The video will be silent with absolutely no spoken dialogue, speech, or vocal audio.`;
 
-    const annexInstructions = `\n\n📌 **COMO ANEXAR SEUS RECURSOS NO FLOW:**
+    const annexInstructions = `\n\n📌 **COMO ANEXAR SEUS RECURSOS NO VIRALSELLER:**
 1. Baixe as fotos e prompts de apoio acima.
 2. Primeiro, anexe a Foto do seu Produto e a Foto do seu Avatar no seu gerador de imagem na Opção de Referência para gerar 4 fotos exclusivas do avatar segurando o produto real sem nenhuma distorção fictícia.
-3. Em seguida, uploade essas 4 fotos geradas na seção de Frames de Início/Referência do seu gerador de vídeo do AI Flow.
-4. Cole o prompt de vídeo abaixo no prompt do Flow. A IA usará obrigatoriamente as 4 imagens anexas como guias sequenciais de keyframe real para animar com 100% de consistência!`;
+3. Em seguida, uploade essas 4 fotos geradas na seção de Frames de Início/Referência do seu gerador de vídeo do ViralSeller.
+4. Cole o prompt de vídeo abaixo no prompt do ViralSeller. A IA usará obrigatoriamente as 4 imagens anexas como guias sequenciais de keyframe real para animar com 100% de consistência!`;
 
     if (videoMode === 'UGC') {
       const interactionLabels: Record<string, string> = {};
@@ -1613,7 +1683,7 @@ export default function ScreenProdutos({
         imgPrompt = PROMPT_CENARIO_PRONTO_FIXO;
       } else {
         imgPrompt = `Generate separate individual images, each as its own standalone full-frame photo, showing the interaction between the uploaded product image and the uploaded avatar image.
-These instructions are written assuming the user has uploaded their chosen product photo and avatar photo directly into Flow.
+These instructions are written assuming the user has uploaded their chosen product photo and avatar photo directly into ViralSeller.
 - Avatar Selected: ${engAvatar}
 - Scenario Selected: ${engScenario}
 - Pose Selected: ${engPose}
@@ -1629,7 +1699,7 @@ The video must strictly and exclusively maintain fidelity to the visual details 
 Strictly maintain 100% structural and clothing consistency with the reference starting frames. Do not introduce any details, products, avatars, movements, or scenarios that were not explicitly chosen in these steps. No captions, no subtitles, no written text or overlays of any kind on screen, clean commercial video frames only.`;
 
       formatted = `---
-✅ RESUMO DAS SUAS ESCOLHAS DO FLOW (MODO UGC):
+✅ RESUMO DAS SUAS ESCOLHAS DO VIRALSELLER (MODO UGC):
 - Produto: ${activeWizardProduct.name}
 - Enquadramento / Pose: ${poseSelected}
 - Avatar Escolhido: ${selectedAvatarId ? allAvatars.find(a => a.id === selectedAvatarId)?.name || 'Customizado' : 'Customizado'}
@@ -1637,7 +1707,7 @@ Strictly maintain 100% structural and clothing consistency with the reference st
 - Estado de Áudio: ${hasSpeech ? `Ativado (Locução em PT-BR, ${numTakes} take(s))` : 'Silencioso (Sem Fala)'}
 
 ---
-Your detailed prompt in English for HighFlow Studies.
+Your detailed prompt in English for HighViralSeller Studies.
 
 ${videoPromptMain}${annexInstructions}`;
 
@@ -1687,7 +1757,7 @@ Strictly maintain 100% visual and material consistency. Each image must be a com
 Strictly maintain 100% structural consistency with the starting reference frames. Perfect hand interactions, high retention presentation, smooth slow-motion panning camera, clear close-up textures, zero overlays, zero text on screen, clean high-end commercial frames only.`;
 
       formatted = `---
-✅ RESUMO DAS SUAS ESCOLHAS DO FLOW (MODO POV):
+✅ RESUMO DAS SUAS ESCOLHAS DO VIRALSELLER (MODO POV):
 - Produto: ${activeWizardProduct.name}
 - Cenário POV: ${povScenarioSelected}
 - Aparência das Mãos: ${povHandGender} ${povGloveOption === 'com_luva' ? '(Com Luvas)' : `(Pele: ${povSkinColor})`}
@@ -1695,7 +1765,7 @@ Strictly maintain 100% structural consistency with the starting reference frames
 - Estado de Áudio: ${hasSpeech ? `Ativado (Locução em PT-BR, ${numTakes} take(s))` : 'Silencioso (Sem Fala)'}
 
 ---
-Your detailed prompt in English for HighFlow Studies.
+Your detailed prompt in English for HighViralSeller Studies.
 
 ${videoPromptMain}${annexInstructions}`;
 
@@ -1738,7 +1808,7 @@ ${videoPromptMain}${annexInstructions}`;
         imgPrompt = PROMPT_CENARIO_PRONTO_FIXO;
       } else {
         imgPrompt = `Generate separate individual images, each as its own standalone full-frame photo, showing the interaction between the uploaded product image and the uploaded avatar image.
-These instructions are written assuming the user has uploaded their chosen product photo and avatar photo directly into Flow.
+These instructions are written assuming the user has uploaded their chosen product photo and avatar photo directly into ViralSeller.
 - Interaction Selected: ${engInteraction}
 - Scenario Selected: ${engScenario}
 - Pose Selected: ${engPose}
@@ -1753,7 +1823,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
 Smooth cinematic camera stabilization, high-end commercial grading, precise and fluid motion transition, zero overlays.`;
 
       formatted = `---
-✅ RESUMO DAS SUAS ESCOLHAS DO FLOW (MODO MOVIMENTO):
+✅ RESUMO DAS SUAS ESCOLHAS DO VIRALSELLER (MODO MOVIMENTO):
 - Produto: ${activeWizardProduct.name}
 - Avatar Escolhido: ${selectedAvatarId ? allAvatars.find(a => a.id === selectedAvatarId)?.name || 'Customizado' : 'Customizado'}
 - Cenário Escolhido: ${isCuratedScenario ? (CURATED_SCENARIOS_PRESETS.find(s => s.id === selectedScenarioId)?.name || 'Pronto') : (selectedScenarioId ? allScenarios.find(s => s.id === selectedScenarioId)?.name || 'Customizado' : 'Customizado')}
@@ -1761,7 +1831,7 @@ Smooth cinematic camera stabilization, high-end commercial grading, precise and 
 - Estado de Áudio: ${hasSpeech ? `Ativado (Locução em PT-BR, ${numTakes} take(s))` : 'Silencioso (Sem Fala)'}
 
 ---
-Your detailed prompt in English for HighFlow Studies.
+Your detailed prompt in English for HighViralSeller Studies.
 
 ${videoPromptMain}${annexInstructions}`;
     }
@@ -1789,6 +1859,13 @@ ${videoPromptMain}${annexInstructions}`;
     setIsLoadingPrompt(false);
   };
 
+  useEffect(() => {
+    if (shouldAutoGenerate && !isLoadingPrompt) {
+      setShouldAutoGenerate(false);
+      handleGeneratePrompt();
+    }
+  }, [shouldAutoGenerate, isLoadingPrompt]);
+
   const handleCopyPrompt = (type: 'image' | 'video') => {
     if (type === 'image') {
       try {
@@ -1799,8 +1876,8 @@ ${videoPromptMain}${annexInstructions}`;
         console.warn("Erro ao copiar prompt de imagem:", err);
       }
     } else {
-      // Find "Your detailed prompt in English for HighFlow Studies." and copy from there down
-      const splitIndex = generatedPrompt.indexOf("Your detailed prompt in English for HighFlow Studies.");
+      // Find "Your detailed prompt in English for HighViralSeller Studies." and copy from there down
+      const splitIndex = generatedPrompt.indexOf("Your detailed prompt in English for HighViralSeller Studies.");
       let textToCopy = generatedPrompt;
       if (splitIndex !== -1) {
         textToCopy = generatedPrompt.substring(splitIndex).trim();
@@ -2052,6 +2129,34 @@ ${videoPromptMain}${annexInstructions}`;
             {/* STEP 1: PRODUCT SELECTION */}
             {wizardStep === 1 && (
               <div className="space-y-4 sm:space-y-5 animate-fade-in font-sans">
+                
+                {(localStorage.getItem('viralseller_video_mode') || localStorage.getItem('viralseller_avatar_pre')) && (
+                  <div className="mb-4 bg-gradient-to-r from-[#06B6D4]/10 to-[#7C3AED]/10 border border-[#06B6D4]/30 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#06B6D4]/20 flex items-center justify-center text-[#06B6D4]">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-[11px] font-black text-white uppercase tracking-wider">
+                          {localStorage.getItem('viralseller_video_mode') ? `Modo ${localStorage.getItem('viralseller_video_mode')} Pré-selecionado!` : 'Avatar Pré-selecionado!'}
+                        </h4>
+                        <p className="text-[10px] text-[#8888AA]">Clique em "Gerar Vídeo" em qualquer produto abaixo para aplicar.</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem('viralseller_video_mode');
+                        localStorage.removeItem('viralseller_movimento_pre');
+                        localStorage.removeItem('viralseller_avatar_pre');
+                        window.location.reload();
+                      }}
+                      className="px-3 py-1 bg-[#1E1E2E] hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-[10px] font-black rounded-lg transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div className="space-y-1">
                     <span className="text-[10px] text-[#FE2C55] font-black uppercase tracking-widest block">ETAPA 1 — PRODUTO COMERCIAL</span>
@@ -2360,6 +2465,33 @@ ${videoPromptMain}${annexInstructions}`;
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* SKIPPING MESSAGE OVERLAY */}
+            {skippingMessage && (
+              <div className="absolute inset-0 z-50 bg-[#0B0B11]/90 backdrop-blur-sm flex items-center justify-center animate-fade-in rounded-3xl">
+                <div className="bg-[#1E1E2E] border border-green-500/30 text-green-400 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm">
+                  {skippingMessage}
+                </div>
+              </div>
+            )}
+
+            {/* SKIPPING MESSAGE OVERLAY */}
+            {skippingMessage && (
+              <div className="absolute inset-0 z-50 bg-[#0B0B11]/90 backdrop-blur-sm flex items-center justify-center animate-fade-in rounded-3xl">
+                <div className="bg-[#1E1E2E] border border-green-500/30 text-green-400 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm">
+                  {skippingMessage}
+                </div>
+              </div>
+            )}
+
+            {/* SKIPPING MESSAGE OVERLAY */}
+            {skippingMessage && (
+              <div className="absolute inset-0 z-50 bg-[#0B0B11]/90 backdrop-blur-sm flex items-center justify-center animate-fade-in rounded-3xl">
+                <div className="bg-[#1E1E2E] border border-green-500/30 text-green-400 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm">
+                  {skippingMessage}
                 </div>
               </div>
             )}
@@ -3302,7 +3434,7 @@ ${videoPromptMain}${annexInstructions}`;
                       <div className="space-y-1">
                         <span className="text-[10px] text-[#FE2C55] font-black uppercase tracking-widest block">ETAPA 5 — MOVIMENTO</span>
                         <h3 className="text-lg font-black text-white">Escolha o Movimento</h3>
-                        <p className="text-xs text-[#8888AA]">Selecione como o avatar premium do Flow deve interagir e gesticular nos primeiros segundos.</p>
+                        <p className="text-xs text-[#8888AA]">Selecione como o avatar premium do ViralSeller deve interagir e gesticular nos primeiros segundos.</p>
                       </div>
 
                       {/* Movements visuals grid presets list matching photo 3 */}
@@ -3619,7 +3751,7 @@ ${videoPromptMain}${annexInstructions}`;
                   {isLoadingPrompt && (
                     <div className="absolute inset-0 z-20 bg-[#07070C]/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center space-y-3">
                       <RefreshCw className="w-8 h-8 text-[#06B6D4] animate-spin" />
-                      <span className="text-xs font-black text-white uppercase tracking-widest animate-pulse">Recalculando Movimento do Flow...</span>
+                      <span className="text-xs font-black text-white uppercase tracking-widest animate-pulse">Recalculando Movimento do ViralSeller...</span>
                       <span className="text-[10px] text-[#8888AA]">Isso leva apenas alguns instantes</span>
                     </div>
                   )}
@@ -3627,11 +3759,11 @@ ${videoPromptMain}${annexInstructions}`;
                     <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest flex items-center justify-center gap-1">
                       <CheckCircle2 className="w-4 h-4" /> GERAÇÃO COMPLETA COM SUCESSO!
                     </span>
-                    <h3 className="text-xl font-black text-white">Prompt Comercial Pronto para o AI Studios Flow</h3>
-                    <p className="text-xs text-[#8888AA] mt-0.5">Baixe os arquivos de mídia associados e use os prompts abaixo para engrenar seu Flow.</p>
+                    <h3 className="text-xl font-black text-white">Prompt Comercial Pronto para o ViralSeller</h3>
+                    <p className="text-xs text-[#8888AA] mt-0.5">Baixe os arquivos de mídia associados e use os prompts abaixo para engrenar seu ViralSeller.</p>
                   </div>
 
-                  {/* HIGHLY INTERACTIVE AND CONVENIENT BENTO RESOURCE GRID BOX FOR GOOGLE FLOW */}
+                  {/* HIGHLY INTERACTIVE AND CONVENIENT BENTO RESOURCE GRID BOX FOR GOOGLE VIRALSELLER */}
                   <div className={`grid grid-cols-1 ${isCuratedScenario ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 border border-[#1E1E2E] bg-[#111118]/80 p-4 rounded-2xl relative overflow-hidden`}>
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#FE2C55]/5 blur-2xl rounded-full" />
                     
@@ -3639,7 +3771,7 @@ ${videoPromptMain}${annexInstructions}`;
                     <div className={`${isCuratedScenario ? 'md:col-span-4' : 'md:col-span-3'} flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#1E1E2E] pb-2.5 gap-2`}>
                       <div className="flex items-center gap-1.5">
                         <Download className="w-4 h-4 text-[#FE2C55]" />
-                        <span className="text-xs font-black text-white uppercase tracking-wider">Recursos de Apoio do AI Flow</span>
+                        <span className="text-xs font-black text-white uppercase tracking-wider">Recursos de Apoio do ViralSeller</span>
                       </div>
                       
                       <div className="flex items-center gap-2">
@@ -3665,7 +3797,7 @@ ${videoPromptMain}${annexInstructions}`;
                         <div className="flex flex-col items-center justify-center bg-[#111118] p-2.5 rounded-lg border border-dashed border-[#1E1E2E]/60 h-20 text-center">
                           <ArrowUpFromLine className="w-5 h-5 text-[#8888AA] mb-1" />
                           <span className="text-[10px] text-[#8888AA] font-bold leading-tight">Foto Própria do Usuário</span>
-                          <span className="text-[8px] text-[#666688]">Subirá direto no Flow do vídeo</span>
+                          <span className="text-[8px] text-[#666688]">Subirá direto no ViralSeller do vídeo</span>
                         </div>
                       ) : (() => {
                         const avPreset = allAvatars.find(a => a.id === selectedAvatarId);
@@ -3894,7 +4026,7 @@ ${videoPromptMain}${annexInstructions}`;
                       </div>
                       
                       <p className="text-[11px] text-[#8888AA] leading-relaxed">
-                        Baixe as fotos do seu **Avatar** e do seu **Produto** na aba "Recursos de Apoio do AI Flow" acima. Em seguida, anexe ambas como imagens de referência no seu gerador de imagem (como Midjourney ou Stable diffusion) e use o prompt abaixo para gerar <strong className="text-emerald-400">4 Fotos Realistas</strong> do seu avatar segurando e interagindo com o seu produto real, sem inventar designs fictícios!
+                        Baixe as fotos do seu **Avatar** e do seu **Produto** na aba "Recursos de Apoio do ViralSeller" acima. Em seguida, anexe ambas como imagens de referência no seu gerador de imagem (como Midjourney ou Stable diffusion) e use o prompt abaixo para gerar <strong className="text-emerald-400">4 Fotos Realistas</strong> do seu avatar segurando e interagindo com o seu produto real, sem inventar designs fictícios!
                       </p>
 
                       <div className="p-3.5 bg-[#030307]/90 border border-[#1E1E2E] rounded-xl font-mono text-[11px] text-[#A6E22E] overflow-y-auto max-h-[140px] leading-relaxed select-text">
@@ -3925,7 +4057,7 @@ ${videoPromptMain}${annexInstructions}`;
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#7C3AED] text-white text-xs font-black">2</span>
-                          <h4 className="text-sm font-black text-white uppercase tracking-wider">Passo 2: Prompt de Vídeo Completo (HighFlow Studies)</h4>
+                          <h4 className="text-sm font-black text-white uppercase tracking-wider">Passo 2: Prompt de Vídeo Completo (HighViralSeller Studies)</h4>
                         </div>
                         <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 p-1 px-2 rounded-lg font-black uppercase tracking-widest">Sincronização & Movimento</span>
                       </div>
@@ -3967,31 +4099,34 @@ ${videoPromptMain}${annexInstructions}`;
             <div className="border-t border-[#1E1E2E] pt-3 pb-3 sm:pb-0 sm:pt-4 sm:mt-6 mt-auto flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 sticky bottom-0 bg-[#111118] z-40 -mx-4 px-4 sm:-mx-6 sm:px-6 -mb-4 sm:-mb-6 shadow-[0_-10px_30px_rgba(17,17,24,0.9)]">
               
               {/* Back or Prev inside active wizard */}
-              {wizardStep > 2 && wizardStep < 6 ? (
-                <button
-                  type="button"
-                  onClick={() => setWizardStep(wizardStep - 1)}
-                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-black rounded-xl text-[#A0A0C0] hover:text-white flex items-center justify-center gap-1.5 transition-all"
-                >
-                  <ArrowLeft className="w-4 h-4" /> Etapa Anterior
-                </button>
-              ) : wizardStep === 6 ? (
-                <button
-                  type="button"
-                  onClick={handleResetWizard}
-                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#26263B] text-xs font-black rounded-xl text-[#F00050] flex items-center justify-center gap-1.5 transition"
-                >
-                  <RefreshCw className="w-4 h-4" /> Novo Vídeo / Reiniciar
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResetWizard}
-                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-bold rounded-xl text-[#8888AA] hover:text-white flex items-center justify-center"
-                >
-                  Cancelar Assistente
-                </button>
-              )}
+              <div className="flex gap-2">
+                {wizardStep >= 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => setWizardStep(wizardStep - 1)}
+                    className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-black rounded-xl text-[#A0A0C0] hover:text-white flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Etapa Anterior
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResetWizard}
+                    className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-bold rounded-xl text-[#8888AA] hover:text-white flex items-center justify-center"
+                  >
+                    Cancelar Assistente
+                  </button>
+                )}
+                {wizardStep === 6 && (
+                  <button
+                    type="button"
+                    onClick={handleResetWizard}
+                    className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#26263B] text-xs font-black rounded-xl text-[#F00050] flex items-center justify-center gap-1.5 transition"
+                  >
+                    <RefreshCw className="w-4 h-4" /> Novo Vídeo / Reiniciar
+                  </button>
+                )}
+              </div>
 
               {/* Progress or Submit action button */}
               {videoMode === 'UGC' && wizardStep === 2 ? (
@@ -4009,7 +4144,7 @@ ${videoPromptMain}${annexInstructions}`;
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 text-black" />
-                      Gerar Prompt para o AI Flow (UGC)
+                      Gerar Prompt para o ViralSeller (UGC)
                     </>
                   )}
                 </button>
@@ -4049,7 +4184,7 @@ ${videoPromptMain}${annexInstructions}`;
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 text-black" />
-                      Gerar Prompt para o AI Flow
+                      Gerar Prompt para o ViralSeller
                     </>
                   )}
                 </button>
@@ -4061,7 +4196,7 @@ ${videoPromptMain}${annexInstructions}`;
                   className="px-4 py-2 bg-gradient-to-r from-[#FE2C55] to-[#25F4EE] hover:opacity-95 text-black font-black text-xs rounded-xl flex items-center gap-1.5 transition shadow-md shadow-[#FE2C55]/10 active:scale-95 animate-pulse"
                 >
                   <Sparkles className="w-4 h-4 text-black fill-black" />
-                  Ir para o Flow
+                  Ir para o ViralSeller
                 </a>
               )}
 
@@ -4123,7 +4258,7 @@ ${videoPromptMain}${annexInstructions}`;
 
         </div>
 
-        {showFlowModal && (
+        {showViralSellerModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
             <div className="bg-[#030307] border border-[#1E1E2E] hover:border-[#25F4EE]/20 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl shadow-[#FE2C55]/15 flex flex-col relative p-5 sm:p-6 space-y-5 my-8">
               
@@ -4131,10 +4266,10 @@ ${videoPromptMain}${annexInstructions}`;
               <div className="flex items-center justify-between border-b border-[#1E1E2E] pb-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-[#25F4EE]" />
-                  <h3 className="text-base sm:text-lg font-black text-white tracking-wide">Como Gerar seu Vídeo no Flow</h3>
+                  <h3 className="text-base sm:text-lg font-black text-white tracking-wide">Como Gerar seu Vídeo no ViralSeller</h3>
                 </div>
                 <button 
-                  onClick={() => setShowFlowModal(false)}
+                  onClick={() => setShowViralSellerModal(false)}
                   className="w-8 h-8 rounded-full bg-[#1E1E2E] flex items-center justify-center text-[#8888AA] hover:text-white transition"
                 >
                   <X className="w-4 h-4" />
@@ -4146,7 +4281,7 @@ ${videoPromptMain}${annexInstructions}`;
                 <Coins className="w-5 h-5 text-[#FE2C55] shrink-0 mt-0.5" />
                 <div className="text-xs text-zinc-300 leading-relaxed font-semibold">
                   <span className="text-[#FE2C55] font-black uppercase tracking-wider">50 Créditos Diários Disponíveis</span>
-                  <p className="mt-1 font-medium">Ao criar sua conta gratuita no Google Labs Flow, você recebe <strong className="text-white font-black">50 créditos diários gratuitos</strong> para renderizações exclusivas sem qualquer cobrança!</p>
+                  <p className="mt-1 font-medium">Ao criar sua conta gratuita no ViralSeller, você recebe <strong className="text-white font-black">50 créditos diários gratuitos</strong> para renderizações exclusivas sem qualquer cobrança!</p>
                 </div>
               </div>
 
@@ -4175,8 +4310,8 @@ ${videoPromptMain}${annexInstructions}`;
                       2
                     </div>
                     <div className="text-xs text-zinc-300 leading-relaxed">
-                      <strong className="text-white font-bold block mb-0.5">Criar Conta no Flow</strong>
-                      Acesse o site oficial do Google Labs Flow e faça login ou crie sua conta gratuita.
+                      <strong className="text-white font-bold block mb-0.5">Criar Conta no ViralSeller</strong>
+                      Acesse o site oficial do ViralSeller e faça login ou crie sua conta gratuita.
                     </div>
                   </div>
 
@@ -4187,7 +4322,7 @@ ${videoPromptMain}${annexInstructions}`;
                     </div>
                     <div className="text-xs text-zinc-300 leading-relaxed">
                       <strong className="text-white font-bold block mb-0.5">Colar o Prompt</strong>
-                      Na caixa de texto do estúdio do Flow, cole o prompt em inglês. Se você escolheu usar sua foto própria, faça o upload de sua imagem no estúdio (Image-to-Video).
+                      Na caixa de texto do estúdio do ViralSeller, cole o prompt em inglês. Se você escolheu usar sua foto própria, faça o upload de sua imagem no estúdio (Image-to-Video).
                     </div>
                   </div>
 
@@ -4207,8 +4342,8 @@ ${videoPromptMain}${annexInstructions}`;
                       5
                     </div>
                     <div className="text-xs text-zinc-300 leading-relaxed">
-                      <strong className="text-white font-bold block mb-0.5">Baixar o Vídeo do Flow</strong>
-                      Faça o download do arquivo de vídeo renderizado da própria plataforma oficial do Flow.
+                      <strong className="text-white font-bold block mb-0.5">Baixar o Vídeo do ViralSeller</strong>
+                      Faça o download do arquivo de vídeo renderizado da própria plataforma oficial do ViralSeller.
                     </div>
                   </div>
 
@@ -4221,14 +4356,14 @@ ${videoPromptMain}${annexInstructions}`;
                   href="https://labs.google/fx/pt/tools/flow" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  onClick={() => setShowFlowModal(false)}
+                  onClick={() => setShowViralSellerModal(false)}
                   className="w-full py-3 bg-gradient-to-r from-[#06B6D4] via-[#FE2C55] to-[#7C3AED] hover:opacity-95 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-[#FE2C55]/15 transition-all active:scale-[0.98] text-center"
                 >
-                  ACESSAR GOOGLE FLOW AGORA <ExternalLink className="w-4 h-4 text-white" />
+                  ACESSAR GOOGLE VIRALSELLER AGORA <ExternalLink className="w-4 h-4 text-white" />
                 </a>
                 <button 
                   type="button"
-                  onClick={() => setShowFlowModal(false)}
+                  onClick={() => setShowViralSellerModal(false)}
                   className="w-full py-2 bg-[#1E1E2E] hover:bg-[#26263B] text-[#8888AA] hover:text-white font-black text-xs rounded-xl transition"
                 >
                   Voltar ao Assistente
