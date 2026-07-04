@@ -43,7 +43,6 @@ import ProductImage from './ProductImage';
 import { AVATARS_PRESETS, AvatarPreset } from '../data/avatares';
 import { SCENARIOS_PRESETS, CURATED_SCENARIOS_PRESETS, ScenarioPreset, CuratedScenarioPreset } from '../data/cenarios';
 import { MOVEMENTS_PRESETS, MovementPreset } from '../data/prompts';
-import { getPromptPorMovimento } from '../data/promptsMovimento';
 import { MODOS_GERACAO } from '../data/modosGeracao';
 
 
@@ -1120,7 +1119,6 @@ export default function ScreenProdutos({
   const [selectedAvatarId, setSelectedAvatarId] = useState<string>('');
   const [allAvatars, setAllAvatars] = useState<AvatarPreset[]>(AVATARS_PRESETS);
   const [allScenarios, setAllScenarios] = useState<ScenarioPreset[]>(SCENARIOS_PRESETS);
-  const [allMovements, setAllMovements] = useState<MovementPreset[]>(MOVEMENTS_PRESETS);
   const [allInteractions, setAllInteractions] = useState<{ id: string; name: string; description: string; englishText: string }[]>([]);
 
   // Helper to merge loaded lists with default presets to prevent losing custom items or software-updated defaults
@@ -1150,7 +1148,6 @@ export default function ScreenProdutos({
     // Definir presets de forma estática, importando diretamente dos arquivos de dados
     setAllAvatars(AVATARS_PRESETS);
     setAllScenarios(SCENARIOS_PRESETS);
-    setAllMovements(MOVEMENTS_PRESETS);
 
     // Carregar interações configuradas
     const savedInteractions = localStorage.getItem('local_interactions_presets');
@@ -1638,6 +1635,12 @@ export default function ScreenProdutos({
     setGeneratedPrompt('');
     setGeneratedImagePrompt('');
 
+    const targetMovementId = forcedMovementId || (videoMode === 'MOVIMENTO' ? movementSelectedMode : selectedMovementId);
+    if (forcedMovementId) {
+      setMovementSelectedMode(forcedMovementId);
+      setSelectedMovementId(forcedMovementId);
+    }
+
     // Determine values depending on videoMode
     let imgPrompt = '';
     let videoPromptMain = '';
@@ -1792,7 +1795,7 @@ ${videoPromptMain}${annexInstructions}`;
       const engScenario = hasEditedScenario ? finalScenario : (isCuratedScenario ? finalScenario : translateScenario(selectedScenarioId, scenarioText));
       const engInteraction = translateInteraction(interactionLabels[interactionSelected], interactionText);
 
-      const matchedMovement = allMovements.find(m => m.id === movementSelectedMode);
+      const matchedMovement = MOVEMENTS_PRESETS.find(m => m.id === targetMovementId);
       let movementSelectedDesc = 'smooth cinematic camera panning';
       if (matchedMovement) {
         if ((matchedMovement as any).basePrompt) {
@@ -1815,11 +1818,8 @@ These instructions are written assuming the user has uploaded their chosen produ
 Strictly maintain 100% visual consistency. Each image must be a complete, independent photo occupying the full frame.`;
       }
 
-      const movementSelected = { id: movementSelectedMode };
-      const promptMovimento = getPromptPorMovimento(movementSelected.id);
-
-      if (promptMovimento && promptMovimento.trim() !== "") {
-        formatted = promptMovimento;
+      if (matchedMovement && matchedMovement.promptText) {
+        formatted = matchedMovement.promptText;
       } else {
         formatted = "⚠️ Prompt para este movimento ainda não configurado. Entre em contato com o suporte.";
       }
@@ -1865,11 +1865,13 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
         console.warn("Erro ao copiar prompt de imagem:", err);
       }
     } else {
-      // Find "Your detailed prompt in English for HighViralSeller Studies." and copy from there down
-      const splitIndex = generatedPrompt.indexOf("Your detailed prompt in English for HighViralSeller Studies.");
       let textToCopy = generatedPrompt;
-      if (splitIndex !== -1) {
-        textToCopy = generatedPrompt.substring(splitIndex).trim();
+      if (videoMode !== 'MOVIMENTO') {
+        // Find "Your detailed prompt in English for HighViralSeller Studies." and copy from there down
+        const splitIndex = generatedPrompt.indexOf("Your detailed prompt in English for HighViralSeller Studies.");
+        if (splitIndex !== -1) {
+          textToCopy = generatedPrompt.substring(splitIndex).trim();
+        }
       }
       try {
         navigator.clipboard.writeText(textToCopy);
@@ -3441,7 +3443,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           ? 'max-h-[200px] xs:max-h-[240px] sm:max-h-[350px]' 
                           : 'max-h-[380px] xs:max-h-[460px] sm:max-h-[680px]'
                       } overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent`}>
-                        {allMovements.map((mv) => {
+                        {MOVEMENTS_PRESETS.map((mv) => {
                           const isSelected = movementSelectedMode === mv.id;
                           return (
                             <MovementCard
@@ -3469,7 +3471,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
 
                       {/* Movements visuals grid presets list matching photo 3 */}
                       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-h-[260px] xs:max-h-[320px] sm:max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
-                        {allMovements.map((mv) => {
+                        {MOVEMENTS_PRESETS.map((mv) => {
                           const isSelected = selectedMovementId === mv.id;
                           return (
                             <MovementCard
@@ -3975,8 +3977,9 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     {/* Column 3: Movement Prompt */}
                     <div className="bg-[#0A0A0F] border border-[#1E1E2E] p-3 rounded-xl flex flex-col justify-between space-y-2.5">
                       {(() => {
-                        const mvPreset = allMovements.find(m => m.id === selectedMovementId);
-                        const mPrompt = movementText || mvPreset?.promptText || "Showcasing product with engaging facial expressions.";
+                        const activeMovementId = videoMode === 'MOVIMENTO' ? movementSelectedMode : selectedMovementId;
+                        const mvPreset = MOVEMENTS_PRESETS.find(m => m.id === activeMovementId);
+                        const mPrompt = mvPreset?.promptText || (mvPreset as any)?.prompt || movementText || "Showcasing product with engaging facial expressions.";
                         return (
                           <>
                             <div className="flex items-center justify-between">
@@ -4012,21 +4015,21 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                               title="Copiar prompt de movimento"
                             >
                               <Copy className="w-3 h-3" />
-                              {copiedMovementPrompt ? "Copiado!" : "Copiar Movimento"}
+                              {copiedMovementPrompt ? "✅ Copiado!" : "Copiar Movimento"}
                             </button>
-
+                            
                             {/* Trocar Movimento Dropdown Selector */}
                             <div className="pt-2 border-t border-[#1E1E2E]/80 space-y-1">
                               <span className="text-[9px] font-black uppercase text-[#8888AA] flex items-center gap-1">
                                 <Sparkles className="w-2.5 h-2.5 text-purple-400" /> Outro Movimento:
                               </span>
                               <select
-                                value={selectedMovementId}
+                                value={activeMovementId}
                                 disabled={isLoadingPrompt}
                                 onChange={(e) => handleGeneratePrompt(e.target.value)}
                                 className="w-full text-[10px] font-bold text-white bg-[#030307] border border-[#1E1E2E] rounded-lg p-1 px-2 focus:border-purple-500 hover:border-[#333] transition-all outline-none cursor-pointer"
                               >
-                                {allMovements.map((m) => (
+                                {MOVEMENTS_PRESETS.map((m) => (
                                   <option key={m.id} value={m.id} className="bg-[#0A0A0F] text-xs">
                                     {m.name} ({m.type})
                                   </option>
