@@ -146,6 +146,26 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
         video: signupPlan === 'pro' ? 15 : signupPlan === 'starter' ? 3 : 0,
       };
 
+      // Direct upsert to Supabase profiles table
+      const { error: profileError } = await client
+        .from('profiles')
+        .upsert({
+          id: userObj.id,
+          name: regName,
+          email: regEmail,
+          plan: finalPlan,
+          role: 'client',
+          credits_text: finalCredits.text,
+          credits_image: finalCredits.image,
+          credits_video: finalCredits.video,
+          ativo: true,
+          created_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+
+      if (profileError) {
+        console.warn('Profile upsert warning:', profileError.message);
+      }
+
       // Sync profile
       const syncResponse = await fetch('/api/profile/sync', {
         method: 'POST',
@@ -372,7 +392,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
         {/* 6. Pricing Layout */}
         <PricingSection 
-          onSelectPlan={(plan) => handleSelectPlan(plan)} 
+          onSelectPlan={(plan, customUrl) => handleSelectPlan(plan, customUrl)} 
         />
 
         {/* 7. Faq Accordions */}

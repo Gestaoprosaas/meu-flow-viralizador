@@ -104,11 +104,16 @@ async function run() {
 
         const nome = nomeEl.textContent?.trim();
         if (nome) {
+          const fakeId = Math.floor(Math.random() * 1000000000000000000).toString();
+          const linkTikTok = row.querySelector('a[href*="tiktok.com"]')?.getAttribute('href')
+            || row.querySelector('a[href*="shop.tiktok"]')?.getAttribute('href')
+            || `https://shop.tiktok.com/view/product/${fakeId}`;
+
           resultado.push({
             nome,
             preco: precoEl?.textContent?.trim() || '99,90',
             imagem: imageUrl ? (imageUrl.startsWith('http') ? imageUrl : 'https://img.kalocdn.com/' + imageUrl) : '',
-            url: window.location.href || "https://www.kalodata.com/product"
+            url: linkTikTok || "https://www.kalodata.com/product"
           });
         }
       });
@@ -149,25 +154,25 @@ async function run() {
         nome: "Smartwatch Ultra Series 9",
         imagem: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?auto=format&fit=crop&q=80&w=400",
         preco: "R$ 199,90",
-        url: "https://www.kalodata.com/product",
+        url: "https://shop.tiktok.com/view/product/1700000000000000001",
       },
       {
         nome: "Kit Skincare Premium",
         imagem: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
         preco: "R$ 149,90",
-        url: "https://www.kalodata.com/product",
+        url: "https://shop.tiktok.com/view/product/1700000000000000002",
       },
       {
         nome: "Fone de Ouvido Noise Cancelling Pro",
         imagem: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400",
         preco: "R$ 299,90",
-        url: "https://www.kalodata.com/product",
+        url: "https://shop.tiktok.com/view/product/1700000000000000003",
       },
       {
         nome: "Suporte Veicular Magnético com Carregamento",
         imagem: "https://images.unsplash.com/photo-1586105251261-72a756497a11?auto=format&fit=crop&q=80&w=400",
         preco: "R$ 49,90",
-        url: "https://www.kalodata.com/product",
+        url: "https://shop.tiktok.com/view/product/1700000000000000004",
       }
     ];
   }

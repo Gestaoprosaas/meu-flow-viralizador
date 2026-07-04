@@ -127,7 +127,7 @@ console.log("[Boot] process.cwd():", process.cwd());
 
 // In-Memory Database for SaaS Experience
 const dbState = {
-  produtos_alta: [],
+  produtos_alta: [], cupons_admins: [],
   produtos_manuais: [],
   _profileFallback: {
     id: "user-123",
@@ -1569,7 +1569,11 @@ async function syncFromSupabase(key: string) {
       const profileId = dbState.profile?.id || "user-123";
       const { data, error } = await supabase.from("profiles").select("*").eq("id", profileId).single();
       if (!error && data) {
+        const wasAdmin = dbState.profile.role === 'admin';
         dbState.profile = { ...dbState.profile, ...data };
+        if (wasAdmin && (dbState.profile.email === "gestaoprosaas@gmail.com" || dbState.profile.email === "admin@gestaoprosaas.com" || dbState.profile.email === "viralseller@gmail.com")) {
+            dbState.profile.role = 'admin';
+        }
         if (data.plano) dbState.profile.plan = data.plano;
         if (data.creditos !== undefined) (dbState.profile as any).creditos = data.creditos;
         if (data.ativo !== undefined) (dbState.profile as any).ativo = data.ativo;
@@ -4642,12 +4646,148 @@ app.delete("/api/admin/produtos-alta/:id", async (req, res) => {
 });
 
 
+
+// ---------------------------------------------------------
+// CUPONS DE INDICAÇÃO (ADMIN)
+// ---------------------------------------------------------
+app.get("/api/admin/cupons", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Apenas administradores podem ver os cupons." });
+  }
+  await syncFromSupabase("cupons_admins");
+  res.json(dbState.cupons_admins || []);
+});
+
+app.post("/api/admin/cupons", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Apenas administradores podem cadastrar." });
+  }
+  const { admin_email, admin_nome, cupom, checkout_url, desconto_percentual, preco_original, preco_com_desconto } = req.body;
+  if (!admin_email || !admin_nome || !cupom || !checkout_url) {
+    return res.status(400).json({ error: "Dados incompletos." });
+  }
+
+  await syncFromSupabase("cupons_admins");
+  if (!dbState.cupons_admins) dbState.cupons_admins = [];
+
+  if (dbState.cupons_admins.some(c => c.cupom.toUpperCase() === cupom.toUpperCase())) {
+    return res.status(400).json({ error: "Este cupom já existe." });
+  }
+
+  const newCupom = {
+    id: `cupom-${Date.now()}`,
+    admin_id: `admin-${Date.now()}`,
+    admin_email,
+    admin_nome,
+    cupom: cupom.toUpperCase(),
+    checkout_url,
+    desconto_percentual: desconto_percentual || 40,
+    preco_original: preco_original || 497.00,
+    preco_com_desconto: preco_com_desconto || 297.00,
+    ativo: true,
+    usos: 0,
+    criado_em: new Date().toISOString()
+  };
+
+  dbState.cupons_admins.push(newCupom);
+  await syncWriteToSupabase("cupons_admins", newCupom, "insert");
+  logAudit("CRIAR_CUPOM_ADMIN", "cupons_admins", { cupom, admin_email });
+  res.json(newCupom);
+});
+
+app.put("/api/admin/cupons/:id/toggle", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (profile?.role !== "admin") {
+    return res.status(403).json({ error: "Acesso negado." });
+  }
+  const { id } = req.params;
+  await syncFromSupabase("cupons_admins");
+  const index = dbState.cupons_admins.findIndex(c => c.id === id);
+  if (index === -1) return res.status(404).json({ error: "Cupom não encontrado." });
+  
+  dbState.cupons_admins[index].ativo = !dbState.cupons_admins[index].ativo;
+  await syncWriteToSupabase("cupons_admins", dbState.cupons_admins[index], "update");
+  res.json(dbState.cupons_admins[index]);
+});
+
+app.get("/api/admin/meu-cupom", async (req, res) => {
+  const profile = requestProfileStore.getStore();
+  if (!profile || profile.role !== "admin") {
+    return res.status(403).json({ error: "Acesso negado." });
+  }
+  await syncFromSupabase("cupons_admins");
+  const cupom = (dbState.cupons_admins || []).find(c => c.admin_email.toLowerCase() === profile.email.toLowerCase());
+  res.json(cupom || null);
+});
+
+app.get("/api/validar-cupom/:codigo", async (req, res) => {
+  const { codigo } = req.params;
+  await syncFromSupabase("cupons_admins");
+  const cupom = (dbState.cupons_admins || []).find(c => c.cupom.toUpperCase() === codigo.toUpperCase() && c.ativo);
+  
+  if (!cupom) {
+    return res.json({ valido: false });
+  }
+
+  res.json({
+    valido: true,
+    cupom: cupom.cupom,
+    checkout_url: cupom.checkout_url,
+    preco_original: cupom.preco_original,
+    preco_com_desconto: cupom.preco_com_desconto,
+    desconto_percentual: cupom.desconto_percentual,
+    admin_nome: cupom.admin_nome
+  });
+});
+
+app.post("/api/validar-cupom/:codigo/usar", async (req, res) => {
+  const { codigo } = req.params;
+  await syncFromSupabase("cupons_admins");
+  const index = (dbState.cupons_admins || []).findIndex(c => c.cupom.toUpperCase() === codigo.toUpperCase() && c.ativo);
+  
+  if (index !== -1) {
+    dbState.cupons_admins[index].usos += 1;
+    await syncWriteToSupabase("cupons_admins", dbState.cupons_admins[index], "update");
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ success: false });
+  }
+});
+
+
+// ---------------------------------------------------------
+// PROXY DE IMAGEM PARA DOWNLOAD
+// ---------------------------------------------------------
+app.get('/api/proxy-imagem', async (req, res) => {
+  const { url } = req.query;
+  if (!url || typeof url !== 'string') {
+    return res.status(400).json({ error: 'URL inválida' });
+  }
+  try {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', 'attachment; filename="produto.jpg"');
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao baixar imagem' });
+  }
+});
+
 // ---------------------------------------------------------
 // PRODUTOS MANUAIS (SUPABASE)
+
 // ---------------------------------------------------------
 app.get("/api/produtos-manuais", async (req, res) => {
+  console.log('[produtos-manuais] Buscando produtos...');
+  console.log('[produtos-manuais] Supabase URL presente:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log('[produtos-manuais] Service Role Key presente:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
   await syncFromSupabase("produtos_manuais");
-  res.json(dbState.produtos_manuais || []);
+  const activeProducts = (dbState.produtos_manuais || []).filter((p: any) => p.ativo);
+  res.json(activeProducts);
 });
 
 app.post("/api/produtos-manuais", async (req, res) => {

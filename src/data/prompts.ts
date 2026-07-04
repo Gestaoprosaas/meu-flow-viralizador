@@ -1,4 +1,4 @@
-export interface MovementPreset {
+﻿export interface MovementPreset {
   id: string;
   name: string;
   type: string;
@@ -302,203 +302,103 @@ FINAL FEELING:
 The animation should feel like a real girl casually stepping forward and softly placing the clothing in front of the phone camera for a natural TikTok-style transition.`
   },
   {
-    id: 'selfie_cabelo',
-    name: 'Selfie Cabelo',
-    type: 'Selfie',
-    format: 'Video',
-    description: 'A avatar faz selfie com uma mão no cabelo, movimento leve e sedutor',
-    imageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-touching-her-long-hair-41589-large.mp4',
-    promptText: '9:16 portrait video, young woman holds phone for a selfie, gently playing with her long beautiful hair, soft smile, flirtatious look under cozy natural room lighting.'
-  },
-  {
-    id: 'espelho_textura',
-    name: 'Espelho Textura',
-    type: 'Selfie',
-    format: 'Video',
-    description: 'Selfie em espelho mostrando textura/tecido/acabamento da roupa ou produto',
-    imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-showing-her-outfit-in-the-mirror-40283-large.mp4',
-    promptText: 'Mirror selfie close-up video, focusing on the fine fabric texture and premium weaving while the creator rotates side to side, capturing real light reactions on the textile.'
-  },
-  {
-    id: 'mostrando_look_cta',
-    name: 'Mostrando Look + CTA',
-    type: 'Look',
-    format: 'Video',
-    description: 'A avatar mostra o look inteiro e termina com gesto de chamada para ação',
-    imageUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-posing-in-front-of-a-mirror-40282-large.mp4',
-    promptText: 'A aesthetic woman presents her complete look in a mirror reflection, concluding with a friendly finger-pointing gesture towards the bio link or "Shop Now" text.'
-  },
-  {
-    id: 'passando_produto_rosto',
-    name: 'Passando Produto no Rosto',
+    id: 'Animação Natural',
+    name: 'Animação Natural',
     type: 'Movimentos',
     format: 'Video',
-    description: 'A avatar aplica produto no rosto de forma natural e realista',
-    imageUrl: 'https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-gorgeous-woman-putting-on-makeup-41595-large.mp4',
-    promptText: 'UGC beauty tutorial, female host directly applying a skincare serum/cream to her cheek in circular motions, glowing hydrated dewy skin texture, extremely natural.'
+    description: 'A avatar realiza movimentos naturais e fluidos, com postura relaxada e expressão facial suave',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/animacaonatural.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/animacaonatural.mp4',
+    promptText: '{  "animation_style": "realistic_fashion_presentation",  "camera": {    "fixed": true,    "no_zoom": true,    "no_reframe": true  },  "motion": {    "type": "continuous",    "speed": "natural_slightly_fast",    "no_pause": true,    "no_freeze": true  },  "position": {    "stay_near_same_spot": true,    "small_natural_steps": true,    "no_large_movement": true  },  "sequence": {    "start": "facing_camera",    "action": {      "type": "natural_flow",      "description": "subject keeps moving naturally all the time"    },    "fabric": {      "type": "light_touch",      "area": "clothing",      "no_pull": true    },    "movement": {      "type": "small_side_shift",      "max_angle": "10_degrees",      "no_turn": true,      "no_spin": true,      "no_360": true    }  },  "body": {    "hip": "subtle_continuous",    "weight": "always_shifting",    "no_static": true  },  "face": {    "expression": "natural",    "smile": "brief_subtle",    "no_constant": true  },  "rules": {    "no_rotation": true,    "no_360": true,    "no_freeze": true,    "no_exaggeration": true  },  "final": "natural continuous movement, no rotation, no freeze"}\\n\\nGENERATE ANIMATED BACKGROUND MUSIC'
   },
   {
-    id: 'giro_lento_360',
-    name: 'Giro Lento 360 Controlled',
+    id: 'Colocando Capuz',
+    name: 'Colocando Capuz',
     type: 'Movimentos',
     format: 'Video',
-    description: 'Giro lento e suave, mostrando corpo/roupa em rotação controlada',
-    imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-turning-around-showing-her-look-41587-large.mp4',
-    promptText: 'High quality 360 camera turn, model spin slow and controlled in studio showing the outfit fit and flow from all angles, 4k vertical resolution.'
+    description: 'A avatar coloca um capuz de forma natural e fluida, com movimentos suaves e expressão facial agradável',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/colocando%20capus.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/colocando%20capus.mp4',
+    promptText: 'Animate the subject as a REAL person in a soft ultra-realistic diagonal back-view fashion video.MAIN ACTION (PUTTING ON HOOD):– The subject uses BOTH hands together during the entire motion– She naturally raises both hands toward the hood area behind the neck– Both hands softly grab the sides of the hoodie hood– The motion should feel casual, feminine and realistic– She gently lifts the hood upward and naturally pulls it over the hair– The hood softly slides over the back of the head and partially covers the hair– The movement must feel smooth, relaxed and authentic– No exaggerated motionHOOD MOVEMENT DETAILS:– Hair starts naturally loose outside the hoodie– Both hands lift the hood slowly upward– Fingers softly hold the hood fabric realistically– Elbows lift naturally and softly– The hood smoothly settles over the head– Some loose hair strands remain naturally visible near the sides/front– After placing the hood on:the hands softly adjust the hood edges briefly– Then the hands naturally relax downwardREALISTIC FABRIC & HAIR PHYSICS:– Hoodie fabric must react naturally with realistic weight– Hood movement must feel soft and believable– No stiff fabric– Hair movement must come ONLY from hand and hood interaction– Hair keeps realistic gravity and weight– No floating hair– No wind effect– Natural loose strands around neck and shouldersIMPORTANT ANTI-BUG RULES:– Keep the subject ALWAYS in the same diagonal back-facing angle– Do NOT allow the subject to rotate toward camera– No front-facing frames– No sudden head turns– Camera remains completely fixed– No zoom– No reframing– Prevent hand deformation– Prevent hood clipping through hair/bodyBODY MOVEMENT STYLE:– Minimal torso movement– Slight natural shoulder lift while lifting the hood'
   },
   {
-    id: 'pov_capinha',
-    name: 'POV Capinha',
-    type: 'POV',
+    id: 'CTA 1',
+    name: 'CTA 1',
+    type: 'Movimentos',
     format: 'Video',
-    description: 'Mão segurando capinha/case em POV, com foco total no produto',
-    imageUrl: 'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-small-cosmetic-bottle-41598-large.mp4',
-    promptText: 'First-person perspective POV shot of hands holding a premium aesthetic phone case, tilting it around to catch the light, showing high material contrast.'
+    description: 'A avatar apresenta o look completo em espelho, finalizando com gesto de apontar para o link da bio ou texto "Compre Agora"',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/cta1.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/cta1.mp4',
+    promptText: 'Animate the subject as a REAL person presenting clothing in a POV-style video.⸻🔥 START OF ANIMATION (UPDATED FOR THIS OUTFIT):– The subject starts very close to the camera– She makes a small, natural adjustment to the outfit:  • A subtle touch near the waistline or skirt area  • OR a light adjustment on the side of the top– The gesture is casual and realistic, like preparing before recording– No chest pulling– No emphasis– No posing– After this quick adjustment, she naturally steps back into a comfortable position– Smooth transition into the rest of the animation⸻GENERAL MOTION STYLE:– Natural, confident, fluid movements– Not static– Not exaggerated– Not robotic– Real human timing⸻BODY MOVEMENTS:– One hand naturally rests on the waist– Gentle hip movement (side-to-side, very subtle)– One foot slightly forward, highlighting the skirt slit– The other foot relaxed behind– Natural posture, relaxed shoulders⸻CLOTHING PRESENTATION (TOP + SKIRT):– Small, natural movements to highlight the outfit– Subtle leg positioning to show the skirt slit naturally– Slight torso rotation to show fit and fabric– No aggressive posing– No runway-style movement– Movements feel spontaneous and casual⸻FACIAL EXPRESSION (VERY IMPORTANT – CTA TIMING):– The subject does NOT smile continuously– Facial expression changes naturally throughout the video– During most of the presentation:  • Neutral, relaxed expression  • Lips softly closed  • Calm, confident face  • Natural eye contact  • No smile held for long periods– Occasionally:  • A very brief, subtle smile appears  • Smile is soft and quickly fades  • No exaggerated cheek movement  • No frozen smile⸻FINAL NATURAL ACTION (END OF VIDEO):– At the very end of the video– The subject walks normally toward the camera– Movement feels casual, like approaching to stop recording– No rush– No posing– As she gets close to the camera:  • She casually raises one hand  • Makes a simple, brief downward pointing gesture with the index finger  • The gesture is relaxed and natural  • No holding the pose– EXACT SMILE TIMING:  • The smile opens ONLY at this moment  • A warm, genuine smile appears  • She slightly turns her face to one side while smiling  • Natural cheek movement  • Smile feels spontaneous and human  • After the gesture, the smile naturally relaxes⸻PERSONALITY:– Sympathetic– Approachable– Comfortable– Feels like a real person casually recording a video at home⸻CAMERA & POV:– POV perspective, as if the phone is held or placed naturally– Very subtle handheld micro-movements– No camera shake– No zoom– Camera remains at chest/face height⸻TIMING:– Movements are continuous– No freezing– No looping poses– Smooth transitions between gestures⸻REALISM RULES:– Preserve original facial identity– Preserve skin texture– Preserve hair movement (slight natural motion)– Natural fabric physics for both top and skirt– No beauty filters– No smoothing– No stylization⸻RESTRICTIONS:– No talking– No text– No UI– No effects– No exaggerated dance– No influencer posing clichés⸻FINAL RESULT:A hyper-realistic POV fashion video with natural facial expression changes, neutral moments throughout, and a genuine smile appearing only at the final moment while approaching the camera and pointing downward — subtle, human and indistinguishable from a real TikTok recording.GENERATE ANIMATED BACKGROUND MUSIC'
   },
   {
-    id: 'pov_sapatos',
-    name: 'POV Sapatos',
-    type: 'POV',
+    id: 'CTA 2',
+    name: 'CTA 2',
+    type: 'Movimentos',
     format: 'Video',
-    description: 'Mão segurando sapato em POV, destacando forma e acabamento',
-    imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-showing-look-of-the-day-fashion-video-41584-large.mp4',
-    promptText: 'POV shot looking down at elegant designer shoes being rotated and held, showing premium leather details and flawless sole craftsmanship, bright social lighting.'
+    description: 'A avatar apresenta o look completo em espelho, finalizando com gesto de apontar para o link da bio ou texto "Compre Agora"',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/cta2.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/cta2.mp4',
+    promptText: '{  "version": "3.1",  "aspectRatio": "9:16",  "durationSeconds": 8,  "seed": 12345,  "subjectRef": "usar a imagem enviada como âncora de identidade, mantendo exatamente as mesmas feições, tom de pele, cor de cabelo, mesma cor, mesma textura, mesmo volume e mesmo comprimento durante TODO o vídeo, sem qualquer alteração em nenhum momento",  "referenceStyle": "realismo cinematográfico natural, interação direta com a câmera estilo gravação em celular",  "negativePrompt": "sem falas, sem áudio vocal, sem movimento labial articulando palavras, sem legendas, sem texto na tela, sem logos, sem marcas d’água, sem deformações corporais, sem dedos extras, sem distorção de mãos, sem artefatos de IA, sem mudança de cor do cabelo, sem mudança de textura do cabelo, sem mudança de estilo do cabelo, sem alteração de iluminação que modifique a cor do cabelo",  "safety": {     "allowMinorViolence": false,     "allowNudity": false   },  "shots": [    {      "scene": "ambiente interno residencial com moldura de madeira e iluminação quente natural",      "action": "ela dá um passo natural para frente, inclina o tronco entre 30 e 40 graus em direção à câmera, mantém contato visual constante com um sorriso cativante e vendedor durante toda a cena. Sem falar absolutamente nada e sem articular palavras com os lábios. Ela levanta a mão direita e posiciona o dedo indicador claramente apontado para baixo (direção inferior da tela, não para a lente). O gesto é intencional e expressivo, realizando um leve movimento repetido de cima para baixo com o dedo indicador, como uma chamada visual para ação. O sorriso permanece natural, envolvente e confiante do início ao fim. O cabelo permanece visualmente idêntico durante toda a ação, sem qualquer alteração de cor, brilho, forma ou volume.",      "camera": "dolly-in sutil acompanhando o passo; 50mm; 24fps; 1/120; foco contínuo no rosto; profundidade de campo rasa mantendo o fundo levemente desfocado",      "lighting": "luz quente lateral suave com leve preenchimento frontal; iluminação estável e constante, sem variação de temperatura de cor ao longo do vídeo",      "environment": "fundo levemente desfocado; movimento natural dos cabelos ao inclinar; leve sensação de profundidade realista sem distorção de mãos; manter consistência total de aparência do cabelo do início ao fim"    }  ]}GENERATE ANIMATED BACKGROUND MUSIC\n'
   },
   {
-    id: 'pov_produto_pequeno',
-    name: 'POV Produto Pequeno',
-    type: 'POV',
+    id: 'CTA 3',
+    name: 'CTA 3',
+    type: 'Movimentos',
     format: 'Video',
-    description: 'Produto pequeno de beleza/maquiagem em close, com mão em destaque',
-    imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-small-cosmetic-bottle-41598-large.mp4',
-    promptText: 'POV close up on a small beauty cosmetic bottle held gracefully in clean manicured hands, smooth micro camera movements showing product labels and matte design.'
+    description: 'A avatar apresenta o look completo em espelho, finalizando com gesto de apontar para o link da bio ou texto "Compre Agora"',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/cta3.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/cta3.mp4',
+    promptText: '{  "animation_style": "realistic_fashion_cta",  "camera": {    "tripod_mode": true,    "absolute_static": true,    "no_movement": true,    "no_drift": true,    "no_reframe": true  },  "motion_timing": {    "tempo": "natural_medium_fast",    "responsive_speed": true,    "no_slow_motion": true  },  "sequence": {    "start_pose": "facing_camera_neutral",    "action_1": {      "type": "small_waist_adjustment",      "motion": "quick_natural",      "shoulder_and_hip_micro_shift": true    },    "action_2": {      "type": "step_forward",      "steps": 1,      "speed": "natural_quick",      "no_rush": true    },    "action_3": {      "type": "downward_point",      "gesture": "index_finger_down",X      "duration": "brief"    },    "action_4": {      "type": "warm_confident_smile",      "timing": "only_during_point",      "natural_cheek_movement": true,      "brief_duration": true    }  },  "mouth_behavior": {    "lips_closed": true,    "no_speaking": true,    "no_lip_sync": true  },  "movement_rules": {    "no_spinning": true,    "no_exaggeration": true,    "natural_weight_transfer": true  },  "realism": {    "preserve_identity": true,    "natural_fabric_physics": true,    "natural_hair_physics": true,    "no_filters": true  },  "final_intent": "natural_fashion_cta_with_step_forward_point_down_and_brief_genuine_smile"}GENERATE ANIMATED BACKGROUND MUSIC'
   },
   {
-    id: 'mesclagem_tiktok_shop',
-    name: 'Mesclagem Pacote TikTok Shop',
+    id: 'Gancho Normal',
+    name: 'Gancho Normal',
+    type: 'Movimentos',
+    format: 'Video',
+    description: 'A avatar segura um produto com as duas mãos e realiza um movimento de gancho, como se estivesse mostrando o produto para a câmera',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/gancho%20normal.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/gancho%20normal.mp4',
+    promptText: 'Animate the subject as a REAL person presenting clothing in a POV-style video (first-person perspective).⸻🔥 START OF THE ANIMATION (UPDATED):– The subject starts at a natural distance from the camera– She calmly takes two small, natural steps toward the camera– While approaching, she gently touches and lightly holds a detail of the clothing– The gesture is delicate, subtle, and realistic, like someone naturally showing a clothing detail– No emphasis, no posing, and no exaggeration– The movement feels spontaneous and casual– After briefly touching the clothing, she takes a small step backward, returning to her original position– Smooth transition into the rest of the animation⸻GENERAL MOVEMENT STYLE:– Natural, confident, and fluid movements– She should not remain completely still– No exaggerated movements– No robotic appearance– Realistic human pacing and motion⸻BODY MOVEMENTS:– One hand naturally rests on the waist– Subtle side-to-side hip movement– One foot slightly forward while the other remains relaxed behind– Natural posture with relaxed shoulders⸻CLOTHING PRESENTATION:– Small natural movements to highlight the outfit– Slight torso rotations to showcase the fit and fabric– No aggressive posing– No exaggerated fashion runway movements– Movements should feel spontaneous and casual⸻FACIAL EXPRESSIONS (VERY IMPORTANT — REALISTIC TIMING):– The subject does NOT smile continuously– Facial expressions naturally change throughout the video– While approaching the camera:• Neutral and relaxed expression• Lips gently closed• Calm and confident gaze– While touching the clothing:• A brief subtle smile appears• The smile is soft and natural, without exaggeration• Only a slight movement of the cheeks– After presenting the clothing:• The expression returns to neutral• Relaxed face and natural breathing– Later in the animation:• She slightly turns her head to one side• Another brief and welcoming smile appears• The smile lasts only a moment and fades naturally– Smile behavior:• Appears and disappears naturally• No frozen smile• No constant smile• No exaggerated facial tension⸻PERSONALITY:– Friendly– Approachable– Comfortable and natural– Feels like a real person casually recording a video⸻CAMERA AND POV:– POV perspective, as if the phone is being held by another person– Small natural handheld micro-movements– No shaking– No zoom– The camera remains at face/chest height⸻TIMING AND RHYTHM:– Movements are continuous– No freezing– No repeated looping poses– Smooth transitions between gestures⸻REALISM RULES:– Preserve the original facial identity– Preserve the natural skin texture– Preserve natural hair movement (light motion)– Natural fabric physics– No beauty filters– No artificial skin smoothing– No stylization– Avoid excessive saturation and use natural daylight lighting⸻RESTRICTIONS:– No speaking– No text– No on-screen interface– No effects– No exaggerated dancing– No cliché influencer poses⸻FINAL RESULT:A hyper-realistic POV fashion video where the subject appears alive and genuinely human, with natural facial expression changes, occasional subtle smiles, neutral moments in between, and slight head movements — indistinguishable from a casual recording made with a real smartphone.GENERATE ANIMATED BACKGROUND MUSIC'
+  },
+  {
+    id: 'Mexendo no Cabelo',
+    name: 'Mexendo no Cabelo',
+    type: 'Movimentos',
+    format: 'Video',
+    description: 'A avatar mexe no cabelo de forma natural e sedutora, com leve sorriso',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/mexendo%20cabelo.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/mexendo%20cabelo.mp4',
+    promptText: 'Animate the subject as a REAL person in a soft ultra-realistic diagonal back-view fashion video.⸻MAIN ACTION (BOTH HANDS TYING HAIR):– The subject uses BOTH hands together during the entire motion– She naturally raises both hands toward the back of the head– Both hands gather the hair softly near the upper back/head area– The motion should feel like she is casually pretending to tie her hair into a ponytail– Natural feminine gesture only– Soft realistic movement– No exaggerated styling motion⸻HAIR TYING MOTION DETAILS:– Hair starts naturally loose– Both hands slide upward through the hair together– Fingers naturally collect the hair backward– Elbows lift softly and naturally– The subject gently holds the gathered hair briefly behind the head– She lightly twists or adjusts the hair as if preparing to tie it– The motion is subtle and relaxed– The hair should NOT become perfectly tied– It should feel like a casual “fixing the hair” moment– After briefly holding the hair, she softly relaxes the hands slightly⸻REALISTIC HAIR PHYSICS (CRITICAL):– Hair movement must come ONLY from both-hand contact and natural head motion– Hair must have realistic weight and gravity– No floating hair– No wind effect– No exaggerated bounce– No zero-gravity movement– Hair tension must feel realistic while being gathered– Loose strands remain natural around the neck and shoulders– Hair should naturally loosen slightly after the motion⸻IMPORTANT ANTI-BUG RULES:– Keep the subject ALWAYS in the same diagonal back-facing angle– Do NOT allow the subject to look at the camera– Do NOT rotate body toward camera– No front-facing frames– No sudden head turns– No camera shake– No zoom– No reframing– Camera remains completely fixed– Prevent hand and finger deformation– Prevent hair clipping through arms/body– Prevent arms from bending unnaturally⸻BODY MOVEMENT STYLE:– Minimal torso movement– Slight natural shoulder lift while gathering the hair– Very subtle hip balance shift– Calm feminine movement– No exaggerated posing– No dance movement– Maintain the same diagonal body angle tikthroughout the clip⸻HAND & ARM MOVEMENT:– Both arms move softly and naturally together– Elbows remain relaxed and feminine– Fingers softly compress and hold the hair realistically– No robotic synchronized motion– No stiff elbows– Natural real-time movement only⸻CAMERA:– Fixed tripod camera– No camera movement– No zoom– No perspective changes– Maintain exact original framing and crop⸻REALISM RULES:– Ultra realistic real-time motion– Natural arm weight and physics– Realistic shoulder mechanics– Realistic fabric response– Preserve skin texture– Preserve identity– Preserve realistic indoor lighting– No beauty filter– No CGI look– No smoothing– No stylization⸻TIMING:– Soft continuous pacing– Slightly slowed realistic motion– No sudden acceleration– No freezing– No looping– Smooth transitions between gestures⸻RESTRICTIONS:– No talking– No text– No UI– No effects– No influencer posing clichés– No direct eye contact– No front-facing pose– No aggressive motion– No floating hair physics⸻FINAL RESULT:A hyper-realistic diagonal back-view fashion animation where the subject softly raises BOTH hands, naturally gathers the hair behind the head as if casually tying a ponytail, briefly adjusts the hair with realistic feminine movement, and maintains stable framing, realistic weighted hair physics, and calm natural body motion throughout the entire clip.GENERATE ANIMATED BACKGROUND MUSIC, no music\n'
+  },
+  {
+    id: 'Pacote Tiktok Shop',
+    name: 'Pacote TikTok Shop',
     type: 'Movimentos',
     format: 'Video',
     description: 'Cena de unboxing / mesclagem de pacote TikTok Shop, com cara de conteúdo viral',
-    imageUrl: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-unboxing-a-new-delivery-box-at-home-41602-large.mp4',
-    promptText: 'TikTok Shop social-first unboxing style video, hands playfully pulling out fresh clothing from a custom mailer bag, energetic and fast-paced aesthetic.'
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/pacote%20tiktok.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/pacote%20tiktok.mp4',
+    promptText: 'HOOK MOVEMENT REFINEMENT (CRITICAL):The subject must WALK TOGETHER with the package toward the camera naturally.Do NOT keep the body static.Do NOT only stretch the arms forward.Do NOT create elastic-arm movement.The body, shoulders, torso, and package must all move forward together naturally.CORRECT MOVEMENT FLOW:– The subject starts already holding the package naturally with both hands– She takes ONE natural small step forward WITH her full body– Her torso naturally moves closer to the camera together with the package– The package stays close to the chest/body during the movement– Arms remain naturally bent– The subject physically walks closer instead of only extending the arms– Natural body weight shift while stepping– Natural shoulder movement– Natural posture balance– Smooth continuous movement– No sudden accelerationIMPORTANT REALISM FIX:– The package must approach the camera because the SUBJECT walks closer– NOT because the arms unnaturally stretch outward– The body must visibly move closer to the lens– Natural forward leaning is allowed near the end– Realistic arm follow-through only– No mannequin movement– No stiff elbowsPACKAGE PRESENTATION:– As she gets closer,she naturally lifts the package slightly upward toward the camera– The package should slowly become larger in frame naturally– Natural package sway and realistic plastic wrinkles are encouraged– Realistic finger grip pressure– Package must feel physically real and lightweightDATA COVERING ACTION (VERY IMPORTANT):– AFTER walking close to the camera,ONE hand naturally slides over the shipping information area– She casually covers the address/shipping data with her fingers– The motion must feel natural and subtle– Similar to a real influencer hiding personal information before showing a package on camera– Fingers must rest naturally on the label– No floating fingers– No clipping– No broken anatomy– No glitchy hand movementFINAL POSITION:– The subject ends VERY close to the camera– The package fills most of the frame– The covered shipping information remains hidden by the hand– The face can remain partially visible behind or beside the package– Final frame should feel like a realistic TikTok-style transitionFACIAL BEHAVIOR FIX (VERY IMPORTANT):– Mouth must remain naturally closed most of the time– Do NOT generate talking behavior– Do NOT simulate speech– Do NOT create lip-sync motion– No random mouth opening– No exaggerated facial animationExpression should remain:• soft• relaxed• natural• slightly happyA very subtle smile is allowed briefly, but:– lips mostly closed– no exaggerated grin– no visible talking motionMOTION QUALITY:– Real-time natural motion– No slow motion– No delay– No robotic timing– No jitter– No frame skipping– No looping behaviorCAMERA:– Stable POV camera– Very subtle handheld micro movement only– No zoom– No cinematic motion– No shakeFINAL FEELING:The animation should feel like a real girl naturally walking closer to the phone while holding a TikTok Shop package, physically approaching the camera together with the package, then casually covering the shipping information with one hand near the lens for a realistic TikTok-style transition.GENERATE ANIMATED BACKGROUND MUSIC, no music, sem musica, somente o moviment, as informações da embalagem tem que estar em portugues\n'
   },
   {
-    id: 'espelho_academia',
-    name: 'Espelho na Academia',
-    type: 'Selfie',
+    id: 'Ultra Realista Mexendo Cabelo',
+    name: 'Ultra Realista Mexendo Cabelo',
+    type: 'Movimentos',
     format: 'Video',
-    description: 'Selfie em espelho de academia, com postura esportiva e iluminação realista',
-    imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fitness-woman-posing-for-selfie-41611-large.mp4',
-    promptText: 'Active lifestyle look, fit gorgeous creator doing a mirror selfie at a high-end gym, showing activewear athletic curves and high-end workout gears.'
+    description: 'A avatar mexe no cabelo de forma ultra realista, com movimentos suaves e naturais, expressão facial confiante e olhar direto para a câmera',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/ULTRA%20REALISTA%20MEXENDO%20CABELO.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/ULTRA%20REALISTA%20MEXENDO%20CABELO.mp4',
+    promptText: 'Animate the subject as a REAL person presenting clothing in a POV-style video.The subject remains in the same position and starts moving immediately.From the beginning, she moves her hair and body at the SAME TIME.She brings one hand into her hair and runs her fingers  through it quickly and naturally, then lightly tosses it.While touching her hair, her body is continuously moving:she shifts her weight between legs,moves her hips slightly side to side,keeps a natural rhythm in her torso,and makes small natural posture adjustments.Her body MUST NOT stop while touching the hair.Hair movement and body movement happen together as one continuous action.The motion should feel alive, fluid and human, never paused, never separated, never robotic.Her expression starts neutral, then a soft natural smile appears briefly during the movement and fades.After finishing the hair movement, she continues with subtle natural body motion without freezing.Movement speed is natural and slightly quick, not slow motion and not exaggerated.Camera remains stable, no zoom, no major movement.åPreserve identity, natural hair physics, natural fabric behavior, no stylization.Final result should feel like a real person casually moving her hair while naturally shifting her body, fully synchronized and lifelike.GENERATE ANIMATED BACKGROUND MUSIC, no music, sem musica, somente o movimento, sem somm.\nsomente o movimento, sem musica, so a animação\n'
   },
   {
-    id: 'espelho_provador',
-    name: 'Espelho Provador',
-    type: 'Selfie',
+    id: 'Virando De Costa',
+    name: 'Virando de Costa',
+    type: 'Movimentos',
     format: 'Video',
-    description: 'Selfie em provador/loja, com look de moda e cenário de boutique',
-    imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-showing-her-outfit-in-the-mirror-40283-large.mp4',
-    promptText: 'Fitting room vlog mirror selfie, warm indirect boutique lighting, trying on stylish outfits with real reactions, showing retail luxury ambient flavor.'
+    description: 'A avatar vira de costas para a câmera de forma natural e fluida, com movimentos suaves e expressão facial confiante',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/VIRANDO%20DE%20COSTA.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/VIRANDO%20DE%20COSTA.mp4',
+    promptText: '{  "intent": "dress_forward_back_pose_flow",  "camera": {    "tripod": true,    "locked": true,    "no_movement": true,    "no_reframe": true,    "no_zoom": true  },  "audio": {    "enabled": false,    "no_speaking": true,    "lips_closed": true  },  "timing": {    "tempo": "fast_natural",    "no_slow_motion": true,    "natural_speed": true  },  "sequence": [    {      "action": "start_pose",      "pose": "front_facing",      "hands": "one_on_hip_one_relaxed",      "expression": "soft_friendly"    },    {      "action": "step_forward",      "steps": 1,      "direction": "straight_forward",      "body_behavior": "natural_confident",      "no_rotation": true    },    {      "action": "hold_front_position",      "duration": "short",      "expression": "soft_smile"    },    {      "action": "step_back",      "steps": 2,      "direction": "straight_back",      "no_rotation": true,      "no_side_shift": true,      "body_stays_front": true    },    {      "action": "final_pose",      "pose": "slight_hip_shift",      "hand": "one_hand_on_hip",      "body_angle": "very_small_side",      "expression": "soft_confident_smile"    }  ],  "movement": {    "no_spinning": true,    "no_360": true,    "no_turning_while_walking": true,    "no_diagonal_movement": true,    "only_straight_forward_and_back": true  },  "body_language": {    "natural_confident": true,    "subtle_hip_movement": true,    "no_exaggeration": true,    "no_robotic_motion": true  },  "realism": {    "preserve_identity": true,    "natural_fabric_physics": true,    "natural_body_motion": true,    "no_beauty_filter": true  }}\n\nGENERATE ANIMATED BACKGROUND MUSIC\n'
   },
-  {
-    id: 'selfie_qualquer_produto',
-    name: 'Selfie com Qualquer Produto',
-    type: 'Selfie',
-    format: 'Video',
-    description: 'Avatar segurando produto na mão, próximo ao rosto, como UGC comercial',
-    imageUrl: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-holding-a-small-cosmetic-bottle-41598-large.mp4',
-    promptText: 'Commercial vertical UGC presentation, model holding the item near her face while smiling beautifully and talking happily to the front camera lens.'
-  },
-  {
-    id: 'selfie_proximo_rosto',
-    name: 'Selfie Próximo ao Rosto',
-    type: 'Selfie',
-    format: 'Video',
-    description: 'Close no rosto com pose bonita, mão próxima ao rosto e olhar confiante',
-    imageUrl: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-blowing-a-kiss-to-the-camera-40748-large.mp4',
-    promptText: 'Flawless clean makeup close up, young confident girl poses very close to camera with high skin realism, smiling gently, dewy soft skin and gorgeous light reflection.'
-  },
-  {
-    id: 'selfie_jaqueta_couro',
-    name: 'Selfie Jaqueta de Couro',
-    type: 'Selfie',
-    format: 'Video',
-    description: 'Avatar usando jaqueta de couro com selfie fashion, vibe editorial',
-    imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-sunglasses-posing-funny-for-the-camera-39906-large.mp4',
-    promptText: 'Bad boy and cool girl editorial aesthetics, wearing a heavy modern black leather jacket, doing real selfie pose with cool retro look and raw studio vibe.'
-  },
-  {
-    id: 'look_casual',
-    name: 'Look Casual',
-    type: 'Look',
-    format: 'Video',
-    description: 'Look casual natural, postura relaxada e estética lifestyle',
-    imageUrl: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-woman-smiling-at-sunset-41712-large.mp4',
-    promptText: 'A aesthetic street lifestyle, model wearing comfortable beige and white casual wear during a day out, relaxed candid walking look with sunset warm background.'
-  },
-  {
-    id: 'torcedora_brasil_premium',
-    name: 'Torcedora Brasil Premium',
-    type: 'Look',
-    format: 'Video',
-    description: 'Avatar com camiseta do Brasil, pose alegre e vibe premium',
-    imageUrl: 'https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-blowing-a-kiss-to-the-camera-40748-large.mp4',
-    promptText: 'UGC influencer styled in a premium Brazil national football team athletic jersey, celebrating happily, golden sun rays, high energy, professional cinematic grading.'
-  },
-  {
-    id: 'cenario_quarto_casual',
-    name: 'Cenário Quarto Casual',
-    type: 'Cenário',
-    format: 'Imagem',
-    description: 'Cena em quarto casual, iluminado e aconchegante, para uso lifestyle',
-    imageUrl: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&q=80&w=400',
-    videoUrl: '',
-    promptText: 'Cozy luxurious modern light-filled bedroom background, warm bokeh depth of field, unmade bed with clean white linens, soft plants in the background, high contrast rendering.'
-  },
-  {
-    id: 'estilo_casual_home',
-    name: 'Estilo Casual Home',
-    type: 'Look',
-    format: 'Video',
-    description: 'Look casual em casa, com sensação real de rotina e conforto',
-    imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-touching-her-long-hair-41589-large.mp4',
-    promptText: 'Homely Sunday lifestyle, cute woman wearing cozy cotton sweatpants and crop top relaxed on an elegant couch at home, drinking tea, natural lighting.'
-  },
-  {
-    id: 'selfie_espelho_elegante',
-    name: 'Selfie Espelho Elegante',
-    type: 'Selfie',
-    format: 'Video',
-    description: 'Selfie no espelho com pose refinada, visual sofisticado e feminino',
-    imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-showing-her-outfit-in-the-mirror-40283-large.mp4',
-    promptText: 'High class feminine style mirror selfie, looking graceful in a chic high-end dinner dress, marble walls and gold details in background, golden reflections.'
-  },
-  {
-    id: 'torcedora_brasil',
-    name: 'Torcedora Brasil',
-    type: 'Look',
-    format: 'Video',
-    description: 'Pose casual com camiseta do Brasil, vibe social e descontraída',
-    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-sunglasses-posing-funny-for-the-camera-39906-large.mp4',
-    promptText: 'A cute local fan wearing a vintage Brazil yellow cropped t-shirt, gesturing peace sign to camera with a playful smile, young joyful casual vibe.'
-  }
-];
+ ];

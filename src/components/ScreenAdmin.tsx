@@ -5,8 +5,9 @@ import {
   ArrowLeft,
   Tag,
   Zap,
-  Plus, Flame, Trash2
+  Plus, Flame, Trash2, Ticket
 } from 'lucide-react';
+import { getSupabase } from '../lib/supabaseClient';
 
 interface ScreenAdminProps {
   onNavigate: (path: string) => void;
@@ -15,13 +16,25 @@ interface ScreenAdminProps {
 }
 
 export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
-  const [activeTab, setActiveTab] = useState<'coupons' | 'users' | 'produtos' | 'produtos_manuais'>('coupons');
+  const [activeTab, setActiveTab] = useState<'parceiros' | 'users' | 'produtos' | 'produtos_manuais'>('parceiros');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+
   // Data state
   const [sysAdmins, setSysAdmins] = useState<any[]>([]);
+  const [cuponsIndicacao, setCuponsIndicacao] = useState<any[]>([]);
+  const [cuponsIndicacaoForm, setCuponsIndicacaoForm] = useState({ 
+    admin_email: '', 
+    admin_nome: '', 
+    cupom: '', 
+    checkout_url: '', 
+    desconto_percentual: 40, 
+    preco_original: 497.00, 
+    preco_com_desconto: 298.20 
+  });
+
   const [coupons, setCoupons] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [produtosAlta, setProdutosAlta] = useState<any[]>([]);
@@ -68,6 +81,67 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
     });
   };
 
+  const updateCuponsForm = (field: string, value: any) => {
+    setCuponsIndicacaoForm(prev => {
+      const next = { ...prev, [field]: value };
+      if (field === 'desconto_percentual' || field === 'preco_original') {
+        const desc = parseFloat(next.desconto_percentual as any) || 0;
+        const orig = parseFloat(next.preco_original as any) || 0;
+        next.preco_com_desconto = parseFloat((orig * (1 - desc / 100)).toFixed(2)) || 0;
+      }
+      return next;
+    });
+  };
+
+  const handleToggleUserRole = async (user: any) => {
+    try {
+      const supabase = getSupabase();
+      if (!supabase) return;
+      const newRole = user.role === 'admin' ? 'client' : 'admin';
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', user.id);
+      
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        setSuccessMsg('Role do usuário atualizado!');
+        const { data, error: listError } = await supabase
+          .from('profiles')
+          .select('id, name, email, plan, role, ativo, created_at')
+          .order('created_at', { ascending: false });
+        if (!listError && data) setUsers(data);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro de rede ao alternar role.');
+    }
+  };
+
+  const handleToggleUserAtivo = async (user: any) => {
+    try {
+      const supabase = getSupabase();
+      if (!supabase) return;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ ativo: !user.ativo })
+        .eq('id', user.id);
+      
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        setSuccessMsg('Status de atividade do usuário atualizado!');
+        const { data, error: listError } = await supabase
+          .from('profiles')
+          .select('id, name, email, plan, role, ativo, created_at')
+          .order('created_at', { ascending: false });
+        if (!listError && data) setUsers(data);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro de rede ao alternar status ativo.');
+    }
+  };
+
   const handleSaveManualProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualForm.nome || !manualForm.preco || !manualForm.comissao) {
@@ -79,14 +153,26 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
     setSuccessMsg(null);
     try {
       const isEdit = !!editingManualId;
-      const url = isEdit ? `/api/produtos-manuais/${editingManualId}` : '/api/produtos-manuais';
-      const method = isEdit ? 'PUT' : 'POST';
-      const res = await adminFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(manualForm)
-      });
-      if (res.ok) {
+      const supabase = getSupabase();
+      if (!supabase) throw new Error("Supabase não configurado.");
+
+      let resError;
+      if (isEdit) {
+        const { error } = await supabase
+          .from('produtos_manuais')
+          .update({ ...manualForm })
+          .eq('id', editingManualId)
+          .select();
+        resError = error;
+      } else {
+        const { error } = await supabase
+          .from('produtos_manuais')
+          .insert([{ ...manualForm, preco: parseFloat(manualForm.preco) || 0, comissao: parseFloat(manualForm.comissao) || 0 }])
+          .select();
+        resError = error;
+      }
+
+      if (!resError) {
         setSuccessMsg(isEdit ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
         setManualForm({
           nome: '',
@@ -99,14 +185,16 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
           ativo: true
         });
         setEditingManualId(null);
-        const listRes = await adminFetch('/api/produtos-manuais');
-        if (listRes.ok) setManualProdutos(await listRes.json());
+        const { data: listData, error: listError } = await supabase
+          .from('produtos_manuais')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!listError && listData) setManualProdutos(listData);
       } else {
-        const errData = await res.json();
-        setErrorMsg(errData.error || 'Erro ao salvar produto.');
+        setErrorMsg(resError.message || 'Erro ao salvar produto.');
       }
-    } catch (err) {
-      setErrorMsg('Erro de rede ao salvar produto.');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro de rede ao salvar produto.');
     } finally {
       setManualLoading(false);
     }
@@ -133,41 +221,59 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
     setErrorMsg(null);
     setSuccessMsg(null);
     try {
-      const res = await adminFetch(`/api/produtos-manuais/${id}`, { method: 'DELETE' });
-      if (res.ok) {
+      const supabase = getSupabase();
+      if (!supabase) throw new Error("Supabase não configurado.");
+
+      const { error } = await supabase
+        .from('produtos_manuais')
+        .delete()
+        .eq('id', id);
+
+      if (!error) {
         setSuccessMsg('Produto excluído com sucesso!');
-        const listRes = await adminFetch('/api/produtos-manuais');
-        if (listRes.ok) setManualProdutos(await listRes.json());
+        const { data: listData, error: listError } = await supabase
+          .from('produtos_manuais')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!listError && listData) setManualProdutos(listData);
       } else {
-        setErrorMsg('Erro ao excluir produto.');
+        setErrorMsg(error.message || 'Erro ao excluir produto.');
       }
-    } catch (err) {
-      setErrorMsg('Erro de rede ao excluir produto.');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro de rede ao excluir produto.');
     } finally {
       setManualLoading(false);
     }
   };
 
-    const loadData = async () => {
+  const loadData = async () => {
     setLoading(true);
     setErrorMsg(null);
     try {
-      if (activeTab === 'coupons') {
-        const [admRes, coupRes] = await Promise.all([
-          adminFetch('/api/admin/sys-admins'),
-          adminFetch('/api/admin/coupons')
-        ]);
-        if (admRes.ok) setSysAdmins(await admRes.json());
-        if (coupRes.ok) setCoupons(await coupRes.json());
+      if (activeTab === 'parceiros') {
+        const res = await adminFetch('/api/admin/cupons');
+        if (res.ok) setCuponsIndicacao(await res.json());
       } else if (activeTab === 'users') {
-        const res = await adminFetch('/api/admin/users');
-        if (res.ok) setUsers(await res.json());
+        const supabase = getSupabase();
+        if (supabase) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, name, email, plan, role, ativo, created_at')
+            .order('created_at', { ascending: false });
+          if (!error && data) setUsers(data);
+        }
       } else if (activeTab === 'produtos') {
         const res = await adminFetch('/api/admin/produtos-alta');
         if (res.ok) setProdutosAlta(await res.json());
       } else if (activeTab === 'produtos_manuais') {
-        const res = await adminFetch('/api/produtos-manuais');
-        if (res.ok) setManualProdutos(await res.json());
+        const supabase = getSupabase();
+        if (supabase) {
+          const { data, error } = await supabase
+            .from('produtos_manuais')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (!error && data) setManualProdutos(data);
+        }
       }
     } catch (err) {
       setErrorMsg('Erro de rede ao carregar dados.');
@@ -181,7 +287,7 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const filteredUsers = users.filter(u => u.email.toLowerCase().includes(userSearch.toLowerCase()) || u.name.toLowerCase().includes(userSearch.toLowerCase()));
+  const filteredUsers = users.filter(u => ((u.email || '').toLowerCase().includes(userSearch.toLowerCase()) || (u.name || '').toLowerCase().includes(userSearch.toLowerCase())));
 
   return (
     <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-20">
@@ -226,13 +332,15 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
             </div>
             <div className="space-y-0.5">
               <button
-                onClick={() => setActiveTab('coupons')}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'coupons' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
+                type="button"
+                onClick={() => setActiveTab('parceiros')}
+                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'parceiros' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
               >
-                <ShieldAlert className="w-4 h-4" />
-                Cadastros & Checkouts
+                <Ticket className="w-4 h-4 text-emerald-400" />
+                Parceiros e Cupons
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('users')}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'users' ? 'bg-[#25F4EE]/10 text-[#25F4EE] border border-[#25F4EE]/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
               >
@@ -240,6 +348,7 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                 Base de Usuários
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('produtos')}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'produtos' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
               >
@@ -247,6 +356,7 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                 Produtos em Alta
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('produtos_manuais')}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'produtos_manuais' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
               >
@@ -260,229 +370,169 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
         {/* Right Content Area */}
         <div className="xl:col-span-9 space-y-6">
           
-          {activeTab === 'coupons' && (
+          {activeTab === 'parceiros' && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
-                  <Tag className="w-5 h-5 text-emerald-400" />
+              <div className="bg-gradient-to-r from-pink-500/10 via-pink-500/5 to-transparent border border-pink-500/20 rounded-2xl p-4 flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 shrink-0">
+                  <Ticket className="w-5 h-5 text-pink-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Cadastros e Checkouts</h3>
+                  <h3 className="text-sm font-bold text-white">Gerenciar Parceiros e Cupons</h3>
                   <p className="text-xs text-[#8888AA] mt-1 leading-relaxed">
-                    Adicione administradores, gerencie links de checkout e vincule cupons de indicação (40% OFF) ou de presente (Kit Premium).
+                    Cadastre parceiros, defina o desconto, o preço original, e a URL de checkout personalizada. O preço com desconto é calculado automaticamente.
                   </p>
                 </div>
               </div>
 
-              {/* QUICK GENERATE PRESENTE */}
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5 space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-400" />
-                  Geração Rápida de Cupom Presente (Lives)
-                </h3>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={quickPresenteCode}
-                    onChange={(e) => setQuickPresenteCode(e.target.value.toUpperCase())}
-                    placeholder="DIGITE O CODIGO"
-                    className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                  />
-                  <button
-                    onClick={async () => {
-                      if (!quickPresenteCode) return alert('Digite um código');
-                      try {
-                        const res = await adminFetch('/api/admin/coupons', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            codigo: quickPresenteCode,
-                            admin_id: profile?.id || 'admin-1',
-                            tipo: 'presente',
-                            ativo: true
-                          })
-                        });
-                        if (res.ok) {
-                          setSuccessMsg('Cupom Presente gerado com sucesso!');
-                          setQuickPresenteCode('');
-                          loadData();
-                        } else {
-                          setErrorMsg('Erro ao gerar cupom.');
-                        }
-                      } catch(e) {
-                        setErrorMsg('Erro de rede.');
+              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5 space-y-4">
+                <h3 className="text-sm font-bold text-white border-b border-[#1E1E2E] pb-2">Cadastrar Novo Parceiro / Cupom</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Nome do Parceiro *</label>
+                    <input
+                      type="text"
+                      placeholder="Nome do Parceiro"
+                      value={cuponsIndicacaoForm.admin_nome}
+                      onChange={(e) => updateCuponsForm('admin_nome', e.target.value)}
+                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-[#8888AA]">E-mail *</label>
+                    <input
+                      type="email"
+                      placeholder="E-mail"
+                      value={cuponsIndicacaoForm.admin_email}
+                      onChange={(e) => updateCuponsForm('admin_email', e.target.value)}
+                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Código do Cupom *</label>
+                    <input
+                      type="text"
+                      placeholder="Código do Cupom (Ex: JOAO40)"
+                      value={cuponsIndicacaoForm.cupom}
+                      onChange={(e) => updateCuponsForm('cupom', e.target.value.toUpperCase())}
+                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500 uppercase"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-[#8888AA]">URL de checkout (Applyfy/Kiwify) *</label>
+                    <input
+                      type="text"
+                      placeholder="URL do Checkout Applyfy/Kiwify"
+                      value={cuponsIndicacaoForm.checkout_url}
+                      onChange={(e) => updateCuponsForm('checkout_url', e.target.value)}
+                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Desconto % *</label>
+                    <input
+                      type="number"
+                      placeholder="Desconto % (padrão 40)"
+                      value={cuponsIndicacaoForm.desconto_percentual}
+                      onChange={(e) => updateCuponsForm('desconto_percentual', parseInt(e.target.value) || 0)}
+                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Preço Original *</label>
+                    <input
+                      type="number"
+                      placeholder="Preço original (padrão 497.00)"
+                      value={cuponsIndicacaoForm.preco_original}
+                      onChange={(e) => updateCuponsForm('preco_original', parseFloat(e.target.value) || 0)}
+                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Preço Com Desconto *</label>
+                    <input
+                      type="number"
+                      placeholder="Preço com desconto"
+                      value={cuponsIndicacaoForm.preco_com_desconto}
+                      onChange={(e) => updateCuponsForm('preco_com_desconto', parseFloat(e.target.value) || 0)}
+                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await adminFetch('/api/admin/cupons', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cuponsIndicacaoForm)
+                      });
+                      if (res.ok) {
+                        setSuccessMsg('Cupom e parceiro criados com sucesso!');
+                        loadData();
+                        setCuponsIndicacaoForm({ admin_email: '', admin_nome: '', cupom: '', checkout_url: '', desconto_percentual: 40, preco_original: 497.00, preco_com_desconto: 298.20 });
+                      } else {
+                        const d = await res.json();
+                        setErrorMsg(d.error || 'Erro ao criar cupom');
                       }
-                    }}
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition"
-                  >
-                    Gerar e Ativar Agora
-                  </button>
-                </div>
+                    } catch (e) {
+                      setErrorMsg('Erro de rede');
+                    }
+                  }}
+                  className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg text-xs transition"
+                >
+                  Salvar Cupom
+                </button>
               </div>
 
-              {/* Admins Table */}
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-[#1E1E2E] pb-3">
-                  <h3 className="text-sm font-bold text-white">Administradores e Associados</h3>
-                  <button
-                    onClick={() => {
-                      setEditingAdminId(null);
-                      setAdminFormData({ nome: '', email: '', checkout_url: '', is_associado: false, status: true });
-                      setShowAdminForm(true);
-                    }}
-                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1"
-                  >
-                    <Plus className="w-3 h-3" /> Novo Admin
-                  </button>
-                </div>
-                {loading ? (
-                  <div className="text-center py-4 text-xs text-[#8888AA]">Buscando...</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-[#8888AA]">
-                      <thead>
-                        <tr className="border-b border-[#1E1E2E] text-white">
-                          <th className="pb-3 pr-2">Nome</th>
-                          <th className="pb-3 pr-2">Email</th>
-                          <th className="pb-3 pr-2">Checkout URL</th>
-                          <th className="pb-3 pr-2">Tipo</th>
-                          <th className="pb-3 pr-2">Status</th>
-                          <th className="pb-3 pr-2 text-right">Ações</th>
+              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5">
+                <h3 className="text-sm font-bold text-white mb-4">Parceiros / Cupons Cadastrados</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-[#8888AA]">
+                    <thead>
+                      <tr className="border-b border-[#1E1E2E] text-white">
+                        <th className="pb-3 pr-2">Cupom</th>
+                        <th className="pb-3 px-2">Parceiro</th>
+                        <th className="pb-3 px-2">Checkout URL</th>
+                        <th className="pb-3 px-2">Desconto</th>
+                        <th className="pb-3 px-2 text-center">Usos</th>
+                        <th className="pb-3 pl-2 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cuponsIndicacao.map((c: any) => (
+                        <tr key={c.id} className="border-b border-[#1E1E2E]/50 hover:bg-white/5">
+                          <td className="py-3 pr-2 font-mono text-pink-400 font-bold">{c.cupom}</td>
+                          <td className="py-3 px-2">
+                            <span className="text-white font-bold">{c.admin_nome}</span>
+                            <br />
+                            <span className="text-[10px] text-[#8888AA]">{c.admin_email}</span>
+                          </td>
+                          <td className="py-3 px-2 truncate max-w-[150px] font-mono text-[10px]">{c.checkout_url}</td>
+                          <td className="py-3 px-2">{c.desconto_percentual || 40}%</td>
+                          <td className="py-3 px-2 text-center text-white">{c.usos || 0}</td>
+                          <td className="py-3 pl-2 text-right">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await adminFetch(`/api/admin/cupons/${c.id}/toggle`, { method: 'PUT' });
+                                loadData();
+                              }}
+                              className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${c.ativo ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}
+                            >
+                              {c.ativo ? 'Ativo' : 'Inativo'}
+                            </button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#1E1E2E]/60 text-[#F0F0FF]">
-                        {sysAdmins.map((admin) => (
-                          <tr key={admin.id} className="hover:bg-[#1E1E2E]/20">
-                            <td className="py-2 pr-2 font-bold">{admin.nome}</td>
-                            <td className="py-2 pr-2 font-mono text-purple-300">{admin.email}</td>
-                            <td className="py-2 pr-2 font-mono text-[10px] text-zinc-500 truncate max-w-[150px]">{admin.checkout_url}</td>
-                            <td className="py-2 pr-2">
-                              {admin.is_associado ? (
-                                <span className="text-[9px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">Associado</span>
-                              ) : (
-                                <span className="text-[9px] px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">Fundador</span>
-                              )}
-                            </td>
-                            <td className="py-2 pr-2">
-                              {admin.status ? (
-                                <span className="text-emerald-400">Ativo</span>
-                              ) : (
-                                <span className="text-rose-400">Inativo</span>
-                              )}
-                            </td>
-                            <td className="py-2 pr-2 text-right">
-                              <button
-                                onClick={() => {
-                                  setEditingAdminId(admin.id);
-                                  setAdminFormData({
-                                    nome: admin.nome,
-                                    email: admin.email,
-                                    checkout_url: admin.checkout_url || '',
-                                    is_associado: admin.is_associado,
-                                    status: admin.status
-                                  });
-                                  setShowAdminForm(true);
-                                }}
-                                className="text-blue-400 hover:text-blue-300 text-[10px] underline mr-2"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  if (confirm("Excluir admin?")) {
-                                    await adminFetch(`/api/admin/sys-admins/${admin.id}`, { method: 'DELETE' });
-                                    loadData();
-                                  }
-                                }}
-                                className="text-rose-400 hover:text-rose-300 text-[10px] underline"
-                              >
-                                Excluir
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                        {sysAdmins.length === 0 && (
-                          <tr><td colSpan={6} className="py-4 text-center text-xs">Nenhum admin cadastrado.</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Coupons Table */}
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-[#1E1E2E] pb-3">
-                  <h3 className="text-sm font-bold text-white">Cupons Vinculados</h3>
-                  <button
-                    onClick={() => {
-                      setEditingCouponId(null);
-                      setCouponFormData({ codigo: '', admin_id: sysAdmins[0]?.id || '', tipo: 'indicacao', ativo: true });
-                      setShowCouponForm(true);
-                    }}
-                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1"
-                  >
-                    <Plus className="w-3 h-3" /> Novo Cupom
-                  </button>
-                </div>
-                {loading ? (
-                  <div className="text-center py-4 text-xs text-[#8888AA]">Buscando...</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-[#8888AA]">
-                      <thead>
-                        <tr className="border-b border-[#1E1E2E] text-white">
-                          <th className="pb-3 pr-2">Código</th>
-                          <th className="pb-3 pr-2">Tipo</th>
-                          <th className="pb-3 pr-2">Admin Dono</th>
-                          <th className="pb-3 pr-2">Status</th>
-                          <th className="pb-3 pr-2 text-right">Ações</th>
+                      ))}
+                      {cuponsIndicacao.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-4 text-center text-xs">Nenhum cupom cadastrado.</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#1E1E2E]/60 text-[#F0F0FF]">
-                        {coupons.map((coupon) => {
-                          const admin = sysAdmins.find(a => a.id === coupon.admin_id);
-                          return (
-                            <tr key={coupon.id} className="hover:bg-[#1E1E2E]/20">
-                              <td className="py-2 pr-2 font-bold font-mono text-emerald-400">{coupon.codigo}</td>
-                              <td className="py-2 pr-2">
-                                {coupon.tipo === 'indicacao' ? (
-                                  <span className="text-[9px] px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded border border-purple-500/20 uppercase font-bold">40% OFF</span>
-                                ) : (
-                                  <span className="text-[9px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-bold">Presente (Premium)</span>
-                                )}
-                              </td>
-                              <td className="py-2 pr-2 font-mono text-xs">{admin?.nome || 'Desconhecido'}</td>
-                              <td className="py-2 pr-2">
-                                {coupon.ativo ? (
-                                  <span className="text-emerald-400">Ativo</span>
-                                ) : (
-                                  <span className="text-rose-400">Inativo</span>
-                                )}
-                              </td>
-                              <td className="py-2 pr-2 text-right">
-                                <button
-                                  onClick={async () => {
-                                    if (confirm("Excluir cupom?")) {
-                                      await adminFetch(`/api/admin/coupons/${coupon.id}`, { method: 'DELETE' });
-                                      loadData();
-                                    }
-                                  }}
-                                  className="text-rose-400 hover:text-rose-300 text-[10px] underline"
-                                >
-                                  Excluir
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {coupons.length === 0 && (
-                          <tr><td colSpan={5} className="py-4 text-center text-xs">Nenhum cupom cadastrado.</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -666,13 +716,20 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] font-black uppercase text-[#8888AA]">URL da Imagem</label>
-                      <input
-                        type="url"
-                        value={manualForm.imagem_url}
-                        onChange={(e) => setManualForm({ ...manualForm, imagem_url: e.target.value })}
-                        placeholder="Ex: https://link-da-foto.com/imagem.jpg"
-                        className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={manualForm.imagem_url}
+                          onChange={(e) => setManualForm({ ...manualForm, imagem_url: e.target.value })}
+                          placeholder="Ex: https://link-da-foto.com/imagem.jpg"
+                          className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 flex-1"
+                        />
+                        {manualForm.imagem_url && (
+                          <div className="w-9 h-9 rounded-lg overflow-hidden border border-[#1E1E2E] shrink-0 bg-[#0C0C12]">
+                            <img src={manualForm.imagem_url} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] font-black uppercase text-[#8888AA]">Preço (R$ 89,90) *</label>
@@ -857,6 +914,7 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
             </div>
           )}
 
+
           {activeTab === 'users' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -877,27 +935,56 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                   <table className="w-full text-left text-xs text-[#8888AA]">
                     <thead>
                       <tr className="border-b border-[#1E1E2E] text-white">
-                        <th className="pb-3 pr-2">Usuário</th>
+                        <th className="pb-3 pr-2">Nome</th>
                         <th className="pb-3 pr-2">Email</th>
                         <th className="pb-3 pr-2">Plano</th>
                         <th className="pb-3 pr-2">Role</th>
+                        <th className="pb-3 pr-2">Ativo</th>
+                        <th className="pb-3 pr-2">Criado em</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#1E1E2E]/60 text-[#F0F0FF]">
                       {filteredUsers.map((user) => (
                         <tr key={user.id} className="hover:bg-[#1E1E2E]/20">
-                          <td className="py-2 pr-2 font-bold">{user.name}</td>
-                          <td className="py-2 pr-2 font-mono text-purple-300">{user.email}</td>
-                          <td className="py-2 pr-2 uppercase font-bold text-[10px]">{user.plan}</td>
-                          <td className="py-2 pr-2">
-                            {user.role === 'admin' ? (
-                              <span className="text-[9px] px-1.5 py-0.5 bg-rose-500/10 text-rose-400 rounded border border-rose-500/20">Admin</span>
-                            ) : (
-                              <span className="text-[9px] px-1.5 py-0.5 bg-zinc-500/10 text-zinc-400 rounded border border-zinc-500/20">Client</span>
-                            )}
+                          <td className="py-2.5 pr-2 font-bold">{user.name || 'Sem nome'}</td>
+                          <td className="py-2.5 pr-2 font-mono text-purple-300">{user.email}</td>
+                          <td className="py-2.5 pr-2 uppercase font-bold text-[10px]">{user.plan || 'Free'}</td>
+                          <td className="py-2.5 pr-2">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleUserRole(user)}
+                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded cursor-pointer transition ${
+                                user.role === 'admin'
+                                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                  : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                              }`}
+                            >
+                              {user.role === 'admin' ? 'Admin' : 'Client'}
+                            </button>
+                          </td>
+                          <td className="py-2.5 pr-2">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleUserAtivo(user)}
+                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded cursor-pointer transition ${
+                                user.ativo !== false
+                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                  : 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                              }`}
+                            >
+                              {user.ativo !== false ? 'Ativo' : 'Inativo'}
+                            </button>
+                          </td>
+                          <td className="py-2.5 pr-2 text-zinc-500">
+                            {user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}
                           </td>
                         </tr>
                       ))}
+                      {filteredUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-4 text-center">Nenhum usuário encontrado.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -907,186 +994,6 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
 
         </div>
       </div>
-
-      {/* Admin Form Modal */}
-      {showAdminForm && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-[#111118] border border-[#1E1E2E] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-            <h2 className="text-lg font-bold text-white">
-              {editingAdminId ? 'Editar Admin/Associado' : 'Novo Admin/Associado'}
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider mb-1 block">Nome</label>
-                <input
-                  type="text"
-                  value={adminFormData.nome}
-                  onChange={(e) => setAdminFormData({ ...adminFormData, nome: e.target.value })}
-                  className="w-full bg-[#0C0C12] border border-[#1E1E2E] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider mb-1 block">E-mail</label>
-                <input
-                  type="email"
-                  value={adminFormData.email}
-                  onChange={(e) => setAdminFormData({ ...adminFormData, email: e.target.value })}
-                  className="w-full bg-[#0C0C12] border border-[#1E1E2E] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider mb-1 block">Checkout URL (Applyfy/Kiwify)</label>
-                <input
-                  type="url"
-                  value={adminFormData.checkout_url}
-                  onChange={(e) => setAdminFormData({ ...adminFormData, checkout_url: e.target.value })}
-                  className="w-full bg-[#0C0C12] border border-[#1E1E2E] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  placeholder="https://pay.kiwify.com.br/..."
-                />
-              </div>
-              <div className="flex items-center gap-4 pt-2">
-                <label className="flex items-center gap-2 text-sm text-white">
-                  <input
-                    type="checkbox"
-                    checked={adminFormData.is_associado}
-                    onChange={(e) => setAdminFormData({ ...adminFormData, is_associado: e.target.checked })}
-                    className="rounded bg-[#1E1E2E] border-transparent focus:ring-emerald-500 text-emerald-500"
-                  />
-                  É Associado?
-                </label>
-                <label className="flex items-center gap-2 text-sm text-white">
-                  <input
-                    type="checkbox"
-                    checked={adminFormData.status}
-                    onChange={(e) => setAdminFormData({ ...adminFormData, status: e.target.checked })}
-                    className="rounded bg-[#1E1E2E] border-transparent focus:ring-emerald-500 text-emerald-500"
-                  />
-                  Ativo?
-                </label>
-              </div>
-            </div>
-            <div className="flex gap-3 pt-4 border-t border-[#1E1E2E]">
-              <button
-                onClick={() => setShowAdminForm(false)}
-                className="flex-1 py-2 rounded-xl bg-zinc-800 text-white font-bold text-sm hover:bg-zinc-700 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const method = editingAdminId ? 'PUT' : 'POST';
-                    const url = editingAdminId ? `/api/admin/sys-admins/${editingAdminId}` : '/api/admin/sys-admins';
-                    const res = await adminFetch(url, {
-                      method,
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(adminFormData)
-                    });
-                    if (res.ok) {
-                      setShowAdminForm(false);
-                      loadData();
-                      setSuccessMsg('Admin salvo com sucesso!');
-                    } else {
-                      setErrorMsg('Erro ao salvar admin.');
-                    }
-                  } catch (e) {
-                    setErrorMsg('Erro de rede.');
-                  }
-                }}
-                className="flex-1 py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 transition"
-              >
-                Salvar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Coupon Form Modal */}
-      {showCouponForm && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-[#111118] border border-[#1E1E2E] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-            <h2 className="text-lg font-bold text-white">Novo Cupom</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider mb-1 block">Código</label>
-                <input
-                  type="text"
-                  value={couponFormData.codigo}
-                  onChange={(e) => setCouponFormData({ ...couponFormData, codigo: e.target.value.toUpperCase() })}
-                  className="w-full bg-[#0C0C12] border border-[#1E1E2E] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 uppercase"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider mb-1 block">Admin/Associado Dono</label>
-                <select
-                  value={couponFormData.admin_id}
-                  onChange={(e) => setCouponFormData({ ...couponFormData, admin_id: e.target.value })}
-                  className="w-full bg-[#0C0C12] border border-[#1E1E2E] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="" disabled>Selecione um dono...</option>
-                  {sysAdmins.map(a => (
-                    <option key={a.id} value={a.id}>{a.nome}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-[#8888AA] uppercase tracking-wider mb-1 block">Tipo do Cupom</label>
-                <select
-                  value={couponFormData.tipo}
-                  onChange={(e) => setCouponFormData({ ...couponFormData, tipo: e.target.value })}
-                  className="w-full bg-[#0C0C12] border border-[#1E1E2E] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="indicacao">Indicação (40% OFF)</option>
-                  <option value="presente">Presente (Kit Premium)</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-4 pt-2">
-                <label className="flex items-center gap-2 text-sm text-white">
-                  <input
-                    type="checkbox"
-                    checked={couponFormData.ativo}
-                    onChange={(e) => setCouponFormData({ ...couponFormData, ativo: e.target.checked })}
-                    className="rounded bg-[#1E1E2E] border-transparent focus:ring-emerald-500 text-emerald-500"
-                  />
-                  Ativo?
-                </label>
-              </div>
-            </div>
-            <div className="flex gap-3 pt-4 border-t border-[#1E1E2E]">
-              <button
-                onClick={() => setShowCouponForm(false)}
-                className="flex-1 py-2 rounded-xl bg-zinc-800 text-white font-bold text-sm hover:bg-zinc-700 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await adminFetch('/api/admin/coupons', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(couponFormData)
-                    });
-                    if (res.ok) {
-                      setShowCouponForm(false);
-                      loadData();
-                      setSuccessMsg('Cupom criado com sucesso!');
-                    } else {
-                      setErrorMsg('Erro ao criar cupom.');
-                    }
-                  } catch (e) {
-                    setErrorMsg('Erro de rede.');
-                  }
-                }}
-                className="flex-1 py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 transition"
-              >
-                Salvar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

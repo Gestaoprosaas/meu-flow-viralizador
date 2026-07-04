@@ -84,15 +84,15 @@ export default function ScreenDashboard({
   onNewCampaignClick
 }: ScreenDashboardProps) {
 
-  // Flow pathway highlights
+  // ViralSeller pathway highlights
   const [highlightedPath, setHighlightedPath] = useState<string | null>(null);
 
   // Connection integrations state
   const [integrations, setIntegrations] = useState([
-    { id: 'tiktok-shop', name: 'TikTok Shop Premium', status: 'connected', type: 'Vendas Direct', speed: 'Sincronização Ativa', enabled: true },
+    { id: 'tiktok-shop', name: 'ViralSeller Trends Hub', status: 'connected', type: 'Estudo de Vendas', speed: 'Sincronização Local', enabled: true },
     { id: 'shopee-api', name: 'Shopee Affiliate Engine', status: 'connected', type: 'Afiliados', speed: 'Alta Velocidade (Webhook)', enabled: true },
     { id: 'mercado-livre', name: 'Mercado Livre Store', status: 'disconnected', type: 'Vendas Direct', speed: 'Não Vinculado', enabled: false },
-    { id: 'flowy-media', name: 'Flowy AI Cloud Sync', status: 'connected', type: 'Mídia e Renders', speed: 'Catálogo de Fotos', enabled: true }
+    { id: 'flowy-media', name: 'ViralSellery AI Cloud Sync', status: 'connected', type: 'Mídia e Renders', speed: 'Catálogo de Fotos', enabled: true }
   ]);
 
   const handleToggleIntegration = (id: string) => {
@@ -175,7 +175,7 @@ export default function ScreenDashboard({
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 text-[#fff]">
             <span className="w-2 h-2 rounded-full bg-cyan-400 block animate-pulse shadow-md shadow-cyan-400" />
-            Conectado com Flowy & TikTok API
+            Conectado com ViralSellery Cloud Engine
           </span>
           <span className="text-[#8888AA] hidden sm:inline">|</span>
           <span className="text-[#8888AA] hidden sm:flex items-center gap-1.5">
@@ -312,7 +312,7 @@ export default function ScreenDashboard({
       {/* Row 2: Middle interactive visual flow + retention cohort */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Middle Left (2/3 Column): Audiência & Tráfego Funnel Flow */}
+        {/* Middle Left (2/3 Column): Audiência & Tráfego Funnel ViralSeller */}
         <div className="lg:col-span-2 bg-[#010101] border border-[#1E1E2E] rounded-3xl p-6 flex flex-col justify-between space-y-4 hover:border-[#FE2C55]/20 transition relative">
           
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#FE2C55]/5 rounded-full blur-3xl pointer-events-none" />
@@ -341,7 +341,7 @@ export default function ScreenDashboard({
               <span>CONVERSÃO DE COMPRAS</span>
             </div>
 
-            {/* Direct Flow Diagram mapping SVG ribbons */}
+            {/* Direct ViralSeller Diagram mapping SVG ribbons */}
             <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
               <div className="grid grid-cols-3 items-center relative z-10 gap-2 min-w-[650px] md:min-w-0">
               
@@ -399,7 +399,7 @@ export default function ScreenDashboard({
                 </button>
               </div>
 
-              {/* Center Flow lanes via customized animated glowing ribbon lines */}
+              {/* Center ViralSeller lanes via customized animated glowing ribbon lines */}
               <div className="relative h-44 flex items-center justify-center">
                 <svg className="absolute w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
                   {/* Pathway 1: Organic */}
@@ -454,7 +454,7 @@ export default function ScreenDashboard({
                   />
                 </svg>
 
-                {/* Flow center glowing Core */}
+                {/* ViralSeller center glowing Core */}
                 <div className="px-3 py-1 bg-black/90 border border-white/10 rounded-lg text-[9px] font-black uppercase text-white shadow-xl z-10 animate-pulse">
                   CONECTOR IA
                 </div>
@@ -486,7 +486,7 @@ export default function ScreenDashboard({
 
                 <div className="p-3 bg-[#111118]/80 border border-[#1E1E2E] rounded-xl">
                   <div className="flex justify-between items-center text-[10px] font-bold text-[#A0A0C0] uppercase tracking-wider mb-0.5">
-                    <span>Flowy Checkout / Direto</span>
+                    <span>ViralSellery Checkout / Direto</span>
                     <span className="text-indigo-400">R$ 1.851,21</span>
                   </div>
                   <div className="font-extrabold text-xs text-white">20% do Volume</div>
@@ -627,7 +627,7 @@ export default function ScreenDashboard({
               <h3 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
                 <Settings className="w-4 h-4 text-emerald-400" /> Sincronização Inteligente de Ofertas
               </h3>
-              <p className="text-[11px] text-[#8888AA]">Integre campanhas, fotos do Flowy e inventários diretamente do seu centro operacional.</p>
+              <p className="text-[11px] text-[#8888AA]">Integre campanhas, fotos do ViralSellery e inventários diretamente do seu centro operacional.</p>
             </div>
             
             <button

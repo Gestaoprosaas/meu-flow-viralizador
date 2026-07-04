@@ -3,24 +3,56 @@ import { motion } from 'motion/react';
 import { Check, Sparkles, Gift } from 'lucide-react';
 
 interface PricingSectionProps {
-  onSelectPlan: (planKey: 'starter' | 'pro' | 'agency') => void;
+  onSelectPlan: (planKey: 'starter' | 'pro' | 'agency', customUrl?: string) => void;
 }
 
 export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [couponData, setCouponData] = useState<any>(null);
+  const [loadingCoupon, setLoadingCoupon] = useState(false);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const formatPrice = (value: any) => {
+    const parsed = parseFloat(value) || 0;
+    return `R$ ${parsed.toFixed(2).replace('.', ',')}`;
+  };
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!coupon.trim()) {
       setCouponError('Por favor, digite um cupom.');
       setCouponApplied(false);
+      setCouponData(null);
       return;
     }
-    // Simulate a successful coupon application
-    setCouponApplied(true);
-    setCouponError('');
+    
+    setLoadingCoupon(true);
+    try {
+      const response = await fetch('/api/check-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: coupon })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setCouponData(data.cupom);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponError(data.error || 'Cupom inválido.');
+        setCouponApplied(false);
+        setCouponData(null);
+      }
+    } catch (err) {
+      setCouponError('Erro ao validar cupom.');
+      setCouponApplied(false);
+      setCouponData(null);
+    } finally {
+      setLoadingCoupon(false);
+    }
   };
 
   return (
@@ -65,9 +97,9 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
               APLICAR
             </button>
           </form>
-          {couponApplied && (
-            <p className="text-emerald-400 text-[11px] font-bold mt-2 animate-fade-in tracking-wide">
-              ✓ CUPOM DE INDICAÇÃO ATIVADO! DESCONTO APLICADO NO CHECKOUT.
+          {couponApplied && couponData && (
+            <p className="text-emerald-400 text-sm font-bold mt-2 animate-fade-in tracking-wide bg-emerald-500/10 py-2 px-4 rounded-lg border border-emerald-500/20 inline-block">
+              ✅ Cupom {couponData.cupom} aplicado! { (parseFloat(couponData.preco_com_desconto) || 0) < (parseFloat(couponData.preco_original) || 0) ? `De ${formatPrice(couponData.preco_original)} por ${formatPrice(couponData.preco_com_desconto)}` : `${formatPrice(couponData.preco_com_desconto)}` }
             </p>
           )}
           {couponError && (
@@ -157,7 +189,29 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
               
               {/* Cost layout exactly like image */}
               <div className="mt-8 flex items-baseline gap-2">
-                <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">R$ 497,00</span>
+                {couponApplied && couponData ? (
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const orig = parseFloat(couponData.preco_original) || 0;
+                      const desc = parseFloat(couponData.preco_com_desconto) || 0;
+                      const hasValidDiscount = desc > 0 && desc !== orig;
+                      return (
+                        <>
+                          {hasValidDiscount && (
+                            <span className="text-xl font-bold text-[#8888AA] line-through decoration-red-500">
+                              {formatPrice(couponData.preco_original)}
+                            </span>
+                          )}
+                          <span className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight">
+                            {formatPrice(couponData.preco_com_desconto)}
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">R$ 497,00</span>
+                )}
                 <span className="text-gray-500 text-xs font-extrabold tracking-widest uppercase">PAGAMENTO ÚNICO</span>
               </div>
 
@@ -165,6 +219,13 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
               <span className="text-[10px] font-mono text-[#69C9D0] font-bold block mt-2 tracking-wider">
                 Acesso para sempre. Sem anuidades.
               </span>
+              
+              {couponData?.tipo === 'presente' && (
+                <div className="mt-3 bg-gradient-to-r from-amber-500/20 to-orange-500/5 border border-amber-500/30 rounded-lg p-2 flex items-center justify-center gap-2">
+                  <Gift className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-extrabold text-amber-400 uppercase tracking-widest">+ Kit Viral Premium (EM BREVE)</span>
+                </div>
+              )}
 
               {/* Features List with custom styled checkmarks */}
               <ul className="space-y-4 border-t border-white/[0.04] pt-6 mt-8">
@@ -194,7 +255,12 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
             <div className="mt-8 pt-4 border-t border-white/[0.03]">
               <button
                 type="button"
-                onClick={() => onSelectPlan('pro')}
+                onClick={async () => {
+                if (couponData?.cupom) {
+                  await fetch(`/api/validar-cupom/${couponData.cupom}/usar`, { method: 'POST' });
+                }
+                onSelectPlan('pro', couponData?.checkout_url);
+              }}
                 className="w-full py-4 rounded-xl bg-[#FE2C55]/5 hover:bg-[#FE2C55] hover:text-white border border-[#FE2C55]/30 text-[#FE2C55] font-black text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-[#FE2C55]/25"
                 id="btn-select-vitalicio"
               >

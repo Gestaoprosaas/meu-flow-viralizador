@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   LayoutDashboard,
@@ -42,7 +42,7 @@ import ScreenTreinamentos from './components/ScreenTreinamentos';
 import ScreenViralizarPerfil from './components/ScreenViralizarPerfil';
 import ScreenUpgrade from './components/ScreenUpgrade';
 import ScreenAdmin from './components/ScreenAdmin';
-import ScreenIndiqueAmigos from './components/ScreenIndiqueAmigos';
+import { ScreenIndique } from './components/ScreenIndique';
 import ScreenSeguranca from './components/ScreenSeguranca';
 import TemplateGallery from './components/TemplateGallery';
 import { getSupabase } from './lib/supabaseClient';
@@ -219,6 +219,8 @@ export default function App() {
   const [initialMovementId, setInitialMovementId] = useState<string | null>(null);
 
   // Real data state
+  const profileRef = useRef<any>(null);
+
   const [profile, setProfile] = useState<Profile>({
     id: 'user_01',
     name: 'Admin Global',
@@ -234,6 +236,22 @@ export default function App() {
     credits_video_used: 0,
     created_at: new Date().toISOString()
   });
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  const appFetch = (url: string, options: RequestInit = {}) => {
+    const p = profileRef.current;
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers as Record<string, string> || {}),
+        'x-user-email': p?.email || '',
+        'x-user-id': p?.id || ''
+      }
+    });
+  };
+
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -587,14 +605,14 @@ export default function App() {
   const refreshFullState = async () => {
     try {
       // Profile
-      const pRes = await fetch('/api/profile');
+      const pRes = await appFetch('/api/profile');
       if (pRes.ok) {
         const pData = await pRes.json();
         setProfile(pData);
       }
 
       // Projects
-      const prRes = await fetch('/api/projects');
+      const prRes = await appFetch('/api/projects');
       if (prRes.ok) {
         const prData = await prRes.json();
         if (projects.length === 0) {
@@ -603,7 +621,7 @@ export default function App() {
       }
 
       // Trending Products
-      const tRes = await fetch('/api/trending-products');
+      const tRes = await appFetch('/api/trending-products');
       if (tRes.ok) {
         let tData = await tRes.json();
 
@@ -611,7 +629,7 @@ export default function App() {
       }
 
       // Scripts
-      const sRes = await fetch('/api/roteiros');
+      const sRes = await appFetch('/api/roteiros');
       if (sRes.ok) {
         const sData = await sRes.json();
         if (scripts.length === 0) {
@@ -620,7 +638,7 @@ export default function App() {
       }
 
       // Images
-      const iRes = await fetch('/api/imagens');
+      const iRes = await appFetch('/api/imagens');
       if (iRes.ok) {
         const iData = await iRes.json();
         if (images.length === 0) {
@@ -629,7 +647,7 @@ export default function App() {
       }
 
       // Videos
-      const vRes = await fetch('/api/videos');
+      const vRes = await appFetch('/api/videos');
       if (vRes.ok) {
         const vData = await vRes.json();
         if (videos.length === 0) {
@@ -638,7 +656,7 @@ export default function App() {
       }
 
       // Referrals
-      const rRes = await fetch('/api/afiliados');
+      const rRes = await appFetch('/api/afiliados');
       if (rRes.ok) {
         const rData = await rRes.json();
         setReferrals(rData);
@@ -686,7 +704,7 @@ export default function App() {
       expirationDate.setDate(expirationDate.getDate() + 30);
       document.cookie = `ref=${refParam}; path=/; expires=${expirationDate.toUTCString()}; SameSite=Lax`;
       
-      fetch('/api/afiliados/clique', {
+      appFetch('/api/afiliados/clique', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ref: refParam })
@@ -741,7 +759,7 @@ export default function App() {
     setProjects(prev => [newProj, ...prev]);
 
     try {
-      const response = await fetch('/api/projects', {
+      const response = await appFetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProj)
@@ -772,7 +790,7 @@ export default function App() {
     setTrendingProducts(prev => [newProd, ...prev]);
 
     try {
-      const response = await fetch('/api/trending-products', {
+      const response = await appFetch('/api/trending-products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProd)
@@ -787,7 +805,7 @@ export default function App() {
 
   const handleAddMockReferral = async () => {
     try {
-      const response = await fetch('/api/afiliados/mock', {
+      const response = await appFetch('/api/afiliados/mock', {
         method: 'POST'
       });
       if (response.ok) {
@@ -800,7 +818,7 @@ export default function App() {
 
   const handleUpdateProfile = async (name: string, email: string) => {
     try {
-      const response = await fetch('/api/profile', {
+      const response = await appFetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email })
@@ -815,7 +833,7 @@ export default function App() {
 
   const handleResetDatabase = async () => {
     try {
-      const response = await fetch('/api/profile/reset', { method: 'POST' });
+      const response = await appFetch('/api/profile/reset', { method: 'POST' });
       if (response.ok) {
         refreshFullState();
         setCurrentPath('/dashboard');
@@ -920,7 +938,7 @@ export default function App() {
 
           try {
             // Update name, email and role on express server
-            await fetch('/api/profile', {
+            await appFetch('/api/profile', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
@@ -933,14 +951,14 @@ export default function App() {
             });
 
             // Set the correct plan with corresponding server-side credits
-            await fetch('/api/profile/upgrade', {
+            await appFetch('/api/profile/upgrade', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ plan: userData.plan })
             });
 
             // Persist Supabase integration keys globally
-            await fetch('/api/admin/settings', {
+            await appFetch('/api/admin/settings', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -1123,6 +1141,7 @@ export default function App() {
         </div>
 
         {/* Indique Amigos card module matching the screenshot layout */}
+        {profile.role === 'admin' && (
         <div className="px-4 py-1.5 shrink-0">
           <div className="bg-[#121223] border border-[#20203D] rounded-3xl p-3.5 flex items-center justify-between gap-3 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#903EF6]/4 to-[#FE2C55]/4 opacity-0 group-hover:opacity-100 transition duration-500" />
@@ -1140,6 +1159,7 @@ export default function App() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Sidebar Footer Adjustment Buttons & Quota display */}
         <div className="p-4 border-t border-[#18182D]/80 flex flex-col gap-2.5 shrink-0 bg-[#07070F]/60">
@@ -1205,8 +1225,8 @@ export default function App() {
                 <span className="text-xs font-extrabold uppercase tracking-tight text-white">
                   Seu <span className="bg-gradient-to-r from-[#813EF6] via-[#FE2C55] to-[#25F4EE] bg-clip-text text-transparent">Produtos em Alta</span>
                 </span>
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-[#25F4EE]/10 border border-[#25F4EE]/20 rounded-full text-[10px] font-black text-[#25F4EE] whitespace-nowrap animate-pulse">
-                  <span>●</span> SINC. ATIVA DO TIKTOK SHOP
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black text-emerald-400 whitespace-nowrap animate-pulse">
+                  <span>●</span> MONITOR DE TENDÊNCIAS ATIVO
                 </div>
               </div>
             )}
@@ -1361,9 +1381,7 @@ export default function App() {
                 )}
 
                 {currentPath === '/indique-amigos' && (
-                  <ScreenIndiqueAmigos
-                    profile={profile}
-                  />
+                  <ScreenIndique />
                 )}
               </>
             )}

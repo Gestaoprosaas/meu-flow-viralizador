@@ -617,19 +617,20 @@ const enrichProduct = (p: any) => {
   }
 
   // Fallback / generate default Portuguese properties dynamically
-  const priceStr = p.price || (p.average_price ? p.average_price.toFixed(2).replace('.', ',') : '52,90');
-  const commissionStr = p.commission_percentage ? `${p.commission_percentage}%` : '15%';
-  const tagsList = p.tags || [p.niche || 'Geral'];
+  const priceStr = p.preco || p.price || (p.average_price ? p.average_price.toFixed(2).replace('.', ',') : '52,90');
+  const commissionStr = p.comissao || (p.commission_percentage ? `${p.commission_percentage}%` : '15%');
+  const tagsList = p.tags || [p.niche || p.nicho || 'Geral'];
   const pName = p.name || p.nome || 'Produto Viral';
   const pDesc = p.description || p.trend_reason || 'Produto em alta de alta conversão.';
   
   return {
     ...p,
     nome: pName,
-    imagem: p.image_url || p.imagem || "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=300",
+    preco: priceStr,
+    imagem: p.imagem_url || p.image_url || p.imagem || "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=300",
     tags: tagsList,
     afiliado: {
-      link: p.affiliate_links?.tiktok || `https://shop.tiktok.com/view/product/173${Math.abs(hashString(pName.toString())).toString().padStart(10, '0')}${Math.floor(Math.random() * 10000)}`,
+      link: p.link_afiliado || p.affiliate_links?.tiktok || `https://shop.tiktok.com/view/product/173${Math.abs(hashString(pName.toString())).toString().padStart(10, '0')}${Math.floor(Math.random() * 10000)}`,
       comissao: commissionStr
     },
     prompts: {
@@ -1287,7 +1288,7 @@ export default function ScreenProdutos({
   const handleTikTokSync = async () => {
     setIsSyncingTikTok(true);
     setSyncTikTokSuccess(false);
-    setSyncTikTokMessage('Conectando ao Pipeline de Crawling e APIs do TikTok Shop...');
+    setSyncTikTokMessage('Buscando e analisando tendências de vendas nacionais...');
 
     try {
       const res = await fetch('/api/produtos');
@@ -1295,7 +1296,7 @@ export default function ScreenProdutos({
       setItems(data.map(enrichProduct).filter(Boolean));
       setIsKalodataMode(true);
       setSyncTikTokSuccess(true);
-      setSyncTikTokMessage('Sincronizado em tempo real! Os produtos mais vendidos do TikTok Shop Brasil foram carregados.');
+      setSyncTikTokMessage('Sincronizado em tempo real! Os produtos de alta conversão foram carregados.');
       setTimeout(() => {
         setSyncTikTokSuccess(false);
       }, 5000);
@@ -1311,16 +1312,13 @@ export default function ScreenProdutos({
     }
   };
 
-  const handleTriggerAffiliation = (product: any) => {
-    let link = product?.afiliado?.link || product?.affiliate_links?.tiktok || product?.affiliate_links?.shopee;
-    
-    // Auto-fix for cached identical links or fallbacks from previous versions
-    if (!link || link.includes('1700000000000000000') || link === "https://shop.tiktok.com/view/product/1735089994906043782" || link === "https://www.tiktok.com/view/product/1735089994906043782") {
-      const pName = product?.nome || product?.name || 'produto';
-      link = `https://shop.tiktok.com/view/product/173${Math.abs(hashString(pName.toString())).toString().padStart(10, '0')}${Math.floor(Math.random() * 10000)}`;
+  const handleTriggerAffiliation = (produto: any) => {
+    if (produto?.afiliado?.link) {
+      window.open(produto.afiliado.link, '_blank');
+    } else {
+      let link = produto?.affiliate_links?.tiktok || produto?.affiliate_links?.shopee;
+      if (link) window.open(link, '_blank');
     }
-    
-    window.open(link, '_blank');
   };
 
   const handleTriggerVideoGeneration = (product: any) => {
@@ -1905,28 +1903,24 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
     setActiveWizardProduct(null);
   };
 
-  const handleDownloadImage = async (url: string, filename: string) => {
+  const handleDownloadImagem = async (imageUrl: string, nomeProduto: string) => {
     try {
-      const response = await fetch(url);
+      const proxyUrl = `/api/proxy-imagem?url=${encodeURIComponent(imageUrl)}`;
+      const response = await fetch(proxyUrl);
       const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      console.error("Download failed:", err);
-      // Fallback: direct download link if possible, or window.open
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `${nomeProduto.replace(/\s+/g, '-').toLowerCase()}`;
+      if (!a.download.endsWith('.jpg') && !a.download.endsWith('.png')) {
+        a.download += '.jpg';
+      }
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(imageUrl, '_blank');
     }
   };
 
@@ -1937,12 +1931,12 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
     if (selectedAvatarId !== 'CUSTOM_PHOTO') {
       const avPreset = allAvatars.find(a => a.id === selectedAvatarId);
       avatarUrl = avPreset?.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300';
-      avatarName = `${avPreset?.name || 'avatar'}.jpg`;
+      avatarName = `${avPreset?.name || 'avatar'}`;
     }
 
     // 2. Download Product
-    let productUrl = activeWizardProduct?.image_url || '';
-    let productName = 'produto.jpg';
+    let productUrl = activeWizardProduct?.image_url || activeWizardProduct?.imagem || '';
+    let productName = activeWizardProduct?.nome || activeWizardProduct?.name || 'produto';
 
     // 3. Download Scenario
     let scenarioUrl = '';
@@ -1950,22 +1944,27 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
     if (isCuratedScenario) {
       const scPreset = CURATED_SCENARIOS_PRESETS.find(s => s.id === selectedScenarioId);
       scenarioUrl = scPreset?.referenceImageUrl || scPreset?.imageUrl || '';
-      scenarioName = `${scPreset?.name || 'cenario'}.jpg`;
+      scenarioName = `${scPreset?.name || 'cenario'}`;
     }
 
     // Sequentially download with small timeout to bypass popup blockers
+    let delay = 0;
     if (avatarUrl) {
-      await handleDownloadImage(avatarUrl, avatarName);
+      setTimeout(async () => {
+        await handleDownloadImagem(avatarUrl, avatarName);
+      }, delay);
+      delay += 800;
     }
     if (productUrl) {
       setTimeout(async () => {
-        await handleDownloadImage(productUrl, productName);
-      }, 500);
+        await handleDownloadImagem(productUrl, productName);
+      }, delay);
+      delay += 800;
     }
     if (scenarioUrl) {
       setTimeout(async () => {
-        await handleDownloadImage(scenarioUrl, scenarioName);
-      }, 1000);
+        await handleDownloadImagem(scenarioUrl, scenarioName);
+      }, delay);
     }
   };
 
@@ -2011,7 +2010,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                 
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-[#FE2C55]/10 to-[#25F4EE]/10 border border-[#FE2C55]/25 text-[10px] font-black tracking-wider text-[#F0F0FF] uppercase shadow-sm">
                   <Link2 className="w-3.5 h-3.5 text-[#25F4EE] shrink-0" />
-                  Sincronizado com TikTok Shop
+                  Indexador de Tendências Ativo
                 </span>
 
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-[10px] font-black tracking-wider text-indigo-400 uppercase shadow-sm" title="Integração com Kalodata">
@@ -2096,7 +2095,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
               <span>↗ <strong className="text-white">{items.length}</strong> produtos validados — vitrine reorganizada a cada hora</span>
             </div>
             <div className="hidden sm:block text-[8px] text-[#555577] uppercase tracking-wider font-black">
-              TikTok Miner Engine v3.2
+              ViralSeller Engine v3.2
             </div>
           </div>
         </div>
@@ -2192,7 +2191,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       onClick={handleTikTokSync}
                       className="px-3.5 py-1.5 bg-[#1E1E2E] hover:bg-[#25253A] border border-[#2F2F4E]/60 text-[#25F4EE] hover:text-white text-[10px] font-black rounded-xl flex items-center gap-1 transition"
                     >
-                      <RefreshCw className={`w-3 h-3 ${isSyncingTikTok ? 'animate-spin' : ''}`} /> Sincronizar TikTok
+                      <RefreshCw className={`w-3 h-3 ${isSyncingTikTok ? 'animate-spin' : ''}`} /> Sincronizar Tendências
                     </button>
                   </div>
                 </div>
@@ -2367,7 +2366,11 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
 
                 {/* Product Cards Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 max-h-[calc(100vh-220px)] sm:max-h-[520px] overflow-y-auto pr-1 touch-pan-y">
-                  {filteredItems.map((prod, index) => {
+                  {filteredItems.length === 0 ? (
+  <div className="col-span-full flex flex-col items-center justify-center p-12 bg-[#111118] border border-[#1E1E2E] rounded-xl text-center">
+    <span className="text-sm font-bold text-[#8888AA]">Nenhum produto cadastrado ainda.</span>
+  </div>
+) : filteredItems.map((prod, index) => {
                     const isSelected = activeWizardProduct?.id === prod.id;
                     const pId = prod.id || String(index);
                     const pHash = pId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -3850,7 +3853,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                             </div>
                             <div className="grid grid-cols-2 gap-1.5 pt-1">
                               <button
-                                onClick={() => handleDownloadImage(imgUrlToUse, `${avPreset?.name || 'avatar'}.jpg`)}
+                                onClick={() => handleDownloadImagem(imgUrlToUse, `${avPreset?.name || 'avatar'}.jpg`)}
                                 className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                                 title="Baixar imagem do avatar"
                               >
@@ -3883,20 +3886,20 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           <div className="flex items-center gap-3 bg-[#111118] p-2 rounded-lg border border-[#1E1E2E]">
                             <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#1E1E2E] shrink-0">
                               <ProductImage 
-                                src={activeWizardProduct.image_url} 
-                                alt={activeWizardProduct.name} 
+                                src={activeWizardProduct.imagem || activeWizardProduct.image_url} 
+                                alt={activeWizardProduct.name || activeWizardProduct.nome} 
                                 className="w-full h-full object-cover"
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <span className="text-xs font-bold text-white block truncate">{activeWizardProduct.name}</span>
-                              <span className="text-[9px] text-[#8888AA] block uppercase tracking-wider truncate">{activeWizardProduct.niche}</span>
+                              <span className="text-xs font-bold text-white block truncate">{activeWizardProduct.name || activeWizardProduct.nome}</span>
+                              <span className="text-[9px] text-[#8888AA] block uppercase tracking-wider truncate">{activeWizardProduct.niche || activeWizardProduct.tags?.[0] || 'Produto'}</span>
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-1.5 pt-1">
                             <button
-                              onClick={() => handleDownloadImage(activeWizardProduct.image_url, 'produto.jpg')}
+                              onClick={() => handleDownloadImagem(activeWizardProduct.imagem || activeWizardProduct.image_url, 'produto.jpg')}
                               className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                               title="Baixar foto do produto"
                             >
@@ -3905,7 +3908,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                             <button
                               onClick={() => {
                                   try {
-                                    navigator.clipboard.writeText(activeWizardProduct.image_url);
+                                    navigator.clipboard.writeText(activeWizardProduct.imagem || activeWizardProduct.image_url);
                                     setCopiedProductLink(true);
                                     setTimeout(() => setCopiedProductLink(false), 2000);
                                   } catch (err) {}
@@ -3949,7 +3952,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                             
                             <div className="grid grid-cols-2 gap-1.5 pt-1">
                               <button
-                                onClick={() => handleDownloadImage(scImgUrl, `${scPreset?.name || 'cenario'}.jpg`)}
+                                onClick={() => handleDownloadImagem(scImgUrl, `${scPreset?.name || 'cenario'}.jpg`)}
                                 className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                                 title="Baixar foto do cenário"
                               >
@@ -4249,17 +4252,17 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                 <div className="rounded-2xl overflow-hidden border border-[#1E1E2E]/80 bg-[#0A0A0F]">
                   <div className="w-full h-36">
                     <ProductImage 
-                      src={activeWizardProduct.image_url} 
-                      alt={activeWizardProduct.name} 
+                      src={activeWizardProduct.imagem || activeWizardProduct.image_url} 
+                      alt={activeWizardProduct.name || activeWizardProduct.nome} 
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="p-4 space-y-2">
                     <span className="text-[9px] font-extrabold text-[#25F4EE] bg-[#25F4EE]/10 px-2 py-0.5 rounded border border-[#25F4EE]/20 tracking-wider inline-block">
-                      {activeWizardProduct.niche}
+                      {activeWizardProduct.niche || activeWizardProduct.tags?.[0] || 'Produto'}
                     </span>
-                    <h4 className="text-sm font-black text-white">{activeWizardProduct.name}</h4>
-                    <p className="text-[11px] text-[#8888AA] line-clamp-3 leading-relaxed">{activeWizardProduct.description}</p>
+                    <h4 className="text-sm font-black text-white">{activeWizardProduct.name || activeWizardProduct.nome}</h4>
+                    <p className="text-[11px] text-[#8888AA] line-clamp-3 leading-relaxed">{activeWizardProduct.description || activeWizardProduct.trend_reason}</p>
                   </div>
                 </div>
 
@@ -4430,7 +4433,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                   <RefreshCw className="w-12 h-12 text-emerald-400 animate-spin" />
                   <div className="space-y-1.5">
                     <p className="text-sm font-black text-white">Buscando Link Comercial...</p>
-                    <p className="text-xs text-[#8888AA]">Conectando com a API do TikTok Shop para gerar seu link de afiliado exclusivo.</p>
+                    <p className="text-xs text-[#8888AA]">Conectando com o banco de afiliações para gerar seu link exclusivo.</p>
                   </div>
                 </div>
               ) : (
@@ -4791,12 +4794,12 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                 <h3 className="text-lg font-black text-white tracking-wide transition-all duration-300">
                   {kalodataSearchPhase === 1 && "🔗 Conectando ao Kalodata..."}
                   {kalodataSearchPhase === 2 && "📊 Analisando produtos em alta no Brasil..."}
-                  {kalodataSearchPhase === 3 && "🔥 Identificando tendências TikTok Shop..."}
+                  {kalodataSearchPhase === 3 && "🔥 Identificando tendências de vendas..."}
                   {kalodataSearchPhase === 4 && `✅ ${kalodataCounter} produtos sincronizados!`}
                 </h3>
                 <p className="text-xs text-zinc-400 leading-relaxed">
                   {kalodataSearchPhase === 1 && "Estabelecendo handshake seguro com servidores do Kalodata BR..."}
-                  {kalodataSearchPhase === 2 && "Varrendo banco de dados do TikTok Shop para identificar produtos quentes..."}
+                  {kalodataSearchPhase === 2 && "Varrendo banco de dados de vendas para identificar produtos quentes..."}
                   {kalodataSearchPhase === 3 && "Calculando velocidade de vendas e engajamento viral..."}
                   {kalodataSearchPhase === 4 && "Tudo pronto! Carregando feed de produtos de alta conversão..."}
                 </p>
