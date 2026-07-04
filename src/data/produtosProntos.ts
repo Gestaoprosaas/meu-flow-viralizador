@@ -13,7 +13,7 @@ export const PRODUTOS_PRONTOS: ProdutoPronto[] = [
   {
     id: 'tt-1734328794865829770',
     nome: 'Saia Longa Feminina Suplex com Fenda Confortável Moda Gringa Casual Elegante',
-    link: 'https://www.tiktok.com/view/product/1734328794865829770',
+    link: 'https://vt.tiktok.com/ZS9MJ1dEF3G49-VxyuJ/',
     valor: 'R$ 59,90',
     tendencia: 'viral',
     nicho: 'Moda',
