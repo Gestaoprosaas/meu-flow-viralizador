@@ -1367,26 +1367,12 @@ export default function ScreenProdutos({
     const match = webLink.match(/\/product\/(\d+)/);
     const productId = match ? match[1] : null;
 
-    if (productId) {
-      // Tenta abrir no app do TikTok primeiro
-      const appLink = `snssdk1233://aweme/detail/${productId}`;
-      const shopLink = `https://shop.tiktok.com/view/product/${productId}`;
-      
-      // Cria elemento oculto para tentar abrir o app
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = appLink;
-      document.body.appendChild(iframe);
-      
-      // Fallback para o navegador após 1s se o app não abrir
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-        window.open(shopLink, '_blank');
-      }, 1000);
-    } else {
-      // Link sem ID identificável, abre direto
-      window.open(webLink, '_blank');
-    }
+    // Link direto da loja do TikTok Shop
+    const shopLink = productId
+      ? `https://shop.tiktok.com/view/product/${productId}`
+      : webLink;
+
+    window.open(shopLink, '_blank');
   };
 
   const handleTriggerVideoGeneration = (product: any) => {
