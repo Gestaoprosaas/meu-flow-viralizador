@@ -645,7 +645,7 @@ const enrichProduct = (p: any) => {
     imagem: finalImg,
     tags: tagsList,
     afiliado: {
-      link: p.link || p.link_afiliado || p.affiliate_links?.tiktok || `https://shop.tiktok.com/view/product/173${Math.abs(hashString(pName.toString())).toString().padStart(10, '0')}${Math.floor(Math.random() * 10000)}`,
+      link: p.link || p.link_afiliado || p.affiliate_links?.tiktok || '',
       comissao: commissionStr
     },
     prompts: {
@@ -1356,11 +1356,36 @@ export default function ScreenProdutos({
   };
 
   const handleTriggerAffiliation = (produto: any) => {
-    if (produto?.afiliado?.link) {
-      window.open(produto.afiliado.link, '_blank');
+    const webLink = produto?.afiliado?.link 
+      || produto?.affiliate_links?.tiktok 
+      || produto?.affiliate_links?.shopee 
+      || '';
+
+    if (!webLink) return;
+
+    // Extrai o ID do produto do link
+    const match = webLink.match(/\/product\/(\d+)/);
+    const productId = match ? match[1] : null;
+
+    if (productId) {
+      // Tenta abrir no app do TikTok primeiro
+      const appLink = `snssdk1233://aweme/detail/${productId}`;
+      const shopLink = `https://shop.tiktok.com/view/product/${productId}`;
+      
+      // Cria elemento oculto para tentar abrir o app
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = appLink;
+      document.body.appendChild(iframe);
+      
+      // Fallback para o navegador após 1s se o app não abrir
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        window.open(shopLink, '_blank');
+      }, 1000);
     } else {
-      let link = produto?.affiliate_links?.tiktok || produto?.affiliate_links?.shopee;
-      if (link) window.open(link, '_blank');
+      // Link sem ID identificável, abre direto
+      window.open(webLink, '_blank');
     }
   };
 
