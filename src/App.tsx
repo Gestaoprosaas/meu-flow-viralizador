@@ -38,6 +38,7 @@ import ScreenVideos from './components/ScreenVideos';
 import ScreenProjetos from './components/ScreenProjetos';
 import ScreenBiblioteca from './components/ScreenBiblioteca';
 import ScreenProdutos from './components/ScreenProdutos';
+import { PRODUTOS_PRONTOS } from './data/produtosProntos';
 import ScreenTreinamentos from './components/ScreenTreinamentos';
 import ScreenViralizarPerfil from './components/ScreenViralizarPerfil';
 import ScreenUpgrade from './components/ScreenUpgrade';
@@ -46,6 +47,14 @@ import { ScreenIndique } from './components/ScreenIndique';
 import ScreenSeguranca from './components/ScreenSeguranca';
 import TemplateGallery from './components/TemplateGallery';
 import { getSupabase } from './lib/supabaseClient';
+
+// Mapped produtosProntos with image proxy for tiktokcdn and ibyteimg as requested
+export const PRODUTOS_PRONTOS_MAPPED = PRODUTOS_PRONTOS.map(p => ({
+  ...p,
+  imagem: p.imagem && (p.imagem.includes('tiktokcdn.com') || p.imagem.includes('ibyteimg.com'))
+    ? `https://images.weserv.nl/?url=${p.imagem.replace('https://', '')}`
+    : p.imagem
+}));
 
 const playCashRegisterSound = () => {
   try {
@@ -624,6 +633,19 @@ export default function App() {
       const tRes = await appFetch('/api/trending-products');
       if (tRes.ok) {
         let tData = await tRes.json();
+
+        // Apply image proxy for tiktokcdn and ibyteimg
+        tData = tData.map((p: any) => {
+          let img = p.image_url || p.imagem || '';
+          if (img && (img.includes('tiktokcdn.com') || img.includes('ibyteimg.com'))) {
+            img = `https://images.weserv.nl/?url=${img.replace('https://', '')}`;
+          }
+          return {
+            ...p,
+            image_url: img,
+            imagem: img
+          };
+        });
 
         setTrendingProducts(tData);
       }

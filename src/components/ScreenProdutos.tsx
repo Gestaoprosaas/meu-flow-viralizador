@@ -44,6 +44,7 @@ import { AVATARS_PRESETS, AvatarPreset } from '../data/avatares';
 import { SCENARIOS_PRESETS, CURATED_SCENARIOS_PRESETS, ScenarioPreset, CuratedScenarioPreset } from '../data/cenarios';
 import { MOVEMENTS_PRESETS, MovementPreset } from '../data/prompts';
 import { MODOS_GERACAO } from '../data/modosGeracao';
+import { PRODUTOS_PRONTOS } from '../data/produtosProntos';
 
 
 const PROMPT_CENARIO_PRONTO_FIXO = `Use the first image ONLY as an environment + pose reference.
@@ -611,26 +612,40 @@ const enrichProduct = (p: any) => {
   const sales_30d = p.sales_30d || (1000 + (numId % 14000));
   const views_30d = p.views_30d || (sales_30d * (5 + (numId % 20)));
 
-  // If it's a local product already, return as is with added metrics
+  let rawImg = p.imagem_url || p.image_url || p.imagem || '';
+  if (rawImg && (rawImg.includes('tiktokcdn.com') || rawImg.includes('ibyteimg.com'))) {
+    rawImg = `https://images.weserv.nl/?url=${rawImg.replace('https://', '')}`;
+  }
+
+  // If it's a local product already, return as is with added metrics and proxied image
   if (p.prompts && p.afiliado && p.tags) {
-    return { ...p, sales_30d, views_30d };
+    return { 
+      ...p, 
+      imagem: rawImg || p.imagem, 
+      imagem_url: rawImg || p.imagem_url, 
+      image_url: rawImg || p.image_url, 
+      sales_30d, 
+      views_30d 
+    };
   }
 
   // Fallback / generate default Portuguese properties dynamically
-  const priceStr = p.preco || p.price || (p.average_price ? p.average_price.toFixed(2).replace('.', ',') : '52,90');
+  const priceStr = p.preco || p.price || (p.valor ? String(p.valor).replace('R$', '').trim() : '') || (p.average_price ? p.average_price.toFixed(2).replace('.', ',') : '52,90');
   const commissionStr = p.comissao || (p.commission_percentage ? `${p.commission_percentage}%` : '15%');
-  const tagsList = p.tags || [p.niche || p.nicho || 'Geral'];
+  const tagsList = p.tags || [p.tendencia || p.trend || 'em_alta', p.nicho || p.niche || 'Geral'];
   const pName = p.name || p.nome || 'Produto Viral';
   const pDesc = p.description || p.trend_reason || 'Produto em alta de alta conversão.';
   
+  const finalImg = rawImg || "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=300";
+
   return {
     ...p,
     nome: pName,
     preco: priceStr,
-    imagem: p.imagem_url || p.image_url || p.imagem || "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=300",
+    imagem: finalImg,
     tags: tagsList,
     afiliado: {
-      link: p.link_afiliado || p.affiliate_links?.tiktok || `https://shop.tiktok.com/view/product/173${Math.abs(hashString(pName.toString())).toString().padStart(10, '0')}${Math.floor(Math.random() * 10000)}`,
+      link: p.link || p.link_afiliado || p.affiliate_links?.tiktok || `https://shop.tiktok.com/view/product/173${Math.abs(hashString(pName.toString())).toString().padStart(10, '0')}${Math.floor(Math.random() * 10000)}`,
       comissao: commissionStr
     },
     prompts: {
@@ -744,11 +759,24 @@ export default function ScreenProdutos({
       const res = await fetch('/api/produtos');
       const data = await res.json();
       fetchedData = data.map(enrichProduct).filter(Boolean);
-      setKalodataTotal(fetchedData.length);
     } catch (e) {
       console.error(e);
-      setKalodataTotal(12);
     }
+
+    // Explicitly merge PRODUTOS_PRONTOS client-side to ensure they always appear mixed
+    const readyMapped = (PRODUTOS_PRONTOS || []).map(enrichProduct).filter(Boolean);
+    const combined = [...readyMapped, ...fetchedData];
+    const unique: any[] = [];
+    const seen = new Set();
+    for (const prod of combined) {
+      const uniqueKey = prod.id || prod.nome || prod.name;
+      if (!seen.has(uniqueKey)) {
+        seen.add(uniqueKey);
+        unique.push(prod);
+      }
+    }
+    fetchedData = unique;
+    setKalodataTotal(fetchedData.length);
 
     // Phase 1 (0-1s): "🔗 Conectando ao Kalodata..."
     setTimeout(() => {
@@ -1293,7 +1321,22 @@ export default function ScreenProdutos({
     try {
       const res = await fetch('/api/produtos');
       const data = await res.json();
-      setItems(data.map(enrichProduct).filter(Boolean));
+      const fetchedData = data.map(enrichProduct).filter(Boolean);
+      
+      // Explicitly merge PRODUTOS_PRONTOS client-side
+      const readyMapped = (PRODUTOS_PRONTOS || []).map(enrichProduct).filter(Boolean);
+      const combined = [...readyMapped, ...fetchedData];
+      const unique: any[] = [];
+      const seen = new Set();
+      for (const prod of combined) {
+        const uniqueKey = prod.id || prod.nome || prod.name;
+        if (!seen.has(uniqueKey)) {
+          seen.add(uniqueKey);
+          unique.push(prod);
+        }
+      }
+      
+      setItems(unique);
       setIsKalodataMode(true);
       setSyncTikTokSuccess(true);
       setSyncTikTokMessage('Sincronizado em tempo real! Os produtos de alta conversão foram carregados.');
@@ -2412,19 +2455,17 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           <span className="text-[9px] bg-[#FE2C55]/15 border border-[#FE2C55]/25 text-[#FE2C55] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
                             Comissão: {commission}
                           </span>
-                          {isKalodataMode ? (
+                          {prod.tendencia ? (
+                            <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
+                              {prod.tendencia === 'em_alta' ? '🔥 Em Alta' :
+                               prod.tendencia === 'muito_quente' ? '🔥🔥 Muito Quente' :
+                               prod.tendencia === 'viral' ? '🔥🔥🔥 Viral' : '⭐ Destaque'}
+                            </span>
+                          ) : isKalodataMode ? (
                             <span className="text-[9px] bg-blue-500/20 border border-blue-500/30 text-blue-400 font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md flex items-center gap-1">
                               ⚡ KALODATA
                             </span>
-                          ) : (
-                            prod.tendencia && (
-                              <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
-                                {prod.tendencia === 'em_alta' ? '🔥 Em Alta' :
-                                 prod.tendencia === 'muito_quente' ? '🔥🔥 Muito Quente' :
-                                 prod.tendencia === 'viral' ? '🔥🔥🔥 Viral' : '⭐ Destaque'}
-                              </span>
-                            )
-                          )}
+                          ) : null}
                         </div>
 
                         {/* Image Container with Aspect Ratio */}

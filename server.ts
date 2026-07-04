@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { sendWelcomeEmail, sendPaymentOverdueEmail } from "./lib/resend.js";
 import { AsyncLocalStorage } from "async_hooks";
 import crypto from "crypto";
+import { PRODUTOS_PRONTOS } from "./src/data/produtosProntos";
 
 const app = express();
 const PORT = 3000;
@@ -1793,6 +1794,7 @@ app.get("/api/produtos", async (req, res) => {
     }
     
     await syncFromSupabase("produtos_alta");
+    await syncFromSupabase("produtos_manuais");
     console.log('[produtos] Lendo de:', filePath);
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     
@@ -1800,18 +1802,56 @@ app.get("/api/produtos", async (req, res) => {
     const customProds = (dbState.produtos_alta || []).map((p: any) => ({
       id: p.id,
       nome: p.name,
-      preco: p.price.replace('R$', '').trim(),
-      imagem: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=300",
-      tags: [p.trend, "Destaque"],
+      preco: String(p.price || '').replace('R$', '').trim(),
+      imagem: p.image_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=300",
+      tags: [p.trend || "Destaque", "Destaque"],
       niche: "Geral",
       rating: "5.0",
       afiliado: {
-        link: p.tiktok_link,
+        link: p.tiktok_link || "",
         comissao: "Personalizada"
       }
     }));
+
+    // Inject Manual products registered by admin
+    const manualProds = (dbState.produtos_manuais || [])
+      .filter((p: any) => p.ativo)
+      .map((p: any) => ({
+        id: p.id,
+        nome: p.nome,
+        name: p.nome,
+        preco: String(p.preco || '').replace('R$', '').trim(),
+        imagem: p.imagem_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=300",
+        imagem_url: p.imagem_url,
+        tags: [p.tendencia || "em_alta", "Manual", p.nicho || "Geral"],
+        niche: p.nicho || "Geral",
+        rating: "5.0",
+        afiliado: {
+          link: p.link_afiliado || "",
+          comissao: p.comissao || "15%"
+        },
+        link_afiliado: p.link_afiliado,
+        comissao: p.comissao,
+        tendencia: p.tendencia,
+        ativo: p.ativo
+      }));
     
-    res.json([...customProds, ...data]);
+    // Map PRODUTOS_PRONTOS for /api/produtos
+    const readyProdsMapped = (PRODUTOS_PRONTOS || []).map((p: any) => ({
+      id: p.id,
+      nome: p.nome,
+      preco: String(p.valor || '').replace('R$', '').trim(),
+      imagem: p.imagem || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=300",
+      tags: [p.tendencia || "em_alta", "Pronto", p.nicho || "Geral"],
+      niche: p.nicho || "Geral",
+      rating: "5.0",
+      afiliado: {
+        link: p.link || "",
+        comissao: p.comissao || "20%"
+      }
+    }));
+    
+    res.json([...readyProdsMapped, ...manualProds, ...customProds, ...data]);
   } catch (error) {
     console.error('[produtos] Erro:', error);
     res.status(500).json({ error: String(error) });
@@ -2057,6 +2097,7 @@ app.get("/api/trending-products", async (req, res) => {
 
   // Comportamento normal padrão de leitura
   const supabase = getSupabaseClient();
+  let dbProducts: any[] = [];
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -2110,7 +2151,7 @@ app.get("/api/trending-products", async (req, res) => {
 
         // Atualizar lista local em memória
         TRENDING_PRODUCTS = mappedProducts;
-        return res.json(mappedProducts);
+        dbProducts = mappedProducts;
       }
     } catch (dbErr: any) {
       if (dbErr && dbErr.message && (dbErr.message.includes("fetch failed") || dbErr.message.includes("network") || dbErr.message.includes("failed to fetch") || dbErr.message.includes("permission denied"))) {
@@ -2121,7 +2162,101 @@ app.get("/api/trending-products", async (req, res) => {
     }
   }
 
-  res.json(TRENDING_PRODUCTS);
+  // Inject manual products
+  try {
+    await syncFromSupabase("produtos_manuais");
+  } catch (syncErr) {
+    console.error("[Sync Error] Failed to sync produtos_manuais:", syncErr);
+  }
+
+  const manualMapped = (dbState.produtos_manuais || [])
+    .filter((p: any) => p.ativo)
+    .map((p: any) => {
+      const rawPrice = Number(String(p.preco || '').replace('R$', '').replace(',', '.').trim()) || 49.90;
+      const commPercent = Number(String(p.comissao || '').replace('%', '').trim()) || 15;
+      return {
+        id: p.id,
+        name: p.nome,
+        nome: p.nome,
+        description: `Produto manual cadastrado pelo Administrador. Nicho: ${p.nicho || 'Geral'}.`,
+        niche: p.nicho || "Geral",
+        image_url: p.imagem_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600",
+        imagem_url: p.imagem_url,
+        preco: p.preco,
+        comissao: p.comissao,
+        link_afiliado: p.link_afiliado,
+        tendencia: p.tendencia,
+        opportunity_score: 95,
+        competition_level: "baixa" as "baixa" | "média" | "alta",
+        trend_reason: "Produto cadastrado manualmente pelo administrador do sistema.",
+        affiliate_links: {
+          tiktok: p.link_afiliado || "",
+          shopee: p.link_afiliado || "",
+          mercadolivre: p.link_afiliado || ""
+        },
+        is_featured: true,
+        created_at: p.criado_em || new Date().toISOString(),
+        sales_30d: 5000,
+        revenue_30d: 5000 * rawPrice,
+        average_price: rawPrice,
+        commission_percentage: commPercent,
+        viral_videos_count: 350,
+        total_views: "5.4M",
+        trend_score_fastmoss: 95,
+        ativo: p.ativo
+      };
+    });
+
+  // Map PRODUTOS_PRONTOS for /api/trending-products (full rich structure)
+  const readyProdsForTrending = (PRODUTOS_PRONTOS || []).map((p: any) => {
+    const rawPrice = Number(String(p.valor || '').replace('R$', '').replace(',', '.').trim()) || 49.90;
+    const commPercent = Number(String(p.comissao || '').replace('%', '').trim()) || 15;
+    return {
+      id: p.id,
+      name: p.nome,
+      nome: p.nome,
+      description: `Produto pronto em destaque. Nicho: ${p.nicho || 'Geral'}.`,
+      niche: p.nicho || "Geral",
+      image_url: p.imagem || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600",
+      preco: p.valor,
+      comissao: p.comissao,
+      link_afiliado: p.link,
+      tendencia: p.tendencia,
+      opportunity_score: 98,
+      competition_level: "baixa" as "baixa" | "média" | "alta",
+      trend_reason: "Produto viral com excelente desempenho comercial no mercado nacional.",
+      affiliate_links: {
+        tiktok: p.link || "",
+        shopee: p.link || "",
+        mercadolivre: p.link || ""
+      },
+      is_featured: true,
+      created_at: new Date().toISOString(),
+      sales_30d: 8200,
+      revenue_30d: 8200 * rawPrice,
+      average_price: rawPrice,
+      commission_percentage: commPercent,
+      viral_videos_count: 510,
+      total_views: "12.8M",
+      trend_score_fastmoss: 98,
+      ativo: true
+    };
+  });
+
+  const baseList = dbProducts.length > 0 ? dbProducts : TRENDING_PRODUCTS;
+  const finalList = [...readyProdsForTrending, ...manualMapped, ...baseList];
+
+  // De-duplicate final list by id
+  const uniqueProducts: any[] = [];
+  const seenIds = new Set();
+  for (const prod of finalList) {
+    if (!seenIds.has(prod.id)) {
+      seenIds.add(prod.id);
+      uniqueProducts.push(prod);
+    }
+  }
+
+  res.json(uniqueProducts);
 });
 
 // POST Bulk synchronization from client side (useful when server has outbound fetch failures)
@@ -3756,13 +3891,41 @@ app.delete("/api/admin/coupons/:id", (req, res) => {
 });
 
 // POST Check Coupon - Public
-app.post("/api/check-coupon", (req, res) => {
+app.post("/api/check-coupon", async (req, res) => {
   const { codigo } = req.body;
   if (!codigo) {
     return res.status(400).json({ error: "Código do cupom é obrigatório." });
   }
   
   const cleanCode = codigo.toUpperCase().trim();
+  
+  // Sync from Supabase to ensure fresh partner coupon list
+  await syncFromSupabase("cupons_admins");
+  
+  // Try searching in partner/admin coupons (new flow)
+  const adminCupom = (dbState.cupons_admins || []).find(
+    (c: any) => c.cupom.toUpperCase() === cleanCode && c.ativo
+  );
+  
+  if (adminCupom) {
+    return res.json({
+      success: true,
+      cupom: {
+        id: adminCupom.id,
+        cupom: adminCupom.cupom,
+        codigo: adminCupom.cupom,
+        tipo: 'indicacao',
+        checkout_url: adminCupom.checkout_url,
+        admin_checkout_url: adminCupom.checkout_url,
+        preco_original: adminCupom.preco_original || 497.00,
+        preco_com_desconto: adminCupom.preco_com_desconto || 297.00,
+        desconto_percentual: adminCupom.desconto_percentual || 40,
+        admin_nome: adminCupom.admin_nome
+      }
+    });
+  }
+
+  // Fallback to legacy static coupons
   const coupons = dbState.coupons || [];
   const coupon = coupons.find((c: any) => c.codigo.toUpperCase() === cleanCode && c.ativo);
   
@@ -3781,9 +3944,15 @@ app.post("/api/check-coupon", (req, res) => {
     success: true,
     cupom: {
       id: coupon.id,
+      cupom: coupon.codigo,
       codigo: coupon.codigo,
       tipo: coupon.tipo,
-      admin_checkout_url: admin.checkout_url
+      checkout_url: admin.checkout_url,
+      admin_checkout_url: admin.checkout_url,
+      preco_original: 497.00,
+      preco_com_desconto: coupon.tipo === 'presente' ? 0 : 297.00,
+      desconto_percentual: coupon.tipo === 'presente' ? 100 : 40,
+      admin_nome: admin.nome
     }
   });
 });
