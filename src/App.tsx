@@ -215,6 +215,36 @@ export function CelebrationConfetti({ active }: { active: boolean }) {
 }
 
 export default function App() {
+  // PWA Install Prompt States
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      // Mostrar banner apenas se não instalado ainda
+      if (!window.matchMedia('(display-mode: standalone)').matches) {
+        setShowInstallBanner(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBanner(false);
+    }
+  };
+
   // Navigation states
   const [isLanding, setIsLanding] = useState<boolean>(true);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
@@ -1072,7 +1102,38 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#06060B] text-[#F0F0FF] font-sans flex overflow-hidden relative">
+    <div className="min-h-screen bg-[#06060B] text-[#F0F0FF] font-sans flex flex-col overflow-hidden relative" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      {/* PWA Install Banner */}
+      {showInstallBanner && (
+        <div id="pwa-install-banner" className="md:hidden w-full p-3 bg-gradient-to-r from-[#FE2C55] via-[#813EF6] to-[#69C9D0] shadow-2xl flex items-center justify-between gap-3 text-white border-b border-white/10 shrink-0 relative z-50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-black/30 border border-white/20 flex items-center justify-center shrink-0">
+              <span className="text-xl">📱</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-black tracking-tight leading-tight uppercase">Instale o ViralSeller</h4>
+              <p className="text-[10px] text-white/90 font-medium leading-none mt-0.5">Acesso rápido, offline e sem navegador</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={handleInstall}
+              className="px-3 py-1.5 bg-white text-black font-black text-[10px] uppercase rounded-lg shadow-md hover:scale-105 active:scale-95 transition-all"
+            >
+              Instalar
+            </button>
+            <button
+              onClick={() => setShowInstallBanner(false)}
+              className="w-7 h-7 flex items-center justify-center rounded-lg bg-black/15 hover:bg-black/25 active:bg-black/35 text-white/90 hover:text-white transition-all"
+              aria-label="Dispensar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex overflow-hidden relative w-full">
       
       {/* Cyber Grid background + Ambient Glows */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-45" style={{
@@ -1451,6 +1512,7 @@ export default function App() {
         </div>
       )}
 
+      </div>
     </div>
   );
 }

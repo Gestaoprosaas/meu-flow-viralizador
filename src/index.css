@@ -15,6 +15,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    overscroll-behavior: none;
   }
 
   /* Custom high-conversion scrollbar styles matching the twilight palette */
@@ -276,3 +277,9 @@ body.light .recharts-legend-item-text {
   color: var(--text-sec) !important;
 }
 
+/* PWA / iOS Zoom prevention and mobile optimizations */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}

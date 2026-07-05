@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#06060B"/>
+  <g transform="translate(48, 48) scale(4.16)">
+    <defs>
+      <linearGradient id="tiktok-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FE2C55"/>
+        <stop offset="50%" stop-color="#813EF6"/>
+        <stop offset="100%" stop-color="#69C9D0"/>
+      </linearGradient>
+    </defs>
+    <path d="M52 14c-1 0-2 0.5-2 1.5v48c0 7.7-6.3 14-14 14s-14-6.3-14-14s6.3-14 14-14c1.2 0 2.4 0.2 3.5 0.5V36.2C38 36.1 36.5 36 35 36 21.7 36 11 46.7 11 60s10.7 24 24 24s24-10.7 24-24V32c5.5 4 12.3 6.3 19.6 6.5v-11C72 27 62.5 19.5 52 14z" fill="#69C9D0" opacity="0.8" transform="translate(-1.5, 1.5)"/>
+    <path d="M52 14c-1 0-2 0.5-2 1.5v48c0 7.7-6.3 14-14 14s-14-6.3-14-14s6.3-14 14-14c1.2 0 2.4 0.2 3.5 0.5V36.2C38 36.1 36.5 36 35 36 21.7 36 11 46.7 11 60s10.7 24 24 24s24-10.7 24-24V32c5.5 4 12.3 6.3 19.6 6.5v-11C72 27 62.5 19.5 52 14z" fill="#FE2C55" opacity="0.8" transform="translate(1.5, -1.5)"/>
+    <path d="M52 14c-1 0-2 0.5-2 1.5v48c0 7.7-6.3 14-14 14s-14-6.3-14-14s6.3-14 14-14c1.2 0 2.4 0.2 3.5 0.5V36.2C38 36.1 36.5 36 35 36 21.7 36 11 46.7 11 60s10.7 24 24 24s24-10.7 24-24V32c5.5 4 12.3 6.3 19.6 6.5v-11C72 27 62.5 19.5 52 14z" fill="url(#tiktok-grad)"/>
+  </g>
+</svg>
