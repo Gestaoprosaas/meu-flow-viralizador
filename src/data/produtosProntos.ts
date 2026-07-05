@@ -27,7 +27,7 @@ export const PRODUTOS_PRONTOS: ProdutoPronto[] = [
     valor: 'R$ 39,90',
     tendencia: 'muito_quente',
     nicho: 'Moda',
-    imagem: 'https://p16-oec-general.tiktokcdn.com/tos-alisg-i-aphluv4xwc-sg/74b5ac5662ac4cd6a7b81a05a75eddec~tplv-aphluv4xwc-resize-png:630:630.png',
+    imagem: 'https://http2.mlstatic.com/D_NQ_NP_852362-MLB112675739801_062026-O.webp',
     comissao: '10%'
   },
   {

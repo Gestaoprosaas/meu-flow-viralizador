@@ -45,6 +45,8 @@ import { SCENARIOS_PRESETS, CURATED_SCENARIOS_PRESETS, ScenarioPreset, CuratedSc
 import { MOVEMENTS_PRESETS, MovementPreset } from '../data/prompts';
 import { MODOS_GERACAO } from '../data/modosGeracao';
 import { PRODUTOS_PRONTOS } from '../data/produtosProntos';
+import { PRODUTOS_EM_ALTA } from '../data/produtos';
+import { motion } from 'motion/react';
 
 
 const PROMPT_CENARIO_PRONTO_FIXO = `Use the first image ONLY as an environment + pose reference.
@@ -723,8 +725,21 @@ export default function ScreenProdutos({
 
   const [items, setItems] = useState<any[]>([]);
   const [isKalodataMode, setIsKalodataMode] = useState<boolean>(false);
+  const [viralItems, setViralItems] = useState<any[]>([]);
   const [kalodataItems, setKalodataItems] = useState<any[]>([]);
   const [manualItems, setManualItems] = useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'viral' | 'kalodata' | 'manual'>(() => {
+    return (sessionStorage.getItem('produtos_filtro_ativo') as 'viral' | 'kalodata' | 'manual') || 'viral';
+  });
+
+  const salvarProdutosCache = (produtos: any[], fonte: 'viral' | 'kalodata' | 'manual') => {
+    sessionStorage.setItem(`produtos_cache_v3_${fonte}`, JSON.stringify(produtos));
+    sessionStorage.setItem(`produtos_cache_v3_time_${fonte}`, Date.now().toString());
+  };
+
+  const salvarFiltroAtivo = (filtro: 'viral' | 'kalodata' | 'manual') => {
+    sessionStorage.setItem('produtos_filtro_ativo', filtro);
+  };
 
   const loadManualProducts = () => {
     fetch('/api/produtos-manuais')
@@ -733,14 +748,91 @@ export default function ScreenProdutos({
         const activeOnly = data.filter((p: any) => p.ativo !== false);
         const enriched = activeOnly.map(enrichProduct).filter(Boolean);
         setManualItems(enriched);
-        setItems(enriched);
+        salvarProdutosCache(enriched, 'manual');
       })
       .catch(err => console.error("Erro ao carregar produtos manuais:", err));
   };
 
+  const fetchKalodataSilently = async () => {
+    try {
+      const res = await fetch('/api/produtos');
+      const data = await res.json();
+      const enriched = data.map(enrichProduct).filter(Boolean);
+      setKalodataItems(enriched);
+      salvarProdutosCache(enriched, 'kalodata');
+    } catch (e) {
+      console.error("Erro ao buscar Kalodata silenciosamente:", e);
+    }
+  };
+
   useEffect(() => {
-    loadManualProducts();
+    // 1. Load Viral Products (PRODUTOS_PRONTOS + PRODUTOS_EM_ALTA)
+    const cacheViral = sessionStorage.getItem('produtos_cache_v3_viral');
+    const cacheTimeViral = sessionStorage.getItem('produtos_cache_v3_time_viral');
+    if (cacheViral && cacheTimeViral && Date.now() - Number(cacheTimeViral) < 30 * 60 * 1000) {
+      setViralItems(JSON.parse(cacheViral));
+    } else {
+      const enrichedProntos = (PRODUTOS_PRONTOS || []).map(enrichProduct).filter(Boolean);
+      const enrichedEmAlta = (PRODUTOS_EM_ALTA || []).map(enrichProduct).filter(Boolean);
+      const combined = [...enrichedProntos, ...enrichedEmAlta];
+      const unique: any[] = [];
+      const seen = new Set();
+      for (const prod of combined) {
+        const uniqueKey = prod.id || prod.nome || prod.name;
+        if (!seen.has(uniqueKey)) {
+          seen.add(uniqueKey);
+          unique.push(prod);
+        }
+      }
+      setViralItems(unique);
+      salvarProdutosCache(unique, 'viral');
+    }
+
+    // 2. Load Kalodata Products
+    const cacheKalodata = sessionStorage.getItem('produtos_cache_v3_kalodata');
+    const cacheTimeKalodata = sessionStorage.getItem('produtos_cache_v3_time_kalodata');
+    if (cacheKalodata && cacheTimeKalodata && Date.now() - Number(cacheTimeKalodata) < 30 * 60 * 1000) {
+      setKalodataItems(JSON.parse(cacheKalodata));
+    } else {
+      fetchKalodataSilently();
+    }
+
+    // 3. Load Manual Products
+    const cacheManual = sessionStorage.getItem('produtos_cache_v3_manual');
+    const cacheTimeManual = sessionStorage.getItem('produtos_cache_v3_time_manual');
+    if (cacheManual && cacheTimeManual && Date.now() - Number(cacheTimeManual) < 30 * 60 * 1000) {
+      setManualItems(JSON.parse(cacheManual));
+    } else {
+      loadManualProducts();
+    }
   }, []);
+
+  // Keep items synchronized with active filter
+  useEffect(() => {
+    if (activeFilter === 'viral') {
+      setItems(viralItems);
+    } else if (activeFilter === 'kalodata') {
+      setItems(kalodataItems);
+    } else if (activeFilter === 'manual') {
+      setItems(manualItems);
+    }
+  }, [activeFilter, viralItems, kalodataItems, manualItems]);
+
+  // Keep isKalodataMode state synchronized with active filter
+  useEffect(() => {
+    setIsKalodataMode(activeFilter === 'kalodata');
+  }, [activeFilter]);
+
+  // Keep active filter synchronized if isKalodataMode is changed externally
+  useEffect(() => {
+    if (isKalodataMode && activeFilter !== 'kalodata') {
+      setActiveFilter('kalodata');
+      salvarFiltroAtivo('kalodata');
+    } else if (!isKalodataMode && activeFilter === 'kalodata') {
+      setActiveFilter('manual');
+      salvarFiltroAtivo('manual');
+    }
+  }, [isKalodataMode]);
 
   // Kalodata Search States
   const [showKalodataOverlay, setShowKalodataOverlay] = useState<boolean>(false);
@@ -763,19 +855,6 @@ export default function ScreenProdutos({
       console.error(e);
     }
 
-    // Explicitly merge PRODUTOS_PRONTOS client-side to ensure they always appear mixed
-    const readyMapped = (PRODUTOS_PRONTOS || []).map(enrichProduct).filter(Boolean);
-    const combined = [...readyMapped, ...fetchedData];
-    const unique: any[] = [];
-    const seen = new Set();
-    for (const prod of combined) {
-      const uniqueKey = prod.id || prod.nome || prod.name;
-      if (!seen.has(uniqueKey)) {
-        seen.add(uniqueKey);
-        unique.push(prod);
-      }
-    }
-    fetchedData = unique;
     setKalodataTotal(fetchedData.length);
 
     // Phase 1 (0-1s): "🔗 Conectando ao Kalodata..."
@@ -806,9 +885,10 @@ export default function ScreenProdutos({
 
     // Phase 4 complete (4s)
     setTimeout(() => {
-      setItems(fetchedData);
       setKalodataItems(fetchedData);
-      setIsKalodataMode(true);
+      salvarProdutosCache(fetchedData, 'kalodata');
+      setActiveFilter('kalodata');
+      salvarFiltroAtivo('kalodata');
       setShowKalodataOverlay(false);
     }, 4000);
   };
@@ -1020,7 +1100,22 @@ export default function ScreenProdutos({
         const updatedProd = await response.json();
         
         // Update local items state
-        setItems(prev => prev.map(item => item.id === productId ? { ...item, image_url: updatedProd.image_url } : item));
+        const updateProd = (list: any[]) => list.map(item => item.id === productId ? { ...item, image_url: updatedProd.image_url } : item);
+        setViralItems(prev => {
+          const updated = updateProd(prev);
+          salvarProdutosCache(updated, 'viral');
+          return updated;
+        });
+        setKalodataItems(prev => {
+          const updated = updateProd(prev);
+          salvarProdutosCache(updated, 'kalodata');
+          return updated;
+        });
+        setManualItems(prev => {
+          const updated = updateProd(prev);
+          salvarProdutosCache(updated, 'manual');
+          return updated;
+        });
         
         // If the active wizard product is the one being edited, update it too
         if (activeWizardProduct && activeWizardProduct.id === productId) {
@@ -1066,8 +1161,14 @@ export default function ScreenProdutos({
 
       const analyzedProduct = await response.json();
       
-      // Update local state list
-      setItems(prev => [analyzedProduct, ...prev]);
+      // Update manual state list and persist in cache
+      setManualItems(prev => {
+        const updated = [analyzedProduct, ...prev];
+        salvarProdutosCache(updated, 'manual');
+        return updated;
+      });
+      setActiveFilter('manual');
+      salvarFiltroAtivo('manual');
       
       // Callback to root component if it exists
       if (onAddProduct) {
@@ -1323,21 +1424,10 @@ export default function ScreenProdutos({
       const data = await res.json();
       const fetchedData = data.map(enrichProduct).filter(Boolean);
       
-      // Explicitly merge PRODUTOS_PRONTOS client-side
-      const readyMapped = (PRODUTOS_PRONTOS || []).map(enrichProduct).filter(Boolean);
-      const combined = [...readyMapped, ...fetchedData];
-      const unique: any[] = [];
-      const seen = new Set();
-      for (const prod of combined) {
-        const uniqueKey = prod.id || prod.nome || prod.name;
-        if (!seen.has(uniqueKey)) {
-          seen.add(uniqueKey);
-          unique.push(prod);
-        }
-      }
-      
-      setItems(unique);
-      setIsKalodataMode(true);
+      setKalodataItems(fetchedData);
+      salvarProdutosCache(fetchedData, 'kalodata');
+      setActiveFilter('kalodata');
+      salvarFiltroAtivo('kalodata');
       setSyncTikTokSuccess(true);
       setSyncTikTokMessage('Sincronizado em tempo real! Os produtos de alta conversão foram carregados.');
       setTimeout(() => {
@@ -2182,22 +2272,11 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       </div>
                       <div>
                         <h4 className="text-[11px] font-black text-white uppercase tracking-wider">
-                          {localStorage.getItem('viralseller_video_mode') ? `Modo ${localStorage.getItem('viralseller_video_mode')} Pré-selecionado!` : 'Avatar Pré-selecionado!'}
+                          {localStorage.getItem('viralseller_video_mode') ? `Modo ${localStorage.getItem('viralseller_video_mode')} Pré-selecionado` : 'Avatar Pré-selecionado'}
                         </h4>
-                        <p className="text-[10px] text-[#8888AA]">Clique em "Gerar Vídeo" em qualquer produto abaixo para aplicar.</p>
+                        <p className="text-[10px] text-gray-400">Suas seleções anteriores foram carregadas automaticamente.</p>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => {
-                        localStorage.removeItem('viralseller_video_mode');
-                        localStorage.removeItem('viralseller_movimento_pre');
-                        localStorage.removeItem('viralseller_avatar_pre');
-                        window.location.reload();
-                      }}
-                      className="px-3 py-1 bg-[#1E1E2E] hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-[10px] font-black rounded-lg transition-colors"
-                    >
-                      Cancelar
-                    </button>
                   </div>
                 )}
 
@@ -2208,37 +2287,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     <p className="text-xs text-[#8888AA]">Escolha um produto em alta ou cadastre um novo para gerar o prompt comercial.</p>
                   </div>
 
-                  {/* Action Ribbon & Filters */}
                   <div className="flex flex-wrap items-center gap-2">
-                    {userRole === 'admin' && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAddAdminModal(true)}
-                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black rounded-xl flex items-center gap-1 transition"
-                      >
-                        <Plus className="w-3 h-3" /> Adicionar Produto
-                      </button>
-                    )}
-                    {isKalodataMode ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsKalodataMode(false);
-                          loadManualProducts();
-                        }}
-                        className="px-3.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-black rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-lg shadow-blue-500/5"
-                      >
-                        ← Voltar aos Meus Produtos
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={triggerKalodataSearch}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-95 text-white text-xs font-black rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-lg shadow-blue-500/20 animate-pulse"
-                      >
-                        🔍 Buscar no Kalodata
-                      </button>
-                    )}
                     <button
                       type="button"
                       disabled={isSyncingTikTok}
@@ -2249,6 +2298,116 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     </button>
                   </div>
                 </div>
+
+                {/* 3 Fontes de Produtos Tabs */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-[#111118]/60 p-1 rounded-2xl border border-[#1E1E2E]/60">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveFilter('viral');
+                      salvarFiltroAtivo('viral');
+                    }}
+                    className={`w-full py-2.5 rounded-xl text-xs font-black tracking-wide flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      activeFilter === 'viral'
+                        ? 'bg-[#FE2C55] border-[#FE2C55] text-white shadow-[0_0_15px_rgba(254,44,85,0.3)]'
+                        : 'bg-transparent border-transparent text-[#8888AA] hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>🔥 Produtos Virais</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveFilter('kalodata');
+                      salvarFiltroAtivo('kalodata');
+                    }}
+                    className={`w-full py-2.5 rounded-xl text-xs font-black tracking-wide flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      activeFilter === 'kalodata'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]'
+                        : 'bg-transparent border-transparent text-[#8888AA] hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>⚡ Sistema Kalodata Integrado</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveFilter('manual');
+                      salvarFiltroAtivo('manual');
+                    }}
+                    className={`w-full py-2.5 rounded-xl text-xs font-black tracking-wide flex items-center justify-center gap-2 transition cursor-pointer border ${
+                      activeFilter === 'manual'
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-[0_0_15px_rgba(5,150,105,0.3)]'
+                        : 'bg-transparent border-transparent text-[#8888AA] hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>📋 Meus Produtos</span>
+                  </button>
+                </div>
+
+                {/* Special Info Card depending on Active Filter */}
+                {activeFilter === 'viral' && (
+                  <div className="bg-gradient-to-r from-red-950/20 via-red-900/10 to-[#030307] border border-red-500/20 rounded-2xl p-4 flex items-center gap-4 animate-fade-in">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-lg shrink-0">
+                      🔥
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider">🔥 PRODUTOS MAIS VENDIDOS AGORA</h4>
+                      <p className="text-[11px] text-[#8888AA] mt-0.5">
+                        Selecionados com base nas tendências do TikTok Shop Brasil. <span className="text-red-400 font-bold">Atualizado semanalmente</span>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {activeFilter === 'kalodata' && (
+                  <div className="bg-gradient-to-r from-blue-950/20 via-blue-900/10 to-[#030307] border border-blue-500/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-lg shrink-0">
+                        ⚡
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-white uppercase tracking-wider">⚡ INTEGRAÇÃO KALODATA ATIVA</h4>
+                        <p className="text-[11px] text-[#8888AA] mt-0.5">
+                          Dados sincronizados em tempo real com os produtos mais vendidos do TikTok Shop Brasil hoje.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={showKalodataOverlay}
+                      onClick={triggerKalodataSearch}
+                      className="px-3.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-black rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md self-start sm:self-auto"
+                    >
+                      <RefreshCw className="w-3 h-3" /> <span>🔄 Atualizar</span>
+                    </button>
+                  </div>
+                )}
+
+                {activeFilter === 'manual' && (
+                  <div className="bg-gradient-to-r from-emerald-950/20 via-emerald-900/10 to-[#030307] border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg shrink-0">
+                        📋
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-white uppercase tracking-wider">📋 SEUS PRODUTOS CADASTRADOS</h4>
+                        <p className="text-[11px] text-[#8888AA] mt-0.5">
+                          Produtos selecionados por você para divulgar com sua audiência.
+                        </p>
+                      </div>
+                    </div>
+                    {userRole === 'admin' && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddAdminModal(true)}
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black rounded-xl flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-500/10 self-start sm:self-auto"
+                      >
+                        <Plus className="w-3 h-3" /> <span>➕ Adicionar Produto</span>
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Custom Product Prominent Block */}
                 {!showAdd && (
@@ -2293,7 +2452,13 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                         product_url: reason
                       };
                       const enriched = enrichProduct(newItem);
-                      setItems([enriched, ...items]);
+                      setManualItems(prev => {
+                        const updated = [enriched, ...prev];
+                        salvarProdutosCache(updated, 'manual');
+                        return updated;
+                      });
+                      setActiveFilter('manual');
+                      salvarFiltroAtivo('manual');
                       
                       setName('');
                       setImgUrl('');
@@ -2453,8 +2618,12 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     const commission = prod.afiliado?.comissao || '10%';
 
                     return (
-                      <div
+                      <motion.div
                         key={prod.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
                         className={`group bg-[#0B0B11] border rounded-2xl overflow-hidden transition-all duration-300 relative flex flex-col p-2 sm:p-3.5 ${
                           isSelected
                             ? 'border-[#FE2C55] shadow-[0_0_15px_rgba(254,44,85,0.15)] bg-[#111118]'
@@ -2466,17 +2635,19 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           <span className="text-[9px] bg-[#FE2C55]/15 border border-[#FE2C55]/25 text-[#FE2C55] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
                             Comissão: {commission}
                           </span>
-                          {prod.tendencia ? (
-                            <span className="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md">
-                              {prod.tendencia === 'em_alta' ? '🔥 Em Alta' :
-                               prod.tendencia === 'muito_quente' ? '🔥🔥 Muito Quente' :
-                               prod.tendencia === 'viral' ? '🔥🔥🔥 Viral' : '⭐ Destaque'}
+                          {activeFilter === 'viral' ? (
+                            <span className="text-[9px] bg-red-500/20 border border-red-500/30 text-red-500 font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md flex items-center gap-1">
+                              🔥 VIRAL
                             </span>
-                          ) : isKalodataMode ? (
+                          ) : activeFilter === 'kalodata' ? (
                             <span className="text-[9px] bg-blue-500/20 border border-blue-500/30 text-blue-400 font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md flex items-center gap-1">
                               ⚡ KALODATA
                             </span>
-                          ) : null}
+                          ) : (
+                            <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md backdrop-blur-sm shadow-md flex items-center gap-1">
+                              📋 MANUAL
+                            </span>
+                          )}
                         </div>
 
                         {/* Image Container with Aspect Ratio */}
@@ -2550,7 +2721,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                             <span>Gerar</span>
                           </button>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
