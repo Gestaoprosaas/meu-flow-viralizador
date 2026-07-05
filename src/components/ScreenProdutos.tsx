@@ -724,13 +724,15 @@ export default function ScreenProdutos({
   }, []);
 
   const [items, setItems] = useState<any[]>([]);
-  const [isKalodataMode, setIsKalodataMode] = useState<boolean>(false);
+
   const [viralItems, setViralItems] = useState<any[]>([]);
   const [kalodataItems, setKalodataItems] = useState<any[]>([]);
   const [manualItems, setManualItems] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<'viral' | 'kalodata' | 'manual'>(() => {
     return (sessionStorage.getItem('produtos_filtro_ativo') as 'viral' | 'kalodata' | 'manual') || 'viral';
   });
+
+  const isKalodataMode = activeFilter === 'kalodata';
 
   const salvarProdutosCache = (produtos: any[], fonte: 'viral' | 'kalodata' | 'manual') => {
     sessionStorage.setItem(`produtos_cache_v3_${fonte}`, JSON.stringify(produtos));
@@ -818,21 +820,7 @@ export default function ScreenProdutos({
     }
   }, [activeFilter, viralItems, kalodataItems, manualItems]);
 
-  // Keep isKalodataMode state synchronized with active filter
-  useEffect(() => {
-    setIsKalodataMode(activeFilter === 'kalodata');
-  }, [activeFilter]);
 
-  // Keep active filter synchronized if isKalodataMode is changed externally
-  useEffect(() => {
-    if (isKalodataMode && activeFilter !== 'kalodata') {
-      setActiveFilter('kalodata');
-      salvarFiltroAtivo('kalodata');
-    } else if (!isKalodataMode && activeFilter === 'kalodata') {
-      setActiveFilter('manual');
-      salvarFiltroAtivo('manual');
-    }
-  }, [isKalodataMode]);
 
   // Kalodata Search States
   const [showKalodataOverlay, setShowKalodataOverlay] = useState<boolean>(false);
