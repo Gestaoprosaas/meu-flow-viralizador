@@ -435,6 +435,13 @@ export default function App() {
     }
   });
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     try {
       if (theme === 'light') {
@@ -1484,6 +1491,30 @@ export default function App() {
 
       {/* 4. VISUAL CELEBRATION FLOATING OVERLAYS */}
       <CelebrationConfetti active={showCelebration} />
+
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950 border-t border-zinc-800 px-2 py-2">
+          <div className="flex items-center justify-around gap-1">
+            {sidebarItems.map((item) => {
+              const isActive = currentPath === item.path;
+              return (
+                <div
+                  key={item.name}
+                  onClick={() => handleNavigate(item.path)}
+                  className={`flex flex-col items-center justify-center rounded-xl px-2 py-2 min-w-[48px] transition-all cursor-pointer
+                    ${isActive
+                      ? 'bg-zinc-800 text-red-400'
+                      : 'bg-zinc-900/60 text-zinc-500'}
+                  `}
+                >
+                  <item.icon size={22} />
+                  <span className="text-[10px] mt-1 font-medium">{item.name}</span>
+                </div>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       {activeSale && (
         <div className="fixed bottom-6 right-6 z-50 animate-bounce bg-[#0B0B14]/95 border border-[#25F4EE]/40 rounded-3xl p-5 flex items-center gap-4 shadow-2xl shadow-[#25F4EE]/10 max-w-sm select-none">
