@@ -1501,14 +1501,14 @@ export default function App() {
                 <div
                   key={item.name}
                   onClick={() => handleNavigate(item.path)}
-                  className={`flex flex-col items-center justify-center rounded-xl px-2 py-2 min-w-[48px] transition-all cursor-pointer
+                  className={`flex-1 flex flex-col items-center justify-center rounded-xl py-2 mx-0.5 transition-all cursor-pointer h-16
                     ${isActive
                       ? 'bg-zinc-800 text-red-400'
                       : 'bg-zinc-900/60 text-zinc-500'}
                   `}
                 >
                   <item.icon size={22} />
-                  <span className="text-[10px] mt-1 font-medium">{item.name}</span>
+                  <span className="text-[10px] mt-1 font-medium truncate w-full text-center px-0.5">{item.name}</span>
                 </div>
               );
             })}
