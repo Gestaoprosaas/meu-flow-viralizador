@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, startTransition } from 'react';
 import {
   Sparkles,
   LayoutDashboard,
@@ -252,6 +252,29 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState<string>('/dashboard');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
+
+  // Swipe navigation logic
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const SWIPE_THRESHOLD = 60;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) < SWIPE_THRESHOLD) return;
+
+    const paths = sidebarItems.map(i => i.path);
+    const currentIndex = paths.indexOf(currentPath);
+    if (diff > 0 && currentIndex < paths.length - 1) {
+      handleNavigate(paths[currentIndex + 1]);
+    } else if (diff < 0 && currentIndex > 0) {
+      handleNavigate(paths[currentIndex - 1]);
+    }
+  };
 
   // Payload redirects
   const [roteirosPreFill, setRoteirosPreFill] = useState<any>(null);
@@ -849,7 +872,9 @@ export default function App() {
         setInitialMovementId(null);
       }
     }
-    setCurrentPath(path);
+    startTransition(() => {
+      setCurrentPath(path);
+    });
     setSidebarOpen(false);
   };
 
@@ -1165,7 +1190,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#06060B] text-[#F0F0FF] font-sans flex flex-col overflow-hidden relative pb-16 lg:pb-0" style={{ paddingBottom: isMobile ? 'calc(env(safe-area-inset-bottom) + 64px)' : 'env(safe-area-inset-bottom)' }}>
+    <div className="min-h-screen bg-[#06060B] text-[#F0F0FF] font-sans flex flex-col overflow-hidden relative pb-16 lg:pb-0" style={{ paddingBottom: isMobile ? 'calc(env(safe-area-inset-bottom) + 72px)' : 'env(safe-area-inset-bottom)' }}>
       <FictitiousNotifications />
       {/* PWA Install Banner */}
       {showInstallBanner && (
@@ -1349,7 +1374,8 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         
         {/* Header toolbar */}
-        <header className="h-16 border-b border-[#18182D]/40 bg-[#06060B]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between relative z-30">
+        <header className="border-b border-[#18182D]/40 bg-[#06060B]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between relative z-30"
+          style={{ paddingTop: 'env(safe-area-inset-top)', minHeight: '64px' }}>
           
           <div className="flex items-center gap-3">
             {/* Mobile menu burger */}
@@ -1401,7 +1427,11 @@ export default function App() {
         </header>
 
         {/* Dynamic Content Panel area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 relative z-20">
+        <main 
+          className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 relative z-20"
+          onTouchStart={isMobile ? handleTouchStart : undefined}
+          onTouchEnd={isMobile ? handleTouchEnd : undefined}
+        >
           <div className="w-full max-w-[1800px] mx-auto">
             {checkPathAccess(currentPath).locked ? (
               <ScreenLockedFeature
@@ -1561,22 +1591,27 @@ export default function App() {
       <CelebrationConfetti active={showCelebration} />
 
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950 border-t border-zinc-800 px-2 py-2">
-          <div className="flex items-center justify-around gap-1">
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-50 bg-[#06060B]/95 border-t border-zinc-800/60 backdrop-blur-md"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div className="flex overflow-x-auto scrollbar-hide px-2 py-2 gap-1">
             {sidebarItems.map((item) => {
               const isActive = currentPath === item.path;
               return (
                 <div
                   key={item.name}
                   onClick={() => handleNavigate(item.path)}
-                  className={`flex-1 flex flex-col items-center justify-center rounded-xl py-2 mx-0.5 transition-all cursor-pointer h-16
-                    ${isActive
-                      ? 'bg-zinc-800 text-red-400'
-                      : 'bg-zinc-900/60 text-zinc-500'}
-                  `}
+                  className={`flex flex-col items-center justify-center rounded-xl py-2 px-3 cursor-pointer transition-all shrink-0 min-w-[72px] h-14 ${
+                    isActive
+                      ? 'bg-[#FE2C55]/10 text-[#FE2C55] border border-[#FE2C55]/20'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
                 >
-                  <item.icon size={22} />
-                  <span className="text-[10px] mt-1 font-medium truncate w-full text-center px-0.5">{item.name}</span>
+                  <item.icon size={20} />
+                  <span className="text-[9px] mt-1 font-semibold text-center leading-tight max-w-[64px] line-clamp-1">
+                    {item.name}
+                  </span>
                 </div>
               );
             })}
