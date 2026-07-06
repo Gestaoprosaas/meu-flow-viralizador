@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { LazyVideo } from './LazyVideo';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { 
   Target, 
   Search, 
@@ -193,7 +195,7 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
 
       <div className="relative h-28 xs:h-36 sm:h-48 md:h-56 lg:h-64 overflow-hidden bg-zinc-900">
         {av.videoUrl ? (
-          <video
+          <LazyVideo
             ref={videoRef}
             autoPlay
             loop
@@ -207,9 +209,9 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
             }}
           >
             <source src={av.videoUrl} type="video/mp4" />
-          </video>
+          </LazyVideo>
         ) : (
-          <img 
+          <ImageWithSkeleton 
             src={av.imageUrl} 
             alt={av.name} 
             className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
@@ -272,7 +274,7 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
 
       <div className={`relative ${isLarge ? 'aspect-[2/3] min-h-[420px] sm:min-h-[480px]' : 'h-20 xs:h-24 sm:h-36'} overflow-hidden bg-zinc-900 w-full`}>
         {sc.videoUrl ? (
-          <video
+          <LazyVideo
             ref={videoRef}
             autoPlay
             loop
@@ -286,9 +288,9 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
             }}
           >
             <source src={sc.videoUrl} type="video/mp4" />
-          </video>
+          </LazyVideo>
         ) : (
-          <img 
+          <ImageWithSkeleton 
             src={sc.imageUrl} 
             alt={sc.name} 
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-all duration-500"
@@ -408,7 +410,7 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
             }
 
             return (
-              <video
+              <LazyVideo
                 ref={videoRef}
                 autoPlay
                 loop
@@ -422,11 +424,11 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                 }}
               >
                 <source src={mv.videoUrl} type="video/mp4" />
-              </video>
+              </LazyVideo>
             );
           })()
         ) : (
-          <img
+          <ImageWithSkeleton
             src={mv.imageUrl}
             alt={mv.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -715,6 +717,29 @@ export default function ScreenProdutos({
   initialMovementId,
   userRole
 }: ScreenProdutosProps) {
+  const sentinelaRef = useRef<HTMLDivElement>(null);
+  const [headerColapsado, setHeaderColapsado] = useState(false);
+
+  useEffect(() => {
+    const sentinela = sentinelaRef.current;
+    if (!sentinela) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Quando o sentinela sai da tela (scroll para baixo), colapsa o header
+        setHeaderColapsado(!entry.isIntersecting);
+      },
+      {
+        root: null, // observa o viewport da página inteira
+        threshold: 0,
+        rootMargin: '-60px 0px 0px 0px' // ajusta a altura do navbar fixo se tiver
+      }
+    );
+
+    observer.observe(sentinela);
+    return () => observer.disconnect();
+  }, []);
+
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -1533,7 +1558,7 @@ export default function ScreenProdutos({
     setShowAdd(false);
   };
 
-  const filteredItems = items.filter((item) => {
+  const filteredItems = useMemo(() => items.filter((item) => {
     if (!item) return false;
     const itemName = String(item.name || '');
     const itemNiche = String(item.niche || '');
@@ -1554,7 +1579,7 @@ export default function ScreenProdutos({
     const matchesNiche = selectedNiche === 'todos' || normalized === selectedNiche;
 
     return matchesSearch && matchesNiche;
-  });
+  }), [items, search, selectedNiche]);
 
   // Dynamic Suggestions Helpers
   const getAvatarSuggestions = (product: TrendingProduct) => {
@@ -2114,7 +2139,12 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
       
       {/* Live Auto-Updating Trending Products TikTok Banner */}
       {!isMovimentoWizardStep && !hidePanelsOnMobileMovimento && (
-        <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+        <div
+          className={`transition-all duration-500 ease-in-out overflow-hidden ${
+            headerColapsado ? 'max-h-0 opacity-0 mb-0 pointer-events-none' : 'max-h-[300px] opacity-100 mb-4'
+          }`}
+        >
+          <div className="bg-[#010101] border border-[#1E1E2E] rounded-3xl p-6 relative overflow-hidden shadow-2xl">
           {/* Glow Effects in corners */}
           <div className="absolute top-0 left-0 w-48 h-48 bg-[#25F4EE]/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-48 h-48 bg-[#FE2C55]/5 rounded-full blur-3xl pointer-events-none" />
@@ -2231,6 +2261,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
             </div>
           </div>
         </div>
+        </div>
       )}
       
 
@@ -2241,7 +2272,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
         {/* Main Wizard Form Column: full width (col-span-3) on Step 1, or col-span-2 on others */}
         <div 
           id="wizard-container"
-          className={`${wizardStep === 1 || !activeWizardProduct || hidePanelsOnMobileMovimento || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-y-auto lg:overflow-hidden touch-pan-y flex flex-col justify-between min-h-[400px] sm:min-h-[480px] max-h-[90vh] lg:max-h-none w-full`}
+          className={`${wizardStep === 1 || !activeWizardProduct || hidePanelsOnMobileMovimento || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-visible touch-pan-y flex flex-col justify-between min-h-[400px] sm:min-h-[480px] w-full`}
         >
           
           {/* Ambient Background subtle colors */}
@@ -2252,22 +2283,48 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
             {wizardStep === 1 && (
               <div className="space-y-4 sm:space-y-5 animate-fade-in font-sans">
                 
-                {(localStorage.getItem('viralseller_video_mode') || localStorage.getItem('viralseller_avatar_pre')) && (
-                  <div className="mb-4 bg-gradient-to-r from-[#06B6D4]/10 to-[#7C3AED]/10 border border-[#06B6D4]/30 rounded-xl p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#06B6D4]/20 flex items-center justify-center text-[#06B6D4]">
-                        <Sparkles className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="text-[11px] font-black text-white uppercase tracking-wider">
-                          {localStorage.getItem('viralseller_video_mode') ? `Modo ${localStorage.getItem('viralseller_video_mode')} Pré-selecionado` : 'Avatar Pré-selecionado'}
-                        </h4>
-                        <p className="text-[10px] text-gray-400">Suas seleções anteriores foram carregadas automaticamente.</p>
+                {/* Bloco 1: Produtos Virais ou Avatar Selecionado (se existir) */}
+                <div
+                  className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                    headerColapsado ? 'max-h-0 opacity-0 mb-0 pointer-events-none' : 'max-h-[200px] opacity-100 mb-4'
+                  }`}
+                >
+                  {(localStorage.getItem('viralseller_video_mode') || localStorage.getItem('viralseller_avatar_pre')) && (
+                    <div className="bg-gradient-to-r from-[#06B6D4]/10 to-[#7C3AED]/10 border border-[#06B6D4]/30 rounded-xl p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#06B6D4]/20 flex items-center justify-center text-[#06B6D4]">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-[11px] font-black text-white uppercase tracking-wider">
+                            {localStorage.getItem('viralseller_video_mode') ? `Modo ${localStorage.getItem('viralseller_video_mode')} Pré-selecionado` : 'Avatar Pré-selecionado'}
+                          </h4>
+                          <p className="text-[10px] text-gray-400">Suas seleções anteriores foram carregadas automaticamente.</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
+                {headerColapsado && (
+                  <button
+                    onClick={() => {
+                      document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setHeaderColapsado(false);
+                    }}
+                    className="sticky top-2 z-20 ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-[#0D0D1A]/90 border border-[#1E1E35] hover:border-[#FE2C55]/40 text-zinc-400 hover:text-white text-[11px] font-bold rounded-full backdrop-blur-sm transition-all mb-2"
+                  >
+                    ↑ Mostrar painel
+                  </button>
+                )}
+                
+                {/* Bloco 2: Etapa 1 - Produto Comercial */}
+                <div
+                  className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                    headerColapsado ? 'max-h-0 opacity-0 mb-0 pointer-events-none' : 'max-h-[300px] opacity-100 mb-4'
+                  }`}
+                >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div className="space-y-1">
                     <span className="text-[10px] text-[#FE2C55] font-black uppercase tracking-widest block">ETAPA 1 — PRODUTO COMERCIAL</span>
@@ -2331,6 +2388,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                   >
                     <span>📋 Meus Produtos</span>
                   </button>
+                </div>
                 </div>
 
                 {/* Special Info Card depending on Active Filter */}
@@ -2571,8 +2629,11 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                   </div>
                 </div>
 
+                {/* Sentinela de scroll - Adicione logo antes da grade de produtos */}
+                <div ref={sentinelaRef} className="w-full h-1" aria-hidden="true" />
+
                 {/* Product Cards Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 max-h-[calc(100vh-220px)] sm:max-h-[520px] overflow-y-auto pr-1 touch-pan-y">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pr-1 touch-pan-y">
                   {filteredItems.length === 0 ? (
   <div className="col-span-full flex flex-col items-center justify-center p-12 bg-[#111118] border border-[#1E1E2E] rounded-xl text-center">
     <span className="text-sm font-bold text-[#8888AA]">Nenhum produto cadastrado ainda.</span>
@@ -2695,7 +2756,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           <button
                             type="button"
                             onClick={() => handleTriggerAffiliation(prod)}
-                            className="flex-1 py-1.5 sm:py-2 bg-[#111118] border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-1"
+                            className="flex-1 py-2 px-2 bg-[#111118] border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 font-black text-xs uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-1"
                           >
                             <Link2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                             <span>Afiliar</span>
@@ -2703,7 +2764,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           <button
                             type="button"
                             onClick={() => handleTriggerVideoGeneration(prod)}
-                            className="flex-1 py-1.5 sm:py-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
+                            className="flex-1 py-2 px-2 bg-[#FE2C55] hover:bg-[#ff3d64] text-white font-black text-xs uppercase tracking-wider rounded-lg sm:rounded-xl transition-all duration-200 active:scale-95 shadow-md shadow-[#FE2C55]/20 flex items-center justify-center gap-1"
                           >
                             <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white fill-white" />
                             <span>Gerar</span>
@@ -3183,7 +3244,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] sm:max-h-[380px] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60vh] sm:max-h-[380px] overflow-y-auto pr-1">
                       {allAvatars.filter((av) => {
                         const currentFilter = (window as any).avatarFilter || 'TODOS';
                         if (currentFilter === 'TODOS') return true;
@@ -3555,7 +3616,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
 
                       {/* Scenarios Grid Presets */}
                       {activeScenarioCategory === 'standard' ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 max-h-[220px] xs:max-h-[300px] sm:max-h-[380px] overflow-y-auto pr-1">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 max-h-[220px] xs:max-h-[300px] sm:max-h-[380px] overflow-y-auto pr-1">
                           {allScenarios.map((sc) => {
                             const isSelected = !isCuratedScenario && selectedScenarioId === sc.id;
                             return (
@@ -3573,7 +3634,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           })}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 max-h-[220px] xs:max-h-[300px] sm:max-h-[380px] overflow-y-auto pr-1">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 max-h-[220px] xs:max-h-[300px] sm:max-h-[380px] overflow-y-auto pr-1">
                           {CURATED_SCENARIOS_PRESETS.map((sc) => {
                             const isSelected = isCuratedScenario && selectedScenarioId === sc.id;
                             return (
@@ -3652,7 +3713,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       </div>
 
                       {/* Movements visual presets grid list with pre-visualization hover cards */}
-                      <div className={`grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 ${
+                      <div className={`grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 ${
                         showVoiceSettings 
                           ? 'max-h-[200px] xs:max-h-[240px] sm:max-h-[350px]' 
                           : 'max-h-[380px] xs:max-h-[460px] sm:max-h-[680px]'
@@ -3684,7 +3745,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       </div>
 
                       {/* Movements visuals grid presets list matching photo 3 */}
-                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-h-[260px] xs:max-h-[320px] sm:max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 max-h-[260px] xs:max-h-[320px] sm:max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                         {MOVEMENTS_PRESETS.map((mv) => {
                           const isSelected = selectedMovementId === mv.id;
                           return (
@@ -4051,7 +4112,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                         return (
                           <div className="space-y-2">
                             <div className="flex items-center gap-3 bg-[#111118] p-2 rounded-lg border border-[#1E1E2E]">
-                              <img 
+                              <ImageWithSkeleton 
                                 src={imgUrlToUse} 
                                 alt={avPreset?.name || 'Avatar'} 
                                 referrerPolicy="no-referrer"
@@ -4148,7 +4209,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           <div className="space-y-2">
                             <div className="flex items-center gap-3 bg-[#111118] p-2 rounded-lg border border-[#1E1E2E]">
                               <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#1E1E2E] shrink-0">
-                                <img 
+                                <ImageWithSkeleton 
                                   src={scImgUrl} 
                                   alt={scPreset?.name || 'Cenário'} 
                                   referrerPolicy="no-referrer"
@@ -4351,7 +4412,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                   <button
                     type="button"
                     onClick={() => setWizardStep(wizardStep - 1)}
-                    className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-black rounded-xl text-[#A0A0C0] hover:text-white flex items-center justify-center gap-1.5 transition-all"
+                    className="w-full sm:w-auto px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-black rounded-xl text-[#A0A0C0] hover:text-white flex items-center justify-center gap-1.5 transition-all"
                   >
                     <ArrowLeft className="w-4 h-4" /> Etapa Anterior
                   </button>
@@ -4359,7 +4420,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                   <button
                     type="button"
                     onClick={handleResetWizard}
-                    className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-bold rounded-xl text-[#8888AA] hover:text-white flex items-center justify-center"
+                    className="w-full sm:w-auto px-4 py-2 min-h-[48px] sm:min-h-0 bg-[#1E1E2E] hover:bg-[#2A2A3E] text-xs font-bold rounded-xl text-[#8888AA] hover:text-white flex items-center justify-center"
                   >
                     Cancelar Assistente
                   </button>
@@ -4381,7 +4442,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                   type="button"
                   disabled={isLoadingPrompt}
                   onClick={() => handleGeneratePrompt()}
-                  className="px-5 py-2.5 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
+                  className="w-full sm:w-auto px-5 py-2.5 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
                 >
                   {isLoadingPrompt ? (
                     <>
@@ -4412,7 +4473,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     const container = document.getElementById('wizard-container');
                     if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="px-4 py-2 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-[#FE2C55] to-[#25F4EE] text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 transition-all shadow-md shadow-[#FE2C55]/10 active:scale-95"
+                  className="w-full sm:w-auto px-4 py-2 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-[#FE2C55] to-[#25F4EE] text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 transition-all shadow-md shadow-[#FE2C55]/10 active:scale-95"
                 >
                   Confirmar e Avançar <ArrowRight className="w-4 h-4" />
                 </button>
@@ -4421,7 +4482,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                   type="button"
                   disabled={isLoadingPrompt}
                   onClick={() => handleGeneratePrompt()}
-                  className="px-5 py-2.5 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
+                  className="w-full sm:w-auto px-5 py-2.5 min-h-[48px] sm:min-h-0 bg-gradient-to-r from-emerald-500 to-cyan-500 disabled:opacity-55 text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-95 shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
                 >
                   {isLoadingPrompt ? (
                     <>
@@ -4887,7 +4948,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       >
                         <div className="relative w-full aspect-[9/16] bg-[#030307]">
                           {modo.videoUrl ? (
-                            <video
+                            <LazyVideo
                               src={modo.videoUrl}
                               autoPlay
                               loop
@@ -4949,7 +5010,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
             <div className="w-full max-w-[320px] mx-auto px-4 sm:px-0 flex flex-col items-center z-10">
               <div className="w-full aspect-[9/16] bg-black rounded-2xl overflow-hidden border border-[#25F4EE]/30 shadow-[0_0_40px_rgba(37,244,238,0.15)] mb-6 relative">
                 {selectedMovementForModal.videoUrl ? (
-                  <video 
+                  <LazyVideo 
                     src={selectedMovementForModal.videoUrl}
                     poster={selectedMovementForModal.imageUrl}
                     autoPlay
@@ -4960,7 +5021,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <img 
+                  <ImageWithSkeleton 
                     src={selectedMovementForModal.imageUrl}
                     alt={selectedMovementForModal.name}
                     className="w-full h-full object-cover"

@@ -11,7 +11,7 @@ interface ScreenAdminProps {
 }
 
 export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'parceiros' | 'produtos' | 'sistema'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'parceiros' | 'sistema'>('users');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -27,14 +27,6 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
     id: '', admin_nome: '', admin_email: '', cupom: '', checkout_url_mensal: '', checkout_url_vitalicio: '', limite_cupons: 2
   });
   const [isEditingParceiro, setIsEditingParceiro] = useState(false);
-  
-  // === SEÇÃO PARCEIROS ===
-  const [produtosManuais, setProdutosManuais] = useState<any[]>([]);
-  const [produtoForm, setProdutoForm] = useState({
-    nome: '', imagem_url: '', preco: '', comissao: '', link_afiliado: '', nicho: 'Geral', ativo: true
-  });
-  const [editingProdutoId, setEditingProdutoId] = useState<string | null>(null);
-
   
   // === SEÇÃO NOTIFICAÇÕES ===
   const [notifIntervalo, setNotifIntervalo] = useState(60000);
@@ -71,9 +63,6 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
         const { data, error } = await supabase.from('cupons_admins').select('*').order('criado_em', { ascending: false });
         console.log('[Admin] Resultado cupons:', data, error);
         if (!error && data) setParceiros(data);
-      } else if (activeTab === 'produtos') {
-        const { data, error } = await supabase.from('produtos_manuais').select('*').order('created_at', { ascending: false });
-        if (!error && data) setProdutosManuais(data);
       }
     } catch (err: any) {
       console.error(err);
@@ -176,39 +165,6 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
     carregarDados();
   };
 
-  // === MÉTODOS PRODUTOS ===
-  const salvarProduto = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supabase) return;
-    setLoading(true);
-    
-    const payload = {
-      ...produtoForm,
-      preco: parseFloat(produtoForm.preco) || 0,
-      comissao: parseFloat(produtoForm.comissao) || 0
-    };
-
-    if (editingProdutoId) {
-      const { error } = await supabase.from('produtos_manuais').update(payload).eq('id', editingProdutoId);
-      if (!error) notify('Produto atualizado!', 'success');
-      else notify('Erro ao atualizar', 'error');
-    } else {
-      const { error } = await supabase.from('produtos_manuais').insert([payload]);
-      if (!error) notify('Produto criado!', 'success');
-      else notify('Erro ao criar', 'error');
-    }
-    
-    setProdutoForm({ nome: '', imagem_url: '', preco: '', comissao: '', link_afiliado: '', nicho: 'Geral', ativo: true });
-    setEditingProdutoId(null);
-    carregarDados();
-  };
-
-  const excluirProduto = async (id: string) => {
-    if (!supabase) return;
-    const { error } = await supabase.from('produtos_manuais').delete().eq('id', id);
-    if (!error) notify('Produto excluído', 'success');
-    carregarDados();
-  };
 
   // Filtering
   const filteredUsers = users.filter(u => 
@@ -250,17 +206,6 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
           </button>
           )}
           
-          {isSuperAdmin && (
-          <button
-            onClick={() => setActiveTab('produtos')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'produtos' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
-            }`}
-          >
-            <Package className="w-4 h-4" /> Produtos Manuais
-          </button>
-          )}
-
           {isSuperAdmin && (
           <button
             onClick={() => setActiveTab('sistema')}
@@ -555,94 +500,13 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
             </div>
           )}
 
-          {/* TAB: PRODUTOS */}
-          {activeTab === 'produtos' && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h1 className="text-3xl font-black tracking-tight">Produtos Manuais</h1>
-                <p className="text-zinc-400 text-sm mt-1">Gerencie os produtos extras exibidos na galeria.</p>
-              </div>
 
-              <div className="grid lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-4">
-                  <form onSubmit={salvarProduto} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-6 space-y-4 sticky top-6">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
-                      {editingProdutoId ? <Edit2 className="w-4 h-4 text-cyan-500" /> : <Plus className="w-4 h-4 text-cyan-500" />}
-                      {editingProdutoId ? 'Editar Produto' : 'Novo Produto'}
-                    </h3>
-                    
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-zinc-400">Nome do Produto</label>
-                      <input type="text" value={produtoForm.nome} onChange={e => setProdutoForm({...produtoForm, nome: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-zinc-400">URL da Imagem</label>
-                      <input type="url" value={produtoForm.imagem_url} onChange={e => setProdutoForm({...produtoForm, imagem_url: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-zinc-400">Preço (R$)</label>
-                        <input type="number" step="0.01" value={produtoForm.preco} onChange={e => setProdutoForm({...produtoForm, preco: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-zinc-400">Comissão (R$)</label>
-                        <input type="number" step="0.01" value={produtoForm.comissao} onChange={e => setProdutoForm({...produtoForm, comissao: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-zinc-400">Link de Afiliado</label>
-                      <input type="url" value={produtoForm.link_afiliado} onChange={e => setProdutoForm({...produtoForm, link_afiliado: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
-                    </div>
-
-                    <div className="pt-2 flex gap-2">
-                      {editingProdutoId && (
-                        <button type="button" onClick={() => { setEditingProdutoId(null); setProdutoForm({ nome: '', imagem_url: '', preco: '', comissao: '', link_afiliado: '', nicho: 'Geral', ativo: true }); }} className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs transition">Cancelar</button>
-                      )}
-                      <button type="submit" disabled={loading} className="flex-[2] py-3 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-bold text-xs uppercase tracking-wider transition disabled:opacity-50 text-zinc-900 shadow-lg shadow-cyan-500/20">
-                        {loading ? 'Salvando...' : 'Salvar Produto'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-                
-                <div className="lg:col-span-8">
-                  {loading && produtosManuais.length === 0 ? (
-                    <div className="flex justify-center p-12"><RefreshCw className="w-8 h-8 text-cyan-500 animate-spin" /></div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {produtosManuais.map(p => (
-                        <div key={p.id} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all group flex flex-col">
-                          <div className="aspect-square w-full relative">
-                            <ImageWithSkeleton src={p.imagem_url} alt={p.nome} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center gap-2">
-                              <button onClick={() => { setProdutoForm(p); setEditingProdutoId(p.id); }} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs rounded-xl transition">Editar</button>
-                              <button onClick={() => excluirProduto(p.id)} className="px-4 py-2 bg-red-500 hover:bg-red-400 text-white font-bold text-xs rounded-xl transition">Excluir</button>
-                            </div>
-                          </div>
-                          <div className="p-4 flex-1 flex flex-col">
-                            <h4 className="font-bold text-white text-sm line-clamp-2">{p.nome}</h4>
-                            <div className="mt-auto pt-3 flex justify-between items-end">
-                              <span className="text-xs text-zinc-400">Preço: <span className="text-white font-bold block">R$ {p.preco.toFixed(2)}</span></span>
-                              <span className="text-xs text-emerald-400 font-bold">Com: R$ {p.comissao.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {produtosManuais.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-zinc-500">Nenhum produto cadastrado.</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+          {/* TAB: SISTEMA */}
+          {activeTab === 'sistema' && (
+            <div className="space-y-6 animate-fade-in text-white">
+              <h1 className="text-3xl font-black tracking-tight">Sistema</h1>
             </div>
           )}
-
-
-          {/* TAB: NOTIFICAÇÕES FICTÍCIAS */}
           {activeTab === 'notificacoes' as any && (
             <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
               <div>
