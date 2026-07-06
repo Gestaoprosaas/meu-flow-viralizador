@@ -359,8 +359,40 @@ export default function App() {
     });
 
     // Escutar mudanças de auth em tempo real
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') setIsLanding(true);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setIsLanding(true);
+        setProfileLoaded(false);
+        setProfile(prev => ({ ...prev, role: 'loading' }));
+        return;
+      }
+
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        try {
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (userProfile) {
+            setProfile(prev => ({
+              ...prev,
+              id: session.user.id,
+              name: userProfile.nome || userProfile.name || session.user.email?.split('@')[0] || '',
+              email: session.user.email || '',
+              plan: userProfile.plano || userProfile.plan || 'starter',
+              role: userProfile.role || 'client',
+              ativo: userProfile.ativo !== false,
+            }));
+            setIsLanding(!userProfile.ativo);
+          }
+        } catch (err) {
+          console.error('[AuthStateChange] Erro ao recarregar perfil:', err);
+        } finally {
+          setProfileLoaded(true);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -666,7 +698,12 @@ export default function App() {
       const pRes = await appFetch('/api/profile');
       if (pRes.ok) {
         const pData = await pRes.json();
-        setProfile(pData);
+        setProfile(prev => ({
+          ...pData,
+          role: (prev.role === 'superadmin' || prev.role === 'admin')
+            ? prev.role
+            : (pData.role || prev.role || 'client')
+        }));
       }
 
       // Projects
