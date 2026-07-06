@@ -1,5 +1,5 @@
 /**
- * PROJETO VITÃO - TypeScript Core Platform Types
+ * ViralSeller - TypeScript Core Platform Types
  */
 
 export interface Profile {
@@ -8,7 +8,7 @@ export interface Profile {
   email: string;
   avatar_url: string;
   plan: 'free' | 'starter' | 'pro' | 'agency';
-  role?: 'admin' | 'client';
+  role?: 'superadmin' | 'admin' | 'client' | 'loading';
   credits_text: number;
   credits_image: number;
   credits_video: number;

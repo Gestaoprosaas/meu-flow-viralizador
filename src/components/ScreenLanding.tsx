@@ -58,14 +58,24 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
   // Check URL query parameters and load keys on launch
   useEffect(() => {
-    // 2. Parse URL for checkout success landing
     const query = new URLSearchParams(window.location.search);
     const planParam = query.get('plan');
-    if (planParam === 'starter' || planParam === 'pro' || planParam === 'agency') {
-      setSignupPlan(planParam as any);
-      setShowSignup(true);
-      // Clean query parameters so the view is pristine
+    const paidParam = query.get('paid');
+    const statusParam = query.get('status');
+
+    const retornouDoPagamento =
+      paidParam === 'true' ||
+      statusParam === 'paid' ||
+      statusParam === 'approved' ||
+      planParam === 'starter' ||
+      planParam === 'pro';
+
+    if (retornouDoPagamento) {
+      // Limpar URL imediatamente
       window.history.replaceState({}, document.title, window.location.pathname);
+      // Mostrar tela de criação de conta em tela cheia
+      setSignupPlan(planParam as any || 'starter');
+      setShowSignup(true);
     }
   }, []);
 
@@ -411,44 +421,29 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
         {/* MODAL 1: ACCOUNT CREATION (POST-CHECKOUT SETUP SCREEN) */}
         <AnimatePresence>
           {showSignup && (
-            <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <div className="fixed inset-0 z-[100] overflow-y-auto flex items-center justify-center p-4 bg-[#06060B]">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative bg-[#09090F]/95 border border-white/[0.08] w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl text-left"
+                className="relative w-full max-w-md space-y-8 text-center"
               >
-                <button
-                  onClick={() => setShowSignup(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-white transition animate-none cursor-pointer border-none bg-transparent"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Banner alert showing purchase recognition */}
-                <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl">
-                  <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="space-y-0.5">
-                    <h5 className="font-extrabold text-xs text-white uppercase tracking-wider">Simulação de Pagamento Confirmado!</h5>
-                    <p className="text-[10px] text-emerald-300 leading-normal">
-                      A compra do plano <strong className="text-white uppercase font-black">{signupPlan}</strong> foi simulada. Complete os dados abaixo para criar sua conta no Supabase de teste.
-                    </p>
+                <div className="space-y-3">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto animate-bounce mb-2">
+                    <ShieldCheck className="w-8 h-8" />
                   </div>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">🎉 Pagamento Confirmado!</h3>
+                  <p className="text-sm sm:text-base text-slate-400">Crie sua conta para acessar o ViralSeller</p>
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-xl font-black text-white font-display">Configure Seu Acesso</h3>
-                  <p className="text-xs text-slate-400">Insira as credenciais para criar seu login real.</p>
-                </div>
-
-                <form onSubmit={handleSignUp} className="space-y-4">
+                <form onSubmit={handleSignUp} className="space-y-4 bg-slate-900/40 p-6 rounded-3xl border border-white/5 text-left">
                   {errorMsg && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-[11px] font-bold text-red-400 rounded-xl leading-normal">
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-[11px] font-bold text-red-400 rounded-xl leading-normal text-center">
                       ⚠ {errorMsg}
                     </div>
                   )}
                   {successMsg && (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 rounded-xl leading-normal">
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 rounded-xl leading-normal text-center">
                       ✓ {successMsg}
                     </div>
                   )}
@@ -457,7 +452,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
                     <label className="text-slate-400 text-xs font-semibold">Nome Completo</label>
                     <input
                       type="text"
-                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition"
+                      className="w-full bg-slate-950 border border-white/[0.08] rounded-xl p-3 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:bg-slate-950/80 transition"
                       placeholder="Seu nome"
                       value={regName}
                       disabled={loading}
@@ -469,7 +464,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
                     <label className="text-slate-400 text-xs font-semibold">Seu melhor E-mail</label>
                     <input
                       type="email"
-                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition font-mono"
+                      className="w-full bg-slate-950 border border-white/[0.08] rounded-xl p-3 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:bg-slate-950/80 transition"
                       placeholder="nome@dominio.com"
                       value={regEmail}
                       disabled={loading}
@@ -481,7 +476,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
                     <label className="text-slate-400 text-xs font-semibold">Defina uma Senha segura</label>
                     <input
                       type="password"
-                      className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE2C55]/60 transition font-mono"
+                      className="w-full bg-slate-950 border border-white/[0.08] rounded-xl p-3 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:bg-slate-950/80 transition"
                       placeholder="Mínimo 6 caracteres"
                       value={regPassword}
                       disabled={loading}
@@ -492,14 +487,13 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-gradient-to-r from-[#FE2C55] to-purple-600 hover:opacity-95 text-white font-extrabold text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition shadow-xl border-none"
+                    className="w-full py-4 mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm tracking-wide rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-[0_0_20px_rgba(16,185,129,0.3)] border-none"
                   >
                     {loading ? (
-                      <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                      <div className="w-5 h-5 rounded-full border-2 border-slate-950/30 border-t-slate-950 animate-spin" />
                     ) : (
                       <>
-                        <UserPlus className="w-4 h-4" />
-                        <span>Criar Conta & Ativar Painel</span>
+                        <span>Criar Minha Conta →</span>
                       </>
                     )}
                   </button>

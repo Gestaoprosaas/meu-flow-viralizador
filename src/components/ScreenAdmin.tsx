@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  ShieldAlert, 
-  ArrowLeft,
-  Tag,
-  Zap,
-  Plus, Flame, Trash2, Ticket
-} from 'lucide-react';
+import { Users, Ticket, Package, Settings, Search, Shield, ShieldAlert, CheckCircle, XCircle, Trash2, Edit2, Play, Sparkles, Copy, Share2, RefreshCw, Power, Server, Lock, ExternalLink, ChevronDown, ChevronUp, UserX, UserCheck, ArrowLeft, Flame, Plus, Bell } from 'lucide-react';
 import { getSupabase } from '../lib/supabaseClient';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { startFictitiousNotifications, stopFictitiousNotifications } from './FictitiousNotifications';
 
 interface ScreenAdminProps {
   onNavigate: (path: string) => void;
@@ -16,982 +11,800 @@ interface ScreenAdminProps {
 }
 
 export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
-  const [activeTab, setActiveTab] = useState<'parceiros' | 'users' | 'produtos' | 'produtos_manuais'>('parceiros');
+  const [activeTab, setActiveTab] = useState<'users' | 'parceiros' | 'produtos' | 'sistema'>('users');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-
-  // Data state
-  const [sysAdmins, setSysAdmins] = useState<any[]>([]);
-  const [cuponsIndicacao, setCuponsIndicacao] = useState<any[]>([]);
-  const [cuponsIndicacaoForm, setCuponsIndicacaoForm] = useState({ 
-    admin_email: '', 
-    admin_nome: '', 
-    cupom: '', 
-    checkout_url: '', 
-    desconto_percentual: 40, 
-    preco_original: 497.00, 
-    preco_com_desconto: 298.20 
-  });
-
-  const [coupons, setCoupons] = useState<any[]>([]);
+  // === SEÇÃO USUÁRIOS ===
   const [users, setUsers] = useState<any[]>([]);
-  const [produtosAlta, setProdutosAlta] = useState<any[]>([]);
-  const [produtoFormData, setProdutoFormData] = useState({ name: '', price: '', trend: '', tiktok_link: '' });
   const [userSearch, setUserSearch] = useState('');
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
-  // Produtos Manuais state
-  const [manualProdutos, setManualProdutos] = useState<any[]>([]);
-  const [manualForm, setManualForm] = useState({
-    nome: '',
-    imagem_url: '',
-    preco: '',
-    comissao: '',
-    link_afiliado: '',
-    tendencia: 'em_alta',
-    nicho: 'Geral',
-    ativo: true
+  // === SEÇÃO PARCEIROS ===
+  const [parceiros, setParceiros] = useState<any[]>([]);
+  const [parceiroForm, setParceiroForm] = useState({
+    id: '', admin_nome: '', admin_email: '', cupom: '', checkout_url_mensal: '', checkout_url_vitalicio: '', limite_cupons: 2
   });
-  const [editingManualId, setEditingManualId] = useState<string | null>(null);
-  const [manualLoading, setManualLoading] = useState(false);
-
-  // Form states
-  const [showAdminForm, setShowAdminForm] = useState(false);
-  const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
-  const [adminFormData, setAdminFormData] = useState({
-    nome: '', email: '', checkout_url: '', is_associado: false, status: true
+  const [isEditingParceiro, setIsEditingParceiro] = useState(false);
+  
+  // === SEÇÃO PARCEIROS ===
+  const [produtosManuais, setProdutosManuais] = useState<any[]>([]);
+  const [produtoForm, setProdutoForm] = useState({
+    nome: '', imagem_url: '', preco: '', comissao: '', link_afiliado: '', nicho: 'Geral', ativo: true
   });
+  const [editingProdutoId, setEditingProdutoId] = useState<string | null>(null);
 
-  const [showCouponForm, setShowCouponForm] = useState(false);
-  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
-  const [couponFormData, setCouponFormData] = useState({
-    codigo: '', admin_id: '', tipo: 'indicacao', ativo: true
-  });
-  const [quickPresenteCode, setQuickPresenteCode] = useState('');
+  
+  // === SEÇÃO NOTIFICAÇÕES ===
+  const [notifIntervalo, setNotifIntervalo] = useState(60000);
+  const [notifTipo, setNotifTipo] = useState<'all' | 'compra' | 'avaliacao' | 'live'>('all');
+  const [notifAtiva, setNotifAtiva] = useState(false);
 
-  const adminFetch = (input: RequestInfo | URL, init?: RequestInit) => {
-    return fetch(input, {
-      ...init,
-      headers: {
-        ...(init?.headers || {}),
-        'x-user-email': profile?.email || '',
-        'x-user-id': profile?.id || ''
-      }
-    });
-  };
-
-  const updateCuponsForm = (field: string, value: any) => {
-    setCuponsIndicacaoForm(prev => {
-      const next = { ...prev, [field]: value };
-      if (field === 'desconto_percentual' || field === 'preco_original') {
-        const desc = parseFloat(next.desconto_percentual as any) || 0;
-        const orig = parseFloat(next.preco_original as any) || 0;
-        next.preco_com_desconto = parseFloat((orig * (1 - desc / 100)).toFixed(2)) || 0;
-      }
-      return next;
-    });
-  };
-
-  const handleToggleUserRole = async (user: any) => {
-    try {
-      const supabase = getSupabase();
-      if (!supabase) return;
-      const newRole = user.role === 'admin' ? 'client' : 'admin';
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', user.id);
-      
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
-        setSuccessMsg('Role do usuário atualizado!');
-        const { data, error: listError } = await supabase
-          .from('profiles')
-          .select('id, name, email, plan, role, ativo, created_at')
-          .order('created_at', { ascending: false });
-        if (!listError && data) setUsers(data);
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Erro de rede ao alternar role.');
-    }
-  };
-
-  const handleToggleUserAtivo = async (user: any) => {
-    try {
-      const supabase = getSupabase();
-      if (!supabase) return;
-      const { error } = await supabase
-        .from('profiles')
-        .update({ ativo: !user.ativo })
-        .eq('id', user.id);
-      
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
-        setSuccessMsg('Status de atividade do usuário atualizado!');
-        const { data, error: listError } = await supabase
-          .from('profiles')
-          .select('id, name, email, plan, role, ativo, created_at')
-          .order('created_at', { ascending: false });
-        if (!listError && data) setUsers(data);
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Erro de rede ao alternar status ativo.');
-    }
-  };
-
-  const handleSaveManualProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualForm.nome || !manualForm.preco || !manualForm.comissao) {
-      setErrorMsg('Nome, preço e comissão são obrigatórios.');
-      return;
-    }
-    setManualLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    try {
-      const isEdit = !!editingManualId;
-      const supabase = getSupabase();
-      if (!supabase) throw new Error("Supabase não configurado.");
-
-      let resError;
-      if (isEdit) {
-        const { error } = await supabase
-          .from('produtos_manuais')
-          .update({ ...manualForm })
-          .eq('id', editingManualId)
-          .select();
-        resError = error;
-      } else {
-        const { error } = await supabase
-          .from('produtos_manuais')
-          .insert([{ ...manualForm, preco: parseFloat(manualForm.preco) || 0, comissao: parseFloat(manualForm.comissao) || 0 }])
-          .select();
-        resError = error;
-      }
-
-      if (!resError) {
-        setSuccessMsg(isEdit ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
-        setManualForm({
-          nome: '',
-          imagem_url: '',
-          preco: '',
-          comissao: '',
-          link_afiliado: '',
-          tendencia: 'em_alta',
-          nicho: 'Geral',
-          ativo: true
-        });
-        setEditingManualId(null);
-        const { data: listData, error: listError } = await supabase
-          .from('produtos_manuais')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (!listError && listData) setManualProdutos(listData);
-      } else {
-        setErrorMsg(resError.message || 'Erro ao salvar produto.');
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Erro de rede ao salvar produto.');
-    } finally {
-      setManualLoading(false);
-    }
-  };
-
-  const handleEditManualProduct = (p: any) => {
-    setEditingManualId(p.id);
-    setManualForm({
-      nome: p.nome || '',
-      imagem_url: p.imagem_url || '',
-      preco: p.preco || '',
-      comissao: p.comissao || '',
-      link_afiliado: p.link_afiliado || '',
-      tendencia: p.tendencia || 'em_alta',
-      nicho: p.nicho || 'Geral',
-      ativo: p.ativo !== false
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteManualProduct = async (id: string) => {
-    if (!confirm('Deseja realmente excluir este produto?')) return;
-    setManualLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    try {
-      const supabase = getSupabase();
-      if (!supabase) throw new Error("Supabase não configurado.");
-
-      const { error } = await supabase
-        .from('produtos_manuais')
-        .delete()
-        .eq('id', id);
-
-      if (!error) {
-        setSuccessMsg('Produto excluído com sucesso!');
-        const { data: listData, error: listError } = await supabase
-          .from('produtos_manuais')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (!listError && listData) setManualProdutos(listData);
-      } else {
-        setErrorMsg(error.message || 'Erro ao excluir produto.');
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Erro de rede ao excluir produto.');
-    } finally {
-      setManualLoading(false);
-    }
-  };
-
-  const loadData = async () => {
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      if (activeTab === 'parceiros') {
-        const res = await adminFetch('/api/admin/cupons');
-        if (res.ok) setCuponsIndicacao(await res.json());
-      } else if (activeTab === 'users') {
-        const supabase = getSupabase();
-        if (supabase) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id, name, email, plan, role, ativo, created_at')
-            .order('created_at', { ascending: false });
-          if (!error && data) setUsers(data);
-        }
-      } else if (activeTab === 'produtos') {
-        const res = await adminFetch('/api/admin/produtos-alta');
-        if (res.ok) setProdutosAlta(await res.json());
-      } else if (activeTab === 'produtos_manuais') {
-        const supabase = getSupabase();
-        if (supabase) {
-          const { data, error } = await supabase
-            .from('produtos_manuais')
-            .select('*')
-            .order('created_at', { ascending: false });
-          if (!error && data) setManualProdutos(data);
-        }
-      }
-    } catch (err) {
-      setErrorMsg('Erro de rede ao carregar dados.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  const supabase = getSupabase();
+  const isSuperAdmin = profile?.role === 'superadmin';
+  const isAdmin = profile?.role === 'admin' || isSuperAdmin;
 
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (profile && !isAdmin && !isSuperAdmin) {
+       onNavigate('/dashboard');
+    }
+  }, [profile, isAdmin, isSuperAdmin, onNavigate]);
+
+
+  useEffect(() => {
+    carregarDados();
   }, [activeTab]);
 
-  const filteredUsers = users.filter(u => ((u.email || '').toLowerCase().includes(userSearch.toLowerCase()) || (u.name || '').toLowerCase().includes(userSearch.toLowerCase())));
+  const carregarDados = async () => {
+    if (!supabase) return;
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('[Admin] Session token:', session?.access_token ? 'presente' : 'ausente');
+
+      if (activeTab === 'users') {
+        const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+        if (!error && data) setUsers(data);
+      } else if (activeTab === 'parceiros') {
+        const { data, error } = await supabase.from('cupons_admins').select('*').order('criado_em', { ascending: false });
+        console.log('[Admin] Resultado cupons:', data, error);
+        if (!error && data) setParceiros(data);
+      } else if (activeTab === 'produtos') {
+        const { data, error } = await supabase.from('produtos_manuais').select('*').order('created_at', { ascending: false });
+        if (!error && data) setProdutosManuais(data);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  const notify = (msg: string, type: 'error' | 'success') => {
+    if (type === 'error') { setErrorMsg(msg); setSuccessMsg(null); }
+    else { setSuccessMsg(msg); setErrorMsg(null); }
+    setTimeout(() => { setErrorMsg(null); setSuccessMsg(null); }, 4000);
+  };
+
+  // === MÉTODOS USUÁRIOS ===
+  const alternarRole = async (userId: string, roleAtual: string) => {
+    if (!supabase) return;
+    if (!isSuperAdmin) {
+      notify('Apenas superadmins podem alterar permissões.', 'error');
+      return;
+    }
+    
+    // Cycle roles: client -> admin -> superadmin -> client
+    let novoRole = 'client';
+    if (roleAtual === 'client') novoRole = 'admin';
+    else if (roleAtual === 'admin') {
+      const confirmSuper = window.confirm("⚠️ Tem certeza? Superadmins têm acesso total ao sistema.");
+      if (confirmSuper) novoRole = 'superadmin';
+      else return; // Cancel
+    } else if (roleAtual === 'superadmin') {
+      novoRole = 'client';
+    }
+
+    const { error } = await supabase.from('profiles').update({ role: novoRole }).eq('id', userId);
+    if (!error) {
+      setUsers(users.map(u => u.id === userId ? { ...u, role: novoRole } : u));
+      notify(`Permissão atualizada para ${novoRole.toUpperCase()}`, 'success');
+    } else {
+      notify('Erro ao atualizar permissão', 'error');
+    }
+  };
+
+
+  const alternarStatus = async (userId: string, ativoAtual: boolean) => {
+    if (!supabase) return;
+    const { error } = await supabase.from('profiles').update({ ativo: !ativoAtual }).eq('id', userId);
+    if (!error) {
+      setUsers(users.map(u => u.id === userId ? { ...u, ativo: !ativoAtual } : u));
+      notify(`Status atualizado para ${!ativoAtual ? 'ATIVO' : 'INATIVO'}`, 'success');
+    } else {
+      notify('Erro ao atualizar status', 'error');
+    }
+  };
+
+  // === MÉTODOS PARCEIROS ===
+  const salvarParceiro = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    if (!parceiroForm.admin_nome || !parceiroForm.admin_email || !parceiroForm.cupom || !parceiroForm.checkout_url_mensal || !parceiroForm.checkout_url_vitalicio) {
+      notify('Preencha todos os campos do parceiro', 'error');
+      return;
+    }
+    
+    setLoading(true);
+    const precoOriginal = 497.00;
+    const descPercent = 40;
+    const precoDesc = precoOriginal * (1 - (descPercent/100));
+    
+    const payload = {
+      admin_nome: parceiroForm.admin_nome,
+      admin_email: parceiroForm.admin_email,
+      cupom: parceiroForm.cupom.toUpperCase().trim(),
+      checkout_url_mensal: parceiroForm.checkout_url_mensal,
+      checkout_url_vitalicio: parceiroForm.checkout_url_vitalicio,
+      limite_cupons: Number(parceiroForm.limite_cupons || 2),
+      preco_original: precoOriginal,
+      desconto_percentual: descPercent,
+      preco_com_desconto: precoDesc, usos: 0,
+      ativo: true
+    };
+
+    if (isEditingParceiro && parceiroForm.id) {
+      const { error } = await supabase.from('cupons_admins').update(payload).eq('id', parceiroForm.id);
+      if (!error) notify('Parceiro atualizado!', 'success');
+      else notify('Erro ao atualizar parceiro', 'error');
+    } else {
+      const { error } = await supabase.from('cupons_admins').insert([payload]);
+      if (!error) notify('Parceiro cadastrado com sucesso!', 'success');
+      else notify('Erro ao cadastrar parceiro', 'error');
+    }
+    
+    setParceiroForm({ id: '', admin_nome: '', admin_email: '', cupom: '', checkout_url_mensal: '', checkout_url_vitalicio: '', limite_cupons: 2 });
+    setIsEditingParceiro(false);
+    carregarDados();
+  };
+
+  const excluirParceiro = async (id: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.from('cupons_admins').delete().eq('id', id);
+    if (!error) notify('Parceiro excluído', 'success');
+    carregarDados();
+  };
+
+  // === MÉTODOS PRODUTOS ===
+  const salvarProduto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    setLoading(true);
+    
+    const payload = {
+      ...produtoForm,
+      preco: parseFloat(produtoForm.preco) || 0,
+      comissao: parseFloat(produtoForm.comissao) || 0
+    };
+
+    if (editingProdutoId) {
+      const { error } = await supabase.from('produtos_manuais').update(payload).eq('id', editingProdutoId);
+      if (!error) notify('Produto atualizado!', 'success');
+      else notify('Erro ao atualizar', 'error');
+    } else {
+      const { error } = await supabase.from('produtos_manuais').insert([payload]);
+      if (!error) notify('Produto criado!', 'success');
+      else notify('Erro ao criar', 'error');
+    }
+    
+    setProdutoForm({ nome: '', imagem_url: '', preco: '', comissao: '', link_afiliado: '', nicho: 'Geral', ativo: true });
+    setEditingProdutoId(null);
+    carregarDados();
+  };
+
+  const excluirProduto = async (id: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.from('produtos_manuais').delete().eq('id', id);
+    if (!error) notify('Produto excluído', 'success');
+    carregarDados();
+  };
+
+  // Filtering
+  const filteredUsers = users.filter(u => 
+    (u.name || '').toLowerCase().includes(userSearch.toLowerCase()) || 
+    (u.email || '').toLowerCase().includes(userSearch.toLowerCase())
+  );
+  
+  const adminsCount = users.filter(u => u.role === 'admin').length;
+  const clientsCount = users.filter(u => u.role !== 'admin').length;
 
   return (
-    <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-20">
-      
-      {/* Header Info */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#1E1E2E] pb-5">
-        <div>
-          <span className="text-[10px] text-emerald-400 font-extrabold uppercase bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/25">
-            Admin Area
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 mt-1">
-            <ShieldAlert className="w-7 h-7 text-emerald-500" />
-            Painel Admin
-          </h1>
-          <p className="text-xs sm:text-sm text-[#8888AA]">Gestão de checkouts, administradores e base de usuários.</p>
+    <div className="flex flex-col md:flex-row h-screen bg-[#06060B] text-white font-sans overflow-hidden selection:bg-[#FE2C55] selection:text-white">
+      {/* SIDEBAR */}
+      <div className="w-full md:w-64 bg-[#0B0B14] border-b md:border-b-0 md:border-r border-[#1E1E35] flex flex-col z-20 shrink-0">
+        <div className="p-4 md:p-6 flex justify-between items-center md:block">
+          <h2 className="text-xl font-black bg-gradient-to-r from-[#FE2C55] to-[#813EF6] bg-clip-text text-transparent">Admin Panel</h2>
+          <p className="text-xs text-zinc-500 mt-1 hidden md:block">{profile?.email}</p>
+          <button onClick={() => onNavigate('/dashboard')} className="md:hidden flex items-center justify-center p-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg"><ArrowLeft className="w-4 h-4" /></button>
         </div>
+        
+        <nav className="flex flex-row md:flex-col flex-1 px-4 md:space-y-2 overflow-x-auto gap-2 md:gap-0 pb-2 md:pb-0 scrollbar-hide">
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'users' ? 'bg-[#FE2C55]/10 text-[#FE2C55] border border-[#FE2C55]/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
+            }`}
+          >
+            <Users className="w-4 h-4" /> Usuários
+          </button>
+          
+          {isSuperAdmin && (
+          <button
+            onClick={() => setActiveTab('parceiros')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'parceiros' ? 'bg-[#813EF6]/10 text-[#813EF6] border border-[#813EF6]/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
+            }`}
+          >
+            <Ticket className="w-4 h-4" /> Parceiros & Cupons
+          </button>
+          )}
+          
+          {isSuperAdmin && (
+          <button
+            onClick={() => setActiveTab('produtos')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'produtos' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
+            }`}
+          >
+            <Package className="w-4 h-4" /> Produtos Manuais
+          </button>
+          )}
 
-        <button
-          onClick={() => onNavigate('/dashboard')}
-          className="px-4 py-2 bg-[#12121A] hover:bg-[#1E1E30] text-xs sm:text-sm font-bold rounded-xl transition border border-[#1E1E2E] cursor-pointer self-start sm:self-auto flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar ao App
-        </button>
+          {isSuperAdmin && (
+          <button
+            onClick={() => setActiveTab('sistema')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'sistema' ? 'bg-zinc-800 text-white border border-zinc-700' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
+            }`}
+          >
+            <Settings className="w-4 h-4" /> Sistema
+          </button>
+          )}
+
+          <button
+            onClick={() => setActiveTab('notificacoes' as any)}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'notificacoes' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
+            }`}
+          >
+            <Bell className="w-4 h-4" /> Notificações
+          </button>
+        </nav>
+        
+        <div className="p-4 border-t border-[#1E1E35] hidden md:block">
+          <button onClick={() => onNavigate('/dashboard')} className="w-full flex items-center justify-center gap-2 px-4 py-2 md:py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-bold rounded-lg transition-colors">
+            <ArrowLeft className="w-3 h-3" /> Voltar ao App
+          </button>
+        </div>
       </div>
 
-      {(errorMsg || successMsg) && (
-        <div className="flex flex-col gap-2">
-          {errorMsg && <div className="p-3 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl text-xs font-bold">{errorMsg}</div>}
-          {successMsg && <div className="p-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold">{successMsg}</div>}
-        </div>
-      )}
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      {/* MAIN CONTENT */}
+      <div className="flex-1 relative overflow-y-auto overflow-x-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FE2C55]/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-[#813EF6]/5 rounded-full blur-[120px] pointer-events-none" />
         
-        {/* Left Sidebar Menu */}
-        <div className="xl:col-span-3 bg-[#111118]/90 border border-[#1E1E2E] rounded-xl p-2.5 space-y-4 shrink-0">
-          <div>
-            <div className="px-3 py-1 text-[10px] font-black uppercase text-emerald-400 tracking-wider border-b border-[#1E1E2E]/60 mb-1.5 mt-2">
-              Administração Geral
-            </div>
-            <div className="space-y-0.5">
-              <button
-                type="button"
-                onClick={() => setActiveTab('parceiros')}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'parceiros' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
-              >
-                <Ticket className="w-4 h-4 text-emerald-400" />
-                Parceiros e Cupons
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('users')}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'users' ? 'bg-[#25F4EE]/10 text-[#25F4EE] border border-[#25F4EE]/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
-              >
-                <Users className="w-4 h-4" />
-                Base de Usuários
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('produtos')}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'produtos' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
-              >
-                <Flame className="w-4 h-4" />
-                Produtos em Alta
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('produtos_manuais')}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 ${activeTab === 'produtos_manuais' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-[#8888AA] hover:text-white hover:bg-white/5'}`}
-              >
-                <Flame className="w-4 h-4 text-indigo-400" />
-                Produtos Manuais
-              </button>
-            </div>
+        <div className="relative z-10 p-6 lg:p-10 max-w-7xl mx-auto min-h-full">
+          
+          {/* Notifications */}
+          <div className="fixed top-6 right-6 z-50 flex flex-col gap-2">
+            {successMsg && (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2 animate-fade-in shadow-xl backdrop-blur-md">
+                <CheckCircle className="w-4 h-4" /> {successMsg}
+              </div>
+            )}
+            {errorMsg && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2 animate-fade-in shadow-xl backdrop-blur-md">
+                <ShieldAlert className="w-4 h-4" /> {errorMsg}
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Right Content Area */}
-        <div className="xl:col-span-9 space-y-6">
-          
-          {activeTab === 'parceiros' && (
-            <div className="space-y-6">
-              <div className="bg-gradient-to-r from-pink-500/10 via-pink-500/5 to-transparent border border-pink-500/20 rounded-2xl p-4 flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 shrink-0">
-                  <Ticket className="w-5 h-5 text-pink-400" />
-                </div>
+          {/* TAB: USERS */}
+          {activeTab === 'users' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white">Gerenciar Parceiros e Cupons</h3>
-                  <p className="text-xs text-[#8888AA] mt-1 leading-relaxed">
-                    Cadastre parceiros, defina o desconto, o preço original, e a URL de checkout personalizada. O preço com desconto é calculado automaticamente.
-                  </p>
+                  <h1 className="text-3xl font-black tracking-tight">Usuários</h1>
+                  <p className="text-zinc-400 text-sm mt-1">Gerencie os acessos e permissões da plataforma.</p>
+                </div>
+                
+                <div className="flex gap-4 w-full md:w-auto">
+                  <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-xl p-3 flex flex-col items-center justify-center min-w-[100px]">
+                    <span className="text-2xl font-black text-white">{users.length}</span>
+                    <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-wider">Total</span>
+                  </div>
+                  <div className="bg-[#FE2C55]/10 border border-[#FE2C55]/20 rounded-xl p-3 flex flex-col items-center justify-center min-w-[100px]">
+                    <span className="text-2xl font-black text-[#FE2C55]">{adminsCount}</span>
+                    <span className="text-[10px] uppercase text-[#FE2C55]/70 font-bold tracking-wider">Admins</span>
+                  </div>
+                  <div className="bg-[#813EF6]/10 border border-[#813EF6]/20 rounded-xl p-3 flex flex-col items-center justify-center min-w-[100px]">
+                    <span className="text-2xl font-black text-[#813EF6]">{clientsCount}</span>
+                    <span className="text-[10px] uppercase text-[#813EF6]/70 font-bold tracking-wider">Clientes</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5 space-y-4">
-                <h3 className="text-sm font-bold text-white border-b border-[#1E1E2E] pb-2">Cadastrar Novo Parceiro / Cupom</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Nome do Parceiro *</label>
-                    <input
-                      type="text"
-                      placeholder="Nome do Parceiro"
-                      value={cuponsIndicacaoForm.admin_nome}
-                      onChange={(e) => updateCuponsForm('admin_nome', e.target.value)}
-                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase text-[#8888AA]">E-mail *</label>
-                    <input
-                      type="email"
-                      placeholder="E-mail"
-                      value={cuponsIndicacaoForm.admin_email}
-                      onChange={(e) => updateCuponsForm('admin_email', e.target.value)}
-                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Código do Cupom *</label>
-                    <input
-                      type="text"
-                      placeholder="Código do Cupom (Ex: JOAO40)"
-                      value={cuponsIndicacaoForm.cupom}
-                      onChange={(e) => updateCuponsForm('cupom', e.target.value.toUpperCase())}
-                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500 uppercase"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase text-[#8888AA]">URL de checkout (Applyfy/Kiwify) *</label>
-                    <input
-                      type="text"
-                      placeholder="URL do Checkout Applyfy/Kiwify"
-                      value={cuponsIndicacaoForm.checkout_url}
-                      onChange={(e) => updateCuponsForm('checkout_url', e.target.value)}
-                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Desconto % *</label>
-                    <input
-                      type="number"
-                      placeholder="Desconto % (padrão 40)"
-                      value={cuponsIndicacaoForm.desconto_percentual}
-                      onChange={(e) => updateCuponsForm('desconto_percentual', parseInt(e.target.value) || 0)}
-                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Preço Original *</label>
-                    <input
-                      type="number"
-                      placeholder="Preço original (padrão 497.00)"
-                      value={cuponsIndicacaoForm.preco_original}
-                      onChange={(e) => updateCuponsForm('preco_original', parseFloat(e.target.value) || 0)}
-                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 md:col-span-2">
-                    <label className="text-[10px] font-black uppercase text-[#8888AA]">Preço Com Desconto *</label>
-                    <input
-                      type="number"
-                      placeholder="Preço com desconto"
-                      value={cuponsIndicacaoForm.preco_com_desconto}
-                      onChange={(e) => updateCuponsForm('preco_com_desconto', parseFloat(e.target.value) || 0)}
-                      className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const res = await adminFetch('/api/admin/cupons', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(cuponsIndicacaoForm)
-                      });
-                      if (res.ok) {
-                        setSuccessMsg('Cupom e parceiro criados com sucesso!');
-                        loadData();
-                        setCuponsIndicacaoForm({ admin_email: '', admin_nome: '', cupom: '', checkout_url: '', desconto_percentual: 40, preco_original: 497.00, preco_com_desconto: 298.20 });
-                      } else {
-                        const d = await res.json();
-                        setErrorMsg(d.error || 'Erro ao criar cupom');
-                      }
-                    } catch (e) {
-                      setErrorMsg('Erro de rede');
-                    }
-                  }}
-                  className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg text-xs transition"
-                >
-                  Salvar Cupom
-                </button>
+              <div className="relative">
+                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar usuário por nome ou email..." 
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                  className="w-full bg-[#0D0D1A] border border-[#1E1E35] text-white rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#FE2C55]/50 transition-colors"
+                />
               </div>
 
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5">
-                <h3 className="text-sm font-bold text-white mb-4">Parceiros / Cupons Cadastrados</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-[#8888AA]">
-                    <thead>
-                      <tr className="border-b border-[#1E1E2E] text-white">
-                        <th className="pb-3 pr-2">Cupom</th>
-                        <th className="pb-3 px-2">Parceiro</th>
-                        <th className="pb-3 px-2">Checkout URL</th>
-                        <th className="pb-3 px-2">Desconto</th>
-                        <th className="pb-3 px-2 text-center">Usos</th>
-                        <th className="pb-3 pl-2 text-right">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cuponsIndicacao.map((c: any) => (
-                        <tr key={c.id} className="border-b border-[#1E1E2E]/50 hover:bg-white/5">
-                          <td className="py-3 pr-2 font-mono text-pink-400 font-bold">{c.cupom}</td>
-                          <td className="py-3 px-2">
-                            <span className="text-white font-bold">{c.admin_nome}</span>
-                            <br />
-                            <span className="text-[10px] text-[#8888AA]">{c.admin_email}</span>
-                          </td>
-                          <td className="py-3 px-2 truncate max-w-[150px] font-mono text-[10px]">{c.checkout_url}</td>
-                          <td className="py-3 px-2">{c.desconto_percentual || 40}%</td>
-                          <td className="py-3 px-2 text-center text-white">{c.usos || 0}</td>
-                          <td className="py-3 pl-2 text-right">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                await adminFetch(`/api/admin/cupons/${c.id}/toggle`, { method: 'PUT' });
-                                loadData();
-                              }}
-                              className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${c.ativo ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}
-                            >
-                              {c.ativo ? 'Ativo' : 'Inativo'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {cuponsIndicacao.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="py-4 text-center text-xs">Nenhum cupom cadastrado.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          
-          {activeTab === 'produtos' && (
-            <div className="space-y-6">
-              <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shrink-0">
-                  <Flame className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Produtos em Alta</h3>
-                  <p className="text-xs text-[#8888AA] mt-1 leading-relaxed">
-                    Adicione produtos que estão em alta para aparecerem no Dashboard dos usuários.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5 space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-amber-400" />
-                  Adicionar Produto
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    value={produtoFormData.name}
-                    onChange={(e) => setProdutoFormData({ ...produtoFormData, name: e.target.value })}
-                    placeholder="Nome do Produto"
-                    className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                  />
-                  <input
-                    type="text"
-                    value={produtoFormData.price}
-                    onChange={(e) => setProdutoFormData({ ...produtoFormData, price: e.target.value })}
-                    placeholder="Valor (ex: R$ 97,00)"
-                    className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                  />
-                  <input
-                    type="text"
-                    value={produtoFormData.trend}
-                    onChange={(e) => setProdutoFormData({ ...produtoFormData, trend: e.target.value })}
-                    placeholder="Tendência (ex: +30%)"
-                    className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                  />
-                  <input
-                    type="text"
-                    value={produtoFormData.tiktok_link}
-                    onChange={(e) => setProdutoFormData({ ...produtoFormData, tiktok_link: e.target.value })}
-                    placeholder="Link do TikTok"
-                    className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <button
-                  onClick={async () => {
-                    if (!produtoFormData.name || !produtoFormData.tiktok_link) return alert('Preencha nome e link');
-                    try {
-                      const res = await adminFetch('/api/admin/produtos-alta', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(produtoFormData)
-                      });
-                      if (res.ok) {
-                        setSuccessMsg('Produto adicionado!');
-                        setProdutoFormData({ name: '', price: '', trend: '', tiktok_link: '' });
-                        loadData();
-                      } else {
-                        setErrorMsg('Erro ao adicionar produto.');
-                      }
-                    } catch(e) {
-                      setErrorMsg('Erro de rede.');
-                    }
-                  }}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition"
-                >
-                  Adicionar Produto
-                </button>
-              </div>
-
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-[#0C0C12] border-b border-[#1E1E2E]">
-                        <th className="p-4 text-[10px] font-black uppercase text-[#8888AA] tracking-wider">Produto</th>
-                        <th className="p-4 text-[10px] font-black uppercase text-[#8888AA] tracking-wider">Valor</th>
-                        <th className="p-4 text-[10px] font-black uppercase text-[#8888AA] tracking-wider">Tendência</th>
-                        <th className="p-4 text-[10px] font-black uppercase text-[#8888AA] tracking-wider">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#1E1E2E]">
-                      {produtosAlta.map((p: any) => (
-                        <tr key={p.id} className="hover:bg-white/5 transition group">
-                          <td className="p-4">
-                            <div className="text-xs font-bold text-white">{p.name}</div>
-                            <a href={p.tiktok_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:underline">
-                              Ver no TikTok
-                            </a>
-                          </td>
-                          <td className="p-4 text-xs text-[#8888AA]">{p.price}</td>
-                          <td className="p-4 text-xs text-emerald-400 font-bold">{p.trend}</td>
-                          <td className="p-4">
-                            <button
-                              onClick={async () => {
-                                if (!confirm('Remover produto?')) return;
-                                try {
-                                  await adminFetch(`/api/admin/produtos-alta/${p.id}`, { method: 'DELETE' });
-                                  loadData();
-                                } catch (e) {
-                                  setErrorMsg('Erro ao deletar');
-                                }
-                              }}
-                              className="text-red-500 hover:text-red-400 p-1"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {produtosAlta.length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="p-8 text-center text-[#8888AA] text-xs">
-                            Nenhum produto cadastrado
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'produtos_manuais' && (
-            <div className="space-y-6 font-sans">
-              <div className="bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-transparent border border-indigo-500/20 rounded-2xl p-4 flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shrink-0">
-                  <Flame className="w-5 h-5 text-indigo-400" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Produtos Manuais (Supabase)</h3>
-                  <p className="text-xs text-[#8888AA] mt-1 leading-relaxed">
-                    Cadastre, edite e ative os produtos manuais persistidos diretamente no Supabase.
-                  </p>
-                </div>
-              </div>
-
-              {/* SUCCESS & ERROR FEEDBACK */}
-              {successMsg && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs rounded-xl font-bold flex items-center justify-between">
-                  <span>{successMsg}</span>
-                  <button type="button" onClick={() => setSuccessMsg(null)} className="text-emerald-400/70 hover:text-white">✕</button>
-                </div>
-              )}
-              {errorMsg && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs rounded-xl font-bold flex items-center justify-between">
-                  <span>{errorMsg}</span>
-                  <button type="button" onClick={() => setErrorMsg(null)} className="text-rose-400/70 hover:text-white">✕</button>
-                </div>
-              )}
-
-              {/* FORM */}
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5 space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-indigo-400" />
-                  {editingManualId ? 'Editar Produto Manual' : 'Cadastrar Novo Produto Manual'}
-                </h3>
-                <form onSubmit={handleSaveManualProduct} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-black uppercase text-[#8888AA]">Nome do Produto *</label>
-                      <input
-                        type="text"
-                        required
-                        value={manualForm.nome}
-                        onChange={(e) => setManualForm({ ...manualForm, nome: e.target.value })}
-                        placeholder="Ex: Escova Alisadora 3 em 1"
-                        className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-black uppercase text-[#8888AA]">URL da Imagem</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="url"
-                          value={manualForm.imagem_url}
-                          onChange={(e) => setManualForm({ ...manualForm, imagem_url: e.target.value })}
-                          placeholder="Ex: https://link-da-foto.com/imagem.jpg"
-                          className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 flex-1"
-                        />
-                        {manualForm.imagem_url && (
-                          <div className="w-9 h-9 rounded-lg overflow-hidden border border-[#1E1E2E] shrink-0 bg-[#0C0C12]">
-                            <img src={manualForm.imagem_url} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              {loading ? (
+                <div className="flex justify-center p-12"><RefreshCw className="w-8 h-8 text-[#FE2C55] animate-spin" /></div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredUsers.map(user => (
+                    <div key={user.id} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-5 hover:border-[#FE2C55]/30 transition-colors flex flex-col h-full">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg shrink-0 ${user.role === 'admin' ? 'bg-gradient-to-br from-[#FE2C55] to-[#813EF6] text-white' : 'bg-zinc-800 text-zinc-400'}`}>
+                          {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-white truncate" title={user.name}>{user.name || 'Sem nome'}</h3>
+                          <p className="text-xs text-zinc-400 truncate" title={user.email}>{user.email}</p>
+                          <div className="flex gap-2 mt-2">
+                            {user.role === 'superadmin' ? (
+                              <span className="px-2 py-0.5 bg-amber-500/20 text-amber-500 text-[10px] font-bold rounded uppercase tracking-wider">Superadmin</span>
+                            ) : user.role === 'admin' ? (
+                              <span className="px-2 py-0.5 bg-[#813EF6]/20 text-[#813EF6] text-[10px] font-bold rounded uppercase tracking-wider">Admin</span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 text-[10px] font-bold rounded uppercase tracking-wider">Cliente</span>
+                            )}
+                            {user.ativo !== false ? (
+                              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded uppercase tracking-wider">Ativo</span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded uppercase tracking-wider">Bloqueado</span>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-black uppercase text-[#8888AA]">Preço (R$ 89,90) *</label>
-                      <input
-                        type="text"
-                        required
-                        value={manualForm.preco}
-                        onChange={(e) => setManualForm({ ...manualForm, preco: e.target.value })}
-                        placeholder="Ex: R$ 89,90"
-                        className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-black uppercase text-[#8888AA]">Comissão (%) *</label>
-                      <input
-                        type="text"
-                        required
-                        value={manualForm.comissao}
-                        onChange={(e) => setManualForm({ ...manualForm, comissao: e.target.value })}
-                        placeholder="Ex: 25%"
-                        className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1 md:col-span-2">
-                      <label className="text-[10px] font-black uppercase text-[#8888AA]">Link de Afiliado</label>
-                      <input
-                        type="url"
-                        value={manualForm.link_afiliado}
-                        onChange={(e) => setManualForm({ ...manualForm, link_afiliado: e.target.value })}
-                        placeholder="Ex: https://shopee.com.br/afiliado..."
-                        className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-black uppercase text-[#8888AA]">Tendência</label>
-                      <select
-                        value={manualForm.tendencia}
-                        onChange={(e) => setManualForm({ ...manualForm, tendencia: e.target.value })}
-                        className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                      >
-                        <option value="em_alta">🔥 Em Alta</option>
-                        <option value="muito_quente">🔥🔥 Muito Quente</option>
-                        <option value="viral">🔥🔥🔥 Viral</option>
-                        <option value="destaque">⭐ Destaque</option>
-                      </select>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-black uppercase text-[#8888AA]">Nicho</label>
-                      <select
-                        value={manualForm.nicho}
-                        onChange={(e) => setManualForm({ ...manualForm, nicho: e.target.value })}
-                        className="bg-[#0C0C12] border border-[#1E1E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                      >
-                        <option value="Beleza">Beleza</option>
-                        <option value="Moda">Moda</option>
-                        <option value="Casa">Casa</option>
-                        <option value="Tecnologia">Tecnologia</option>
-                        <option value="Fitness">Fitness</option>
-                        <option value="Geral">Geral</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-3.5 mt-2">
-                      <span className="text-[10px] font-black uppercase text-[#8888AA]">Produto Ativo?</span>
-                      <button
-                        type="button"
-                        onClick={() => setManualForm({ ...manualForm, ativo: !manualForm.ativo })}
-                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none ${manualForm.ativo ? 'bg-indigo-500' : 'bg-zinc-700'}`}
-                      >
-                        <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${manualForm.ativo ? 'translate-x-6' : 'translate-x-0'}`} />
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="flex gap-2.5 justify-end">
-                    {editingManualId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingManualId(null);
-                          setManualForm({
-                            nome: '',
-                            imagem_url: '',
-                            preco: '',
-                            comissao: '',
-                            link_afiliado: '',
-                            tendencia: 'em_alta',
-                            nicho: 'Geral',
-                            ativo: true
-                          });
-                        }}
-                        className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-lg transition"
-                      >
-                        Cancelar Edição
-                      </button>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={manualLoading}
-                      className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition flex items-center gap-2"
-                    >
-                      {manualLoading && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                      {editingManualId ? 'Atualizar Produto' : 'Adicionar Produto'}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                      <div className="mt-auto pt-4 border-t border-[#1E1E35] grid grid-cols-3 gap-2">
+                        <button 
+                          onClick={() => alternarRole(user.id, user.role)}
+                          className="flex flex-col items-center justify-center p-2 rounded-xl bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                          title="Alternar Permissão"
+                        >
+                          {user.role === 'admin' ? <UserX className="w-4 h-4 mb-1" /> : <UserCheck className="w-4 h-4 mb-1" />}
+                          <span className="text-[9px] font-bold uppercase">{user.role === 'admin' ? 'Revogar' : 'Tornar Admin'}</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => alternarStatus(user.id, user.ativo !== false)}
+                          className={`flex flex-col items-center justify-center p-2 rounded-xl transition-colors ${
+                            user.ativo !== false 
+                              ? 'bg-zinc-900/50 hover:bg-red-500/20 text-zinc-400 hover:text-red-400' 
+                              : 'bg-red-500/10 hover:bg-emerald-500/20 text-red-400 hover:text-emerald-400'
+                          }`}
+                          title="Alternar Status"
+                        >
+                          {user.ativo !== false ? <ShieldAlert className="w-4 h-4 mb-1" /> : <CheckCircle className="w-4 h-4 mb-1" />}
+                          <span className="text-[9px] font-bold uppercase">{user.ativo !== false ? 'Bloquear' : 'Desbloquear'}</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
+                          className="flex flex-col items-center justify-center p-2 rounded-xl bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                        >
+                          {expandedUserId === user.id ? <ChevronUp className="w-4 h-4 mb-1" /> : <ChevronDown className="w-4 h-4 mb-1" />}
+                          <span className="text-[9px] font-bold uppercase">Detalhes</span>
+                        </button>
+                      </div>
 
-              {/* PRODUCTS LIST */}
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-[#0C0C12] border-b border-[#1E1E2E]">
-                        <th className="p-4 font-black uppercase text-[#8888AA] tracking-wider">Produto</th>
-                        <th className="p-4 font-black uppercase text-[#8888AA] tracking-wider">Nicho</th>
-                        <th className="p-4 font-black uppercase text-[#8888AA] tracking-wider">Preço / Comis.</th>
-                        <th className="p-4 font-black uppercase text-[#8888AA] tracking-wider">Status</th>
-                        <th className="p-4 font-black uppercase text-[#8888AA] tracking-wider">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#1E1E2E]">
-                      {manualProdutos.map((p: any) => (
-                        <tr key={p.id} className="hover:bg-white/5 transition group">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              {p.imagem_url && (
-                                <img src={p.imagem_url} alt={p.nome} className="w-10 h-10 object-cover rounded-lg bg-zinc-800 shrink-0" />
-                              )}
+                      {expandedUserId === user.id && (
+                        <div className="mt-3 p-3 bg-zinc-900/50 rounded-xl text-[11px] space-y-1 animate-fade-in border border-[#1E1E35]">
+                          <p><strong className="text-zinc-500">ID:</strong> {user.id}</p>
+                          <p><strong className="text-zinc-500">Plano:</strong> {user.plan || 'Nenhum'}</p>
+                          <p><strong className="text-zinc-500">Criado em:</strong> {new Date(user.created_at).toLocaleDateString('pt-BR')}</p>
+                          <p><strong className="text-zinc-500">Créditos:</strong> T:{user.credits_text} | I:{user.credits_image} | V:{user.credits_video}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {filteredUsers.length === 0 && (
+                    <div className="col-span-full py-12 text-center text-zinc-500">Nenhum usuário encontrado.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: PARCEIROS */}
+          {activeTab === 'parceiros' && isSuperAdmin && (
+            <div className="space-y-10 animate-fade-in">
+              {/* 2A - CADASTRO DE PARCEIROS (Só SuperAdmin) */}
+              <section>
+
+                <div className="mb-6">
+                  <h2 className="text-2xl font-black tracking-tight">Parceiros & Embaixadores</h2>
+                  <p className="text-zinc-400 text-sm mt-1">Cadastre parceiros para que tenham URLs de checkout exclusivas e cupons de 40% OFF.</p>
+                </div>
+
+                <div className="grid lg:grid-cols-12 gap-6">
+                  {/* Formulário */}
+                  <div className="lg:col-span-4">
+                    <form onSubmit={salvarParceiro} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-6 space-y-4 sticky top-6">
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
+                        {isEditingParceiro ? <Edit2 className="w-4 h-4 text-[#813EF6]" /> : <Plus className="w-4 h-4 text-[#FE2C55]" />}
+                        {isEditingParceiro ? 'Editar Parceiro' : 'Novo Parceiro'}
+                      </h3>
+                      
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Nome do Parceiro</label>
+                        <input type="text" value={parceiroForm.admin_nome} onChange={e => setParceiroForm({...parceiroForm, admin_nome: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-[#813EF6] outline-none" placeholder="Ex: Vitor Silva" />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Email (deve existir na tabela profiles)</label>
+                        <input type="email" value={parceiroForm.admin_email} onChange={e => setParceiroForm({...parceiroForm, admin_email: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-[#813EF6] outline-none" placeholder="vitor@email.com" />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Cupom (Automático Maiúsculas)</label>
+                        <input type="text" value={parceiroForm.cupom} onChange={e => setParceiroForm({...parceiroForm, cupom: e.target.value.toUpperCase()})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white font-mono focus:border-[#813EF6] outline-none" placeholder="VITOR10" />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Checkout Mensal</label>
+                        <input type="url" value={parceiroForm.checkout_url_mensal} onChange={e => setParceiroForm({...parceiroForm, checkout_url_mensal: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-[#813EF6] outline-none" placeholder="https://applyfy.com.br/checkout/..." />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Checkout Vitalício</label>
+                        <input type="url" value={parceiroForm.checkout_url_vitalicio} onChange={e => setParceiroForm({...parceiroForm, checkout_url_vitalicio: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-[#813EF6] outline-none" placeholder="https://applyfy.com.br/checkout/..." />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Limite de cupons na live</label>
+                        <input 
+                          type="number" 
+                          min={1} 
+                          max={10} 
+                          value={parceiroForm.limite_cupons} 
+                          onChange={e => setParceiroForm({...parceiroForm, limite_cupons: parseInt(e.target.value) || 1})} 
+                          className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-[#813EF6] outline-none" 
+                        />
+                      </div>
+                      
+                      <div className="p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 text-xs text-zinc-400 space-y-1">
+                        <p className="flex justify-between"><span>Desconto Fixo:</span> <strong className="text-emerald-400">40%</strong></p>
+                        <p className="flex justify-between"><span>Preço Original:</span> <span>R$ 497,00</span></p>
+                        <p className="flex justify-between"><span>Preço Final:</span> <strong className="text-white">R$ 298,20</strong></p>
+                      </div>
+
+                      <div className="pt-2 flex gap-2">
+                        {isEditingParceiro && (
+                          <button type="button" onClick={() => { setIsEditingParceiro(false); setParceiroForm({ id: '', admin_nome: '', admin_email: '', cupom: '', checkout_url_mensal: '', checkout_url_vitalicio: '', limite_cupons: 2 }); }} className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs transition">Cancelar</button>
+                        )}
+                        <button type="submit" disabled={loading} className="flex-[2] py-3 bg-gradient-to-r from-[#FE2C55] to-[#813EF6] hover:opacity-90 rounded-xl font-bold text-xs uppercase tracking-wider transition disabled:opacity-50 text-white shadow-lg shadow-[#813EF6]/20">
+                          {loading ? 'Salvando...' : 'Salvar Parceiro'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  
+                  {/* Lista */}
+                  <div className="lg:col-span-8">
+                    {loading && parceiros.length === 0 ? (
+                      <div className="flex justify-center p-12"><RefreshCw className="w-8 h-8 text-[#813EF6] animate-spin" /></div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {parceiros.map(p => (
+                          <div key={p.id} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-5 hover:border-[#813EF6]/30 transition-all flex flex-col relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { setParceiroForm({ ...p, limite_cupons: p.limite_cupons ?? 2 }); setIsEditingParceiro(true); }} className="w-8 h-8 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center hover:bg-blue-500/40 transition"><Edit2 className="w-4 h-4" /></button>
+                              <button onClick={() => excluirParceiro(p.id)} className="w-8 h-8 bg-red-500/20 text-red-400 rounded-lg flex items-center justify-center hover:bg-red-500/40 transition"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-black text-white shrink-0">
+                                {p.admin_nome.charAt(0).toUpperCase()}
+                              </div>
                               <div>
-                                <div className="font-bold text-white">{p.nome}</div>
-                                <div className="text-[10px] text-[#8888AA] flex items-center gap-1.5 mt-0.5">
-                                  <span>Tendência: {
-                                    p.tendencia === 'em_alta' ? '🔥 Em Alta' :
-                                    p.tendencia === 'muito_quente' ? '🔥🔥 Muito Quente' :
-                                    p.tendencia === 'viral' ? '🔥🔥🔥 Viral' : '⭐ Destaque'
-                                  }</span>
-                                </div>
+                                <h4 className="font-bold text-white text-sm leading-tight">{p.admin_nome}</h4>
+                                <p className="text-[10px] text-zinc-500">{p.admin_email}</p>
                               </div>
                             </div>
-                          </td>
-                          <td className="p-4 text-zinc-300">{p.nicho}</td>
-                          <td className="p-4">
-                            <div className="text-white font-bold">{p.preco}</div>
-                            <div className="text-[10px] text-emerald-400 mt-0.5">Comissão: {p.comissao}</div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${p.ativo !== false ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800 text-zinc-500'}`}>
-                              {p.ativo !== false ? 'Ativo' : 'Inativo'}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleEditManualProduct(p)}
-                                className="text-indigo-400 hover:text-indigo-300 p-1"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteManualProduct(p.id)}
-                                className="text-red-500 hover:text-red-400 p-1"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                            
+                            <div className="bg-[#111118] border border-[#1E1E35] rounded-xl p-3 flex justify-between items-center mb-3">
+                              <span className="text-xs text-zinc-400">Cupom:</span>
+                              <span className="font-mono font-black text-lg text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">{p.cupom}</span>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {manualProdutos.length === 0 && (
-                        <tr>
-                          <td colSpan={5} className="p-8 text-center text-[#8888AA] text-xs">
-                            Nenhum produto manual cadastrado no Supabase
-                          </td>
-                        </tr>
+                            
+                            <div className="mt-auto space-y-2">
+                              <p className="text-[10px] text-zinc-400 flex items-center gap-1">
+                                <span className="font-semibold text-zinc-500">Mensal:</span>
+                                <ExternalLink className="w-3 h-3" />
+                                <span className="truncate max-w-[150px]">{p.checkout_url_mensal}</span>
+                              </p>
+                              <p className="text-[10px] text-zinc-400 flex items-center gap-1">
+                                <span className="font-semibold text-zinc-500">Vitalício:</span>
+                                <ExternalLink className="w-3 h-3" />
+                                <span className="truncate max-w-[150px]">{p.checkout_url_vitalicio}</span>
+                              </p>
+                              <p className="text-[10px] text-zinc-500 flex items-center gap-1"><Users className="w-3 h-3" /> {p.usos || 0} usos registrados</p>
+                            </div>
+                          </div>
+                        ))}
+                        {parceiros.length === 0 && (
+                          <div className="col-span-full py-12 text-center text-zinc-500">Nenhum parceiro cadastrado.</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* TAB: PRODUTOS */}
+          {activeTab === 'produtos' && (
+            <div className="space-y-6 animate-fade-in">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight">Produtos Manuais</h1>
+                <p className="text-zinc-400 text-sm mt-1">Gerencie os produtos extras exibidos na galeria.</p>
+              </div>
+
+              <div className="grid lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-4">
+                  <form onSubmit={salvarProduto} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-6 space-y-4 sticky top-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
+                      {editingProdutoId ? <Edit2 className="w-4 h-4 text-cyan-500" /> : <Plus className="w-4 h-4 text-cyan-500" />}
+                      {editingProdutoId ? 'Editar Produto' : 'Novo Produto'}
+                    </h3>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-zinc-400">Nome do Produto</label>
+                      <input type="text" value={produtoForm.nome} onChange={e => setProdutoForm({...produtoForm, nome: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-zinc-400">URL da Imagem</label>
+                      <input type="url" value={produtoForm.imagem_url} onChange={e => setProdutoForm({...produtoForm, imagem_url: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Preço (R$)</label>
+                        <input type="number" step="0.01" value={produtoForm.preco} onChange={e => setProdutoForm({...produtoForm, preco: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-zinc-400">Comissão (R$)</label>
+                        <input type="number" step="0.01" value={produtoForm.comissao} onChange={e => setProdutoForm({...produtoForm, comissao: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-zinc-400">Link de Afiliado</label>
+                      <input type="url" value={produtoForm.link_afiliado} onChange={e => setProdutoForm({...produtoForm, link_afiliado: e.target.value})} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" required />
+                    </div>
+
+                    <div className="pt-2 flex gap-2">
+                      {editingProdutoId && (
+                        <button type="button" onClick={() => { setEditingProdutoId(null); setProdutoForm({ nome: '', imagem_url: '', preco: '', comissao: '', link_afiliado: '', nicho: 'Geral', ativo: true }); }} className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs transition">Cancelar</button>
                       )}
-                    </tbody>
-                  </table>
+                      <button type="submit" disabled={loading} className="flex-[2] py-3 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-bold text-xs uppercase tracking-wider transition disabled:opacity-50 text-zinc-900 shadow-lg shadow-cyan-500/20">
+                        {loading ? 'Salvando...' : 'Salvar Produto'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+                
+                <div className="lg:col-span-8">
+                  {loading && produtosManuais.length === 0 ? (
+                    <div className="flex justify-center p-12"><RefreshCw className="w-8 h-8 text-cyan-500 animate-spin" /></div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {produtosManuais.map(p => (
+                        <div key={p.id} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all group flex flex-col">
+                          <div className="aspect-square w-full relative">
+                            <ImageWithSkeleton src={p.imagem_url} alt={p.nome} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center gap-2">
+                              <button onClick={() => { setProdutoForm(p); setEditingProdutoId(p.id); }} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs rounded-xl transition">Editar</button>
+                              <button onClick={() => excluirProduto(p.id)} className="px-4 py-2 bg-red-500 hover:bg-red-400 text-white font-bold text-xs rounded-xl transition">Excluir</button>
+                            </div>
+                          </div>
+                          <div className="p-4 flex-1 flex flex-col">
+                            <h4 className="font-bold text-white text-sm line-clamp-2">{p.nome}</h4>
+                            <div className="mt-auto pt-3 flex justify-between items-end">
+                              <span className="text-xs text-zinc-400">Preço: <span className="text-white font-bold block">R$ {p.preco.toFixed(2)}</span></span>
+                              <span className="text-xs text-emerald-400 font-bold">Com: R$ {p.comissao.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {produtosManuais.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-zinc-500">Nenhum produto cadastrado.</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
 
-          {activeTab === 'users' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white">Base de Usuários</h3>
-                <div className="w-full max-w-xs relative">
-                  <input
-                    type="text"
-                    value={userSearch}
-                    onChange={e => setUserSearch(e.target.value)}
-                    placeholder="Buscar e-mail ou nome..."
-                    className="w-full bg-[#111118] border border-[#1E1E2E] rounded-lg pl-3 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
+          {/* TAB: NOTIFICAÇÕES FICTÍCIAS */}
+          {activeTab === 'notificacoes' as any && (
+            <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight">Notificações de Vendas</h1>
+                <p className="text-zinc-400 text-sm mt-1">Configure alertas fictícios de vendas para exibir durante apresentações.</p>
               </div>
-              
-              <div className="bg-[#111118] border border-[#1E1E2E] rounded-xl p-5">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-[#8888AA]">
-                    <thead>
-                      <tr className="border-b border-[#1E1E2E] text-white">
-                        <th className="pb-3 pr-2">Nome</th>
-                        <th className="pb-3 pr-2">Email</th>
-                        <th className="pb-3 pr-2">Plano</th>
-                        <th className="pb-3 pr-2">Role</th>
-                        <th className="pb-3 pr-2">Ativo</th>
-                        <th className="pb-3 pr-2">Criado em</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#1E1E2E]/60 text-[#F0F0FF]">
-                      {filteredUsers.map((user) => (
-                        <tr key={user.id} className="hover:bg-[#1E1E2E]/20">
-                          <td className="py-2.5 pr-2 font-bold">{user.name || 'Sem nome'}</td>
-                          <td className="py-2.5 pr-2 font-mono text-purple-300">{user.email}</td>
-                          <td className="py-2.5 pr-2 uppercase font-bold text-[10px]">{user.plan || 'Free'}</td>
-                          <td className="py-2.5 pr-2">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleUserRole(user)}
-                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded cursor-pointer transition ${
-                                user.role === 'admin'
-                                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                                  : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                              }`}
-                            >
-                              {user.role === 'admin' ? 'Admin' : 'Client'}
-                            </button>
-                          </td>
-                          <td className="py-2.5 pr-2">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleUserAtivo(user)}
-                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded cursor-pointer transition ${
-                                user.ativo !== false
-                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                                  : 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
-                              }`}
-                            >
-                              {user.ativo !== false ? 'Ativo' : 'Inativo'}
-                            </button>
-                          </td>
-                          <td className="py-2.5 pr-2 text-zinc-500">
-                            {user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}
-                          </td>
-                        </tr>
+
+              <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-3xl p-8">
+                <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-amber-500" />
+                  Painel de Controle
+                </h2>
+                
+                <div className="space-y-8">
+                  <div>
+                    <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest block mb-3">Intervalo entre notificações</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[30000, 60000, 120000, 300000].map(val => (
+                        <button
+                          key={val}
+                          onClick={() => setNotifIntervalo(val)}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition ${
+                            notifIntervalo === val ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                          }`}
+                        >
+                          {val / 1000}s
+                        </button>
                       ))}
-                      {filteredUsers.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="py-4 text-center">Nenhum usuário encontrado.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      <button
+                        onClick={() => {
+                          const val = prompt('Intervalo em segundos:');
+                          if (val && !isNaN(Number(val))) setNotifIntervalo(Number(val) * 1000);
+                        }}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white`}
+                      >
+                        Custom
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest block mb-3">Estilo da notificação</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: 'all', label: 'Tudo misturado' },
+                        { id: 'compra', label: '💳 Compra' },
+                        { id: 'avaliacao', label: '⭐ Avaliação' },
+                        { id: 'live', label: '🔥 Live' },
+                      ].map(type => (
+                        <button
+                          key={type.id}
+                          onClick={() => setNotifTipo(type.id as any)}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition ${
+                            notifTipo === type.id ? 'bg-[#FE2C55] text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                          }`}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-[#1E1E35] flex gap-4">
+                    {!notifAtiva ? (
+                      <button
+                        onClick={() => {
+                          startFictitiousNotifications(notifIntervalo, notifTipo);
+                          setNotifAtiva(true);
+                          notify('Notificações ativadas!', 'success');
+                        }}
+                        className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
+                      >
+                        <Play className="w-5 h-5" /> INICIAR
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          stopFictitiousNotifications();
+                          setNotifAtiva(false);
+                          notify('Notificações paradas.', 'success');
+                        }}
+                        className="flex-1 py-4 bg-red-500 hover:bg-red-400 text-white font-black uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
+                      >
+                        <Power className="w-5 h-5" /> PARAR
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* TAB: SISTEMA */}
+          {activeTab === 'sistema' && (
+            <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight">Status do Sistema</h1>
+                <p className="text-zinc-400 text-sm mt-1">Monitoramento e configurações globais.</p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <Server className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white">Supabase Connection</h4>
+                    <p className="text-xs text-emerald-400 font-bold mt-1">Conectado e Estável</p>
+                  </div>
+                </div>
+                
+                <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <Power className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white">Kalodata API</h4>
+                    <p className="text-xs text-emerald-400 font-bold mt-1">Token Válido</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-6">
+                <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Lock className="w-4 h-4" /> Variáveis de Ambiente</h3>
+                <ul className="space-y-3">
+                  <li className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400 font-mono">VITE_SUPABASE_URL</span>
+                    <span className={`px-3 py-1 rounded-lg text-xs font-bold ${import.meta.env.VITE_SUPABASE_URL ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      {import.meta.env.VITE_SUPABASE_URL ? 'PRESENTE' : 'AUSENTE'}
+                    </span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400 font-mono">VITE_SUPABASE_ANON_KEY</span>
+                    <span className={`px-3 py-1 rounded-lg text-xs font-bold ${import.meta.env.VITE_SUPABASE_ANON_KEY ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      {import.meta.env.VITE_SUPABASE_ANON_KEY ? 'PRESENTE' : 'AUSENTE'}
+                    </span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400 font-mono">VITE_KALODATA_API_KEY</span>
+                    <span className={`px-3 py-1 rounded-lg text-xs font-bold ${import.meta.env.VITE_KALODATA_API_KEY ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      {import.meta.env.VITE_KALODATA_API_KEY ? 'PRESENTE' : 'AUSENTE'}
+                    </span>
+                  </li>
+                  <li className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400 font-mono">VITE_GEMINI_API_KEY</span>
+                    <span className={`px-3 py-1 rounded-lg text-xs font-bold ${import.meta.env.VITE_GEMINI_API_KEY ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      {import.meta.env.VITE_GEMINI_API_KEY ? 'PRESENTE' : 'AUSENTE'}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex justify-center pt-8">
+                <button onClick={() => window.location.reload()} className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold text-sm transition flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4" /> Forçar Atualização de Cache
+                </button>
+              </div>
+              <div className="text-center mt-6">
+                <p className="text-zinc-600 text-xs font-mono">Versão do Sistema: v2.1.0-viral</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

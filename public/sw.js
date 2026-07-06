@@ -25,8 +25,15 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — estratégia Network First com fallback para cache
 self.addEventListener('fetch', (event) => {
-  // Não interceptar chamadas de API
-  if (event.request.url.includes('/api/')) return;
+  // Ignorar requisições POST, PUT, DELETE, PATCH
+  if (event.request.method !== 'GET') return;
+
+  // Ignorar chamadas de API e Supabase
+  if (
+    event.request.url.includes('/api/') ||
+    event.request.url.includes('supabase.co') ||
+    event.request.url.includes('kalocdn.com')
+  ) return;
 
   event.respondWith(
     fetch(event.request)

@@ -43,6 +43,7 @@ import ScreenTreinamentos from './components/ScreenTreinamentos';
 import ScreenViralizarPerfil from './components/ScreenViralizarPerfil';
 import ScreenUpgrade from './components/ScreenUpgrade';
 import ScreenAdmin from './components/ScreenAdmin';
+import { FictitiousNotifications } from './components/FictitiousNotifications';
 import { ScreenIndique } from './components/ScreenIndique';
 import ScreenSeguranca from './components/ScreenSeguranca';
 import TemplateGallery from './components/TemplateGallery';
@@ -259,20 +260,20 @@ export default function App() {
 
   // Real data state
   const profileRef = useRef<any>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const [profile, setProfile] = useState<Profile>({
-    id: 'user_01',
-    name: 'Admin Global',
-    email: 'gestaoprosaas@gmail.com',
-    plan: 'pro',
-    role: 'admin',
-    affiliate_code: 'viral777',
-    credits_text_limit: 999,
-    credits_text_used: 1,
-    credits_image_limit: 500,
-    credits_image_used: 1,
-    credits_video_limit: 60,
-    credits_video_used: 0,
+    id: '',
+    name: '',
+    email: '',
+    avatar_url: '',
+    plan: 'starter',
+    role: 'loading', // era 'client'
+    credits_text: 50,
+    credits_image: 30,
+    credits_video: 3,
+    affiliate_code: '',
+    referred_by: null,
     created_at: new Date().toISOString()
   });
   useEffect(() => {
@@ -303,45 +304,56 @@ export default function App() {
     // Verificar se já tem sessão ativa
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        // Usuário já logado — buscar perfil e entrar direto
         try {
-          const { data: userProfile, error } = await supabase.from('profiles')
+          const { data: userProfile } = await supabase
+            .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-          if (error) throw error;
-
-          const isAtivo = userProfile ? userProfile.ativo : true;
-          if (isAtivo) {
+          if (userProfile) {
             setProfile(prev => ({
               ...prev,
-              name: userProfile?.nome || userProfile?.name || session.user.email?.split('@')[0] || 'Usuário',
+              id: session.user.id,
+              name: userProfile.nome || userProfile.name || session.user.email?.split('@')[0] || '',
               email: session.user.email || '',
-              plan: userProfile?.plano || userProfile?.plan || 'starter',
-              role: userProfile?.role || 'client',
-              ativo: true,
+              plan: userProfile.plano || userProfile.plan || 'starter',
+              role: userProfile.role || 'client', // vem do banco, nunca hardcoded
+              ativo: userProfile.ativo !== false,
+            }));
+            setIsLanding(!userProfile.ativo);
+          } else {
+            // Perfil não existe — criar e deixar entrar como client
+            setProfile(prev => ({
+              ...prev,
+              email: session.user.email || '',
+              role: 'client',
             }));
             setIsLanding(false);
-          } else {
-            setIsLanding(true);
           }
         } catch (err) {
-          // Se der erro ou perfil não existir ainda, usar dados básicos do auth
-          setProfile(prev => ({
-            ...prev,
-            name: session.user.email?.split('@')[0] || 'Usuário',
-            email: session.user.email || '',
-            plan: 'starter',
-            role: 'client',
-            ativo: true,
-          }));
+          console.error('[Auth] Erro ao carregar perfil:', err);
+          // Em caso de erro, tentar novamente uma vez
+          setTimeout(async () => {
+            try {
+              const { data: retry } = await supabase
+                .from('profiles')
+                .select('role, nome, plano, ativo')
+                .eq('id', session.user.id)
+                .single();
+              if (retry) {
+                setProfile(prev => ({ ...prev, role: retry.role || 'client' }));
+              }
+            } catch {}
+          }, 2000);
           setIsLanding(false);
         } finally {
+          setProfileLoaded(true);
           setIsCheckingAuth(false);
         }
       } else {
         setIsLanding(true);
+        setProfileLoaded(true);
         setIsCheckingAuth(false);
       }
     });
@@ -926,7 +938,10 @@ export default function App() {
     { name: 'Avatar Studio', icon: Users, path: '/influenciadores' },
     { name: 'Viralizar Perfil', icon: Flame, path: '/afiliados' },
     { name: 'Movimentos', icon: Sparkles, path: '/movimentos' },
-    { name: 'Segurança', icon: Shield, path: '/seguranca' }
+    { name: 'Segurança', icon: Shield, path: '/seguranca' },
+    ...(profile.role === 'admin' || profile.role === 'superadmin'
+      ? [{ name: 'Painel Admin', icon: ShieldAlert, path: '/admin' }]
+      : [])
   ];
 
   // Helper to determine if a menu path is gated for the user's active plan
@@ -971,7 +986,7 @@ export default function App() {
     return (
       <ScreenLanding
         onEnter={async (userData) => {
-          const userRole = userData.role || ((userData.email === 'admin@gestaoprosaas.com' || userData.email === 'gestaoprosaas@gmail.com') ? 'admin' : 'client');
+          const userRole = userData.role || 'client';
           const isAtivo = userData.ativo !== undefined ? userData.ativo : true;
           
           // Set local user profile with purchased plan specs
@@ -1017,9 +1032,13 @@ export default function App() {
             });
 
             // Persist Supabase integration keys globally
-            await appFetch('/api/admin/settings', {
+            await fetch('/api/admin/settings', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-email': userData.email,  // usa o email direto do userData
+                'x-user-id': (userData as any).id || ''
+              },
               body: JSON.stringify({
                 supabase_url: userData.supabaseUrl,
                 supabase_anon_key: userData.supabaseKey
@@ -1109,7 +1128,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#06060B] text-[#F0F0FF] font-sans flex flex-col overflow-hidden relative" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="min-h-screen bg-[#06060B] text-[#F0F0FF] font-sans flex flex-col overflow-hidden relative pb-16 lg:pb-0" style={{ paddingBottom: isMobile ? 'calc(env(safe-area-inset-bottom) + 64px)' : 'env(safe-area-inset-bottom)' }}>
+      <FictitiousNotifications />
       {/* PWA Install Banner */}
       {showInstallBanner && (
         <div id="pwa-install-banner" className="md:hidden w-full p-3 bg-gradient-to-r from-[#FE2C55] via-[#813EF6] to-[#69C9D0] shadow-2xl flex items-center justify-between gap-3 text-white border-b border-white/10 shrink-0 relative z-50">
@@ -1231,7 +1251,7 @@ export default function App() {
         </div>
 
         {/* Indique Amigos card module matching the screenshot layout */}
-        {profile.role === 'admin' && (
+        {profileLoaded && (profile.role === 'admin' || profile.role === 'superadmin') && (
         <div className="px-4 py-1.5 shrink-0">
           <div className="bg-[#121223] border border-[#20203D] rounded-3xl p-3.5 flex items-center justify-between gap-3 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#903EF6]/4 to-[#FE2C55]/4 opacity-0 group-hover:opacity-100 transition duration-500" />
@@ -1255,7 +1275,7 @@ export default function App() {
         <div className="p-4 border-t border-[#18182D]/80 flex flex-col gap-2.5 shrink-0 bg-[#07070F]/60">
           
           {/* Hidden/Discreet Developer Panel Access */}
-          {profile.role === 'admin' && (
+          {profileLoaded && (profile.role === 'admin' || profile.role === 'superadmin') && (
             <button
               type="button"
               onClick={() => handleNavigate('/admin')}
@@ -1463,15 +1483,26 @@ export default function App() {
                 )}
 
                 {currentPath === '/admin' && (
-                  <ScreenAdmin
-                    onNavigate={handleNavigate}
-                    onRefreshProjectState={refreshFullState}
-                    profile={profile}
-                  />
+                  !profileLoaded || profile?.role === 'loading' ? (
+                    <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)]">
+                      <div className="animate-spin w-8 h-8 border-2 border-[#FE2C55] border-t-transparent rounded-full" />
+                      <span className="ml-3 text-zinc-400 text-sm mt-4">Carregando permissões...</span>
+                    </div>
+                  ) : profile?.role === 'client' ? (
+                    <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)]">
+                      <span className="text-zinc-400 text-sm">Acesso negado</span>
+                    </div>
+                  ) : (
+                    <ScreenAdmin
+                      onNavigate={handleNavigate}
+                      onRefreshProjectState={refreshFullState}
+                      profile={profile}
+                    />
+                  )
                 )}
 
                 {currentPath === '/indique-amigos' && (
-                  <ScreenIndique />
+                  <ScreenIndique profile={profile} />
                 )}
               </>
             )}

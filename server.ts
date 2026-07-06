@@ -8,6 +8,29 @@ import { sendWelcomeEmail, sendPaymentOverdueEmail } from "./lib/resend.js";
 import { AsyncLocalStorage } from "async_hooks";
 import crypto from "crypto";
 
+
+const verificarSuperAdmin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Não autorizado' });
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  if (!supabaseAdmin) return res.status(500).json({ error: 'Erro DB' });
+
+  const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+  if (!user) return res.status(401).json({ error: 'Token inválido' });
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'superadmin') {
+    return res.status(403).json({ error: 'Acesso restrito ao superadmin' });
+  }
+  next();
+};
+
 const app = express();
 const PORT = 3000;
 
@@ -4858,7 +4881,7 @@ app.get("/api/admin/cupons", async (req, res) => {
   res.json(dbState.cupons_admins || []);
 });
 
-app.post("/api/admin/cupons", async (req, res) => {
+app.post("/api/admin/cupons", verificarSuperAdmin, async (req, res) => {
   const profile = requestProfileStore.getStore();
   if (profile?.role !== "admin") {
     return res.status(403).json({ error: "Apenas administradores podem cadastrar." });
@@ -4896,7 +4919,7 @@ app.post("/api/admin/cupons", async (req, res) => {
   res.json(newCupom);
 });
 
-app.put("/api/admin/cupons/:id/toggle", async (req, res) => {
+app.put("/api/admin/cupons/:id/toggle", verificarSuperAdmin, async (req, res) => {
   const profile = requestProfileStore.getStore();
   if (profile?.role !== "admin") {
     return res.status(403).json({ error: "Acesso negado." });
@@ -4989,7 +5012,7 @@ app.get("/api/produtos-manuais", async (req, res) => {
   res.json(activeProducts);
 });
 
-app.post("/api/produtos-manuais", async (req, res) => {
+app.post("/api/produtos-manuais", verificarSuperAdmin, async (req, res) => {
   const profile = requestProfileStore.getStore();
   if (profile?.role !== "admin") {
     return res.status(403).json({ error: "Apenas administradores podem cadastrar." });
@@ -5020,7 +5043,7 @@ app.post("/api/produtos-manuais", async (req, res) => {
   res.json(newProduto);
 });
 
-app.put("/api/produtos-manuais/:id", async (req, res) => {
+app.put("/api/produtos-manuais/:id", verificarSuperAdmin, async (req, res) => {
   const profile = requestProfileStore.getStore();
   if (profile?.role !== "admin") {
     return res.status(403).json({ error: "Apenas administradores podem atualizar." });
@@ -5051,7 +5074,7 @@ app.put("/api/produtos-manuais/:id", async (req, res) => {
   res.json(current);
 });
 
-app.delete("/api/produtos-manuais/:id", async (req, res) => {
+app.delete("/api/produtos-manuais/:id", verificarSuperAdmin, async (req, res) => {
   const profile = requestProfileStore.getStore();
   if (profile?.role !== "admin") {
     return res.status(403).json({ error: "Apenas administradores podem deletar." });

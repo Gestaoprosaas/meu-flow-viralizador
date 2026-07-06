@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Check, Sparkles, Gift } from 'lucide-react';
+import { getSupabase } from '../../lib/supabaseClient';
+
+const CHECKOUT_MENSAL = process.env.NEXT_PUBLIC_APPLYFY_URL_STARTER || 'https://applyfy.com.br/checkout/SEU_PRODUTO_STARTER';
+const CHECKOUT_VITALICIO = process.env.NEXT_PUBLIC_APPLYFY_URL_PRO || 'https://applyfy.com.br/checkout/SEU_PRODUTO_PRO';
 
 interface PricingSectionProps {
   onSelectPlan: (planKey: 'starter' | 'pro' | 'agency', customUrl?: string) => void;
@@ -21,7 +25,7 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!coupon.trim()) {
-      setCouponError('Por favor, digite um cupom.');
+      setCouponError('Cupom inválido ou expirado');
       setCouponApplied(false);
       setCouponData(null);
       return;
@@ -29,25 +33,33 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
     
     setLoadingCoupon(true);
     try {
-      const response = await fetch('/api/check-coupon', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: coupon })
-      });
+      const supabase = getSupabase();
+      if (!supabase) throw new Error("Supabase não conectado.");
       
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        setCouponData(data.cupom);
+      const { data, error } = await supabase
+        .from('cupons_admins')
+        .select('*')
+        .eq('cupom', coupon.toUpperCase().trim())
+        .eq('ativo', true)
+        .single();
+        
+      if (data && !error) {
+        setCouponData(data);
         setCouponApplied(true);
         setCouponError('');
+        
+        // Incrementar usos
+        await supabase
+          .from('cupons_admins')
+          .update({ usos: (data.usos || 0) + 1 })
+          .eq('id', data.id);
       } else {
-        setCouponError(data.error || 'Cupom inválido.');
+        setCouponError('Cupom inválido ou expirado');
         setCouponApplied(false);
         setCouponData(null);
       }
     } catch (err) {
-      setCouponError('Erro ao validar cupom.');
+      setCouponError('Cupom inválido ou expirado');
       setCouponApplied(false);
       setCouponData(null);
     } finally {
@@ -99,12 +111,12 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
           </form>
           {couponApplied && couponData && (
             <p className="text-emerald-400 text-sm font-bold mt-2 animate-fade-in tracking-wide bg-emerald-500/10 py-2 px-4 rounded-lg border border-emerald-500/20 inline-block">
-              ✅ Cupom {couponData.cupom} aplicado! { (parseFloat(couponData.preco_com_desconto) || 0) < (parseFloat(couponData.preco_original) || 0) ? `De ${formatPrice(couponData.preco_original)} por ${formatPrice(couponData.preco_com_desconto)}` : `${formatPrice(couponData.preco_com_desconto)}` }
+              ✅ Cupom aplicado com sucesso!
             </p>
           )}
           {couponError && (
-            <p className="text-[#FE2C55] text-[11px] font-bold mt-2 animate-fade-in tracking-wide">
-              ⚠ {couponError}
+            <p className="text-[#FE2C55] text-sm font-bold mt-2 animate-fade-in tracking-wide inline-block">
+              Cupom inválido ou expirado
             </p>
           )}
         </div>
@@ -119,7 +131,7 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
           >
             <div>
               <h4 className="text-2xl font-black text-white tracking-tight">Mensal</h4>
-              <p className="text-xs text-gray-400 mt-2 font-medium">
+              <p className="text-sm text-gray-400 mt-2 font-medium">
                 Acesso completo ao Shopsy com flexibilidade total.
               </p>
               
@@ -160,7 +172,7 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
             <div className="mt-8 pt-4 border-t border-white/[0.03]">
               <button
                 type="button"
-                onClick={() => onSelectPlan('starter')}
+                onClick={() => onSelectPlan('starter', CHECKOUT_MENSAL)}
                 className="w-full py-4 rounded-xl bg-white/[0.03] hover:bg-[#FE2C55] hover:text-white border border-white/[0.07] text-[#ECECFF] font-black text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-[#FE2C55]/15"
                 id="btn-select-mensal"
               >
@@ -176,44 +188,49 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
           >
             {/* Best Value Badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="bg-[#FE2C55] text-white text-[9px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-lg shadow-[#FE2C55]/25 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 fill-white text-white" /> MELHOR CUSTO-BENEFÍCIO
-              </span>
+              {couponApplied && couponData ? (
+                <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] font-black uppercase px-5 py-2 rounded-full tracking-widest shadow-lg shadow-red-500/25 flex items-center gap-1 animate-pulse">
+                  🔥 40% OFF
+                </span>
+              ) : (
+                <span className="bg-[#FE2C55] text-white text-[9px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-lg shadow-[#FE2C55]/25 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 fill-white text-white" /> MELHOR CUSTO-BENEFÍCIO
+                </span>
+              )}
             </div>
 
             <div>
               <h4 className="text-2xl font-black text-white tracking-tight pt-2">Vitalício</h4>
-              <p className="text-xs text-gray-400 mt-2 font-medium">
+              <p className="text-sm text-gray-400 mt-2 font-medium">
                 Pague uma vez. Use para sempre, sem mensalidade.
               </p>
               
               {/* Cost layout exactly like image */}
-              <div className="mt-8 flex items-baseline gap-2">
-                {couponApplied && couponData ? (
-                  <div className="flex items-center gap-3">
-                    {(() => {
-                      const orig = parseFloat(couponData.preco_original) || 0;
-                      const desc = parseFloat(couponData.preco_com_desconto) || 0;
-                      const hasValidDiscount = desc > 0 && desc !== orig;
-                      return (
-                        <>
-                          {hasValidDiscount && (
-                            <span className="text-xl font-bold text-[#8888AA] line-through decoration-red-500">
-                              {formatPrice(couponData.preco_original)}
-                            </span>
-                          )}
-                          <span className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight">
-                            {formatPrice(couponData.preco_com_desconto)}
-                          </span>
-                        </>
-                      );
-                    })()}
+              {couponApplied && couponData ? (
+                <div className="mt-8 space-y-2 bg-[#120F1D]/50 border border-white/[0.03] p-4 rounded-2xl">
+                  <div className="flex items-baseline gap-2.5">
+                    <span className="text-sm font-bold text-zinc-500 line-through">
+                      R$ 497,00
+                    </span>
+                    <span className="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight">
+                      R$ 297,00
+                    </span>
                   </div>
-                ) : (
+                  
+                  <div className="text-base sm:text-lg font-black text-amber-300">
+                    ou 12x de R$ 31,65
+                  </div>
+                  
+                  <div className="text-xs text-zinc-400 font-medium">
+                    Economize R$ 200,00
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-8 flex items-baseline gap-2">
                   <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">R$ 497,00</span>
-                )}
-                <span className="text-gray-500 text-xs font-extrabold tracking-widest uppercase">PAGAMENTO ÚNICO</span>
-              </div>
+                  <span className="text-gray-500 text-xs font-extrabold tracking-widest uppercase">PAGAMENTO ÚNICO</span>
+                </div>
+              )}
 
               {/* Subtitle info */}
               <span className="text-[10px] font-mono text-[#69C9D0] font-bold block mt-2 tracking-wider">
@@ -255,12 +272,7 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
             <div className="mt-8 pt-4 border-t border-white/[0.03]">
               <button
                 type="button"
-                onClick={async () => {
-                if (couponData?.cupom) {
-                  await fetch(`/api/validar-cupom/${couponData.cupom}/usar`, { method: 'POST' });
-                }
-                onSelectPlan('pro', couponData?.checkout_url);
-              }}
+                onClick={() => onSelectPlan('pro', couponApplied && couponData?.checkout_url_vitalicio ? couponData.checkout_url_vitalicio : CHECKOUT_VITALICIO)}
                 className="w-full py-4 rounded-xl bg-[#FE2C55]/5 hover:bg-[#FE2C55] hover:text-white border border-[#FE2C55]/30 text-[#FE2C55] font-black text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-[#FE2C55]/25"
                 id="btn-select-vitalicio"
               >
