@@ -112,15 +112,25 @@ export default function PricingSection({
               </p>
               
               {/* Cost layout exactly like image */}
-              <div className="mt-8 flex items-baseline gap-2">
-                <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">R$ 245,00</span>
-                <span className="text-gray-500 text-xs font-extrabold tracking-widest uppercase">/MÊS</span>
-              </div>
+              {cupomAplicado ? (
+                <div className="mt-8">
+                  <span className="line-through text-zinc-500 text-sm font-bold">R$ 245,00</span>
+                  <div className="text-4xl font-black text-emerald-400">R$ 147,00</div>
+                  <span className="text-xs text-zinc-400 mt-1 block font-bold tracking-wider">À VISTA — SEM PARCELAMENTO</span>
+                </div>
+              ) : (
+                <>
+                  <div className="mt-8 flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">R$ 245,00</span>
+                    <span className="text-gray-500 text-xs font-extrabold tracking-widest uppercase">/MÊS</span>
+                  </div>
 
-              {/* Subtitle information */}
-              <span className="text-[10px] font-mono text-gray-500 block mt-2 tracking-wider">
-                Cobre mensalmente recorrente.
-              </span>
+                  {/* Subtitle information */}
+                  <span className="text-[10px] font-mono text-gray-500 block mt-2 tracking-wider">
+                    Cobre mensalmente recorrente.
+                  </span>
+                </>
+              )}
 
               {/* Features List with custom styled checkmarks */}
               <ul className="space-y-4 border-t border-white/[0.04] pt-6 mt-8">
