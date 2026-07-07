@@ -783,12 +783,16 @@ export default function ScreenProdutos({
   const fetchKalodataSilently = async () => {
     try {
       const res = await fetch('/api/produtos');
+      if (!res.ok) {
+        throw new Error(`HTTP status ${res.status}`);
+      }
       const data = await res.json();
       const enriched = data.map(enrichProduct).filter(Boolean);
       setKalodataItems(enriched);
       salvarProdutosCache(enriched, 'kalodata');
     } catch (e) {
-      console.error("Erro ao buscar Kalodata silenciosamente:", e);
+      // Log as a warning instead of a critical console.error to prevent automated alerts for silent background fetches
+      console.warn("Informação: busca silenciosa Kalodata indisponível no momento.", e);
     }
   };
 
@@ -913,6 +917,11 @@ export default function ScreenProdutos({
   const [selectedVideoProduct, setSelectedVideoProduct] = useState<any | null>(null);
   const [videoModalMode, setVideoModalMode] = useState<'UGC' | 'POV' | 'MOVIMENTO' | null>(null);
   const [videoModalStep, setVideoModalStep] = useState<number>(1);
+
+  // Temporário para diagnóstico - remover depois
+  useEffect(() => {
+    console.log('[Modal estado]', { showVideoModal, selectedVideoProduct });
+  }, [showVideoModal, selectedVideoProduct]);
 
   // UGC Wizard States inside Modal
   const [ugcAvatarId, setUgcAvatarId] = useState<string>('giovanna');
@@ -1533,7 +1542,7 @@ export default function ScreenProdutos({
     setModalGeneratedImagePrompt('');
     setModalGeneratedVideoPrompt('');
 
-    setShowVideoModal(true);
+    setTimeout(() => setShowVideoModal(true), 0);
   };
 
   const handleAdd = (e: React.FormEvent) => {
@@ -2272,7 +2281,11 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
         {/* Main Wizard Form Column: full width (col-span-3) on Step 1, or col-span-2 on others */}
         <div 
           id="wizard-container"
-          className={`${wizardStep === 1 || !activeWizardProduct || hidePanelsOnMobileMovimento || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) ? 'lg:col-span-3' : 'lg:col-span-2'} bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-visible touch-pan-y flex flex-col justify-between min-h-[400px] sm:min-h-[480px] w-full`}
+          className={`${
+            wizardStep === 1 || !activeWizardProduct || hidePanelsOnMobileMovimento || isStep3Movimento || (videoMode === 'MOVIMENTO' && wizardStep === 4) 
+              ? 'lg:col-span-3 bg-transparent border-none p-0' 
+              : 'lg:col-span-2 bg-[#111118] border border-[#1E1E2E] rounded-2xl sm:rounded-3xl p-4 sm:p-6'
+          } relative overflow-visible touch-pan-y flex flex-col justify-between min-h-[400px] sm:min-h-[480px] w-full`}
         >
           
           {/* Ambient Background subtle colors */}
@@ -2633,7 +2646,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                 <div ref={sentinelaRef} className="w-full h-1" aria-hidden="true" />
 
                 {/* Product Cards Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pr-1 touch-pan-y">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 pr-1 touch-pan-y">
                   {filteredItems.length === 0 ? (
   <div className="col-span-full flex flex-col items-center justify-center p-12 bg-[#111118] border border-[#1E1E2E] rounded-xl text-center">
     <span className="text-sm font-bold text-[#8888AA]">Nenhum produto cadastrado ainda.</span>
@@ -4878,8 +4891,13 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
           </div>
         )}
 
-        {showVideoModal && selectedVideoProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+        {showVideoModal && (
+          <div 
+            className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md animate-fade-in"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowVideoModal(false); }}
+          >
+            <div className="flex min-h-full items-center justify-center p-4">
+              {selectedVideoProduct ? (
             <div className="bg-[#030307] border border-[#1E1E2E] hover:border-[#FE2C55]/20 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl shadow-[#FE2C55]/10 flex flex-col relative p-5 sm:p-6 space-y-5 my-8">
               
               {/* Header */}
@@ -4948,7 +4966,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       >
                         <div className="relative w-full aspect-[9/16] bg-[#030307]">
                           {modo.videoUrl ? (
-                            <LazyVideo
+                            <video
                               src={modo.videoUrl}
                               autoPlay
                               loop
@@ -4979,6 +4997,10 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                 </div>
               </div>
 
+            </div>
+            ) : (
+              <div className="text-white text-sm">Carregando...</div>
+            )}
             </div>
           </div>
         )}

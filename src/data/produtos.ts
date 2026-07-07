@@ -41,7 +41,7 @@ export const PRODUTOS_EM_ALTA: Produto[] = [
   {
     id: "copa2026-kit-torcedor-002",
     nome: "Kit Torcedor Brasil 12 Itens Copa 2026",
-    imagem: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=400",
+    imagem: "https://images.unsplash.com/photo-1518063319789-7217e6706b04?auto=format&fit=crop&q=80&w=400",
     tags: ["Copa 2026", "Kit", "Torcida", "Brasil"],
     niche: "Esportes",
     preco: "49,90",

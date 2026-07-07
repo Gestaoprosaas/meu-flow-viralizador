@@ -23,7 +23,8 @@ import {
   FolderOpen,
   Coins,
   GraduationCap,
-  Flame
+  Flame,
+  Crown
 } from 'lucide-react';
 
 // Import subcomponents
@@ -37,6 +38,7 @@ import ScreenMovimentos from './components/ScreenMovimentos';
 import ScreenVideos from './components/ScreenVideos';
 import ScreenProjetos from './components/ScreenProjetos';
 import ScreenBiblioteca from './components/ScreenBiblioteca';
+import ScreenBibliotecaPremium from './components/ScreenBibliotecaPremium';
 import ScreenProdutos from './components/ScreenProdutos';
 import { PRODUTOS_PRONTOS } from './data/produtosProntos';
 import ScreenTreinamentos from './components/ScreenTreinamentos';
@@ -1001,6 +1003,7 @@ export default function App() {
     { name: 'Viralizar Perfil', icon: Flame, path: '/afiliados' },
     { name: 'Movimentos', icon: Sparkles, path: '/movimentos' },
     { name: 'Segurança', icon: Shield, path: '/seguranca' },
+    { name: 'Biblioteca', icon: Crown, path: '/biblioteca-premium' },
     ...(profile.role === 'admin' || profile.role === 'superadmin'
       ? [{ name: 'Painel Admin', icon: ShieldAlert, path: '/admin' }]
       : [])
@@ -1507,6 +1510,8 @@ export default function App() {
                 {currentPath === '/biblioteca' && (
                   <ScreenBiblioteca onNavigate={handleNavigate} />
                 )}
+
+                {currentPath === '/biblioteca-premium' && <ScreenBibliotecaPremium />}
 
                 {currentPath === '/produtos' && (
                   <ScreenProdutos

@@ -35,7 +35,7 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
       )}
       <video
         ref={videoRef}
-        src={isIntersecting ? src : ''}
+        src={isIntersecting && src ? src : undefined}
         poster={posterOptimized}
         loop={loop}
         muted={muted}
