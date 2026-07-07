@@ -56,6 +56,52 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
 
+  // Coupon states
+  const [cupomCode, setCupomCode] = useState('');
+  const [cupomAplicado, setCupomAplicado] = useState<any>(null);
+  const [cupomError, setCupomError] = useState('');
+  const [cupomLoading, setCupomLoading] = useState(false);
+
+  const aplicarCupom = async () => {
+    if (!cupomCode.trim()) return;
+    setCupomLoading(true);
+    setCupomError('');
+    setCupomAplicado(null);
+
+    try {
+      const supabase = getSupabaseClient();
+      if (!supabase) throw new Error('Supabase não inicializado');
+
+      const { data, error } = await supabase
+        .from('cupons_admins')
+        .select('*')
+        .eq('cupom', cupomCode.toUpperCase().trim())
+        .eq('ativo', true)
+        .single();
+
+      if (error || !data) {
+        setCupomError('❌ Cupom inválido ou expirado');
+        return;
+      }
+
+      // Cupom encontrado — aplicar desconto e trocar URLs
+      setCupomAplicado(data);
+      if (data.checkout_url_mensal) setAppflyMonthly(data.checkout_url_mensal);
+      if (data.checkout_url_vitalicio) setAppflyLifetime(data.checkout_url_vitalicio);
+
+      // Incrementar usos
+      await supabase
+        .from('cupons_admins')
+        .update({ usos: (data.usos || 0) + 1 })
+        .eq('id', data.id);
+
+    } catch (err) {
+      setCupomError('❌ Erro ao validar cupom. Tente novamente.');
+    } finally {
+      setCupomLoading(false);
+    }
+  };
+
   // Check URL query parameters and load keys on launch
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -403,6 +449,15 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
         {/* 6. Pricing Layout */}
         <PricingSection 
           onSelectPlan={(plan, customUrl) => handleSelectPlan(plan, customUrl)} 
+          cupomCode={cupomCode}
+          setCupomCode={setCupomCode}
+          cupomAplicado={cupomAplicado}
+          cupomError={cupomError}
+          setCupomError={setCupomError}
+          cupomLoading={cupomLoading}
+          aplicarCupom={aplicarCupom}
+          appflyMonthly={appflyMonthly}
+          appflyLifetime={appflyLifetime}
         />
 
         {/* 7. Faq Accordions */}
