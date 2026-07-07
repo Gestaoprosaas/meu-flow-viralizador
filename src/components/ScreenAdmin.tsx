@@ -432,7 +432,7 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                       <div className="p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 text-xs text-zinc-400 space-y-1">
                         <p className="flex justify-between"><span>Desconto Fixo:</span> <strong className="text-emerald-400">40%</strong></p>
                         <p className="flex justify-between"><span>Preço Original:</span> <span>R$ 497,00</span></p>
-                        <p className="flex justify-between"><span>Preço Final:</span> <strong className="text-white">R$ 298,20</strong></p>
+                        <p className="flex justify-between"><span>Preço Final:</span> <strong className="text-white">R$ 297,00</strong></p>
                       </div>
 
                       <div className="pt-2 flex gap-2">

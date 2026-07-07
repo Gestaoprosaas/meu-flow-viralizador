@@ -1003,7 +1003,7 @@ export default function App() {
     { name: 'Viralizar Perfil', icon: Flame, path: '/afiliados' },
     { name: 'Movimentos', icon: Sparkles, path: '/movimentos' },
     { name: 'Segurança', icon: Shield, path: '/seguranca' },
-    { name: 'Biblioteca', icon: Crown, path: '/biblioteca-premium' },
+    { name: 'Biblioteca Premium', icon: Crown, path: '/biblioteca-premium' },
     ...(profile.role === 'admin' || profile.role === 'superadmin'
       ? [{ name: 'Painel Admin', icon: ShieldAlert, path: '/admin' }]
       : [])
