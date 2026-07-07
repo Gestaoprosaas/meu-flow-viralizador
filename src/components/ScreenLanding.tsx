@@ -1,7 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Lock, ArrowRight, Zap, ShieldCheck, Copy, Sparkles, LogIn, Mail, UserPlus, Info } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 import { getSupabase } from '../lib/supabaseClient';
+
+// Função para obter cliente Supabase com fallback
+const getSupabaseClient = () => {
+  // Tentar o cliente existente primeiro
+  const existing = getSupabase();
+  if (existing) return existing;
+
+  // Fallback: criar cliente diretamente com as keys
+  const url = import.meta.env.VITE_SUPABASE_URL ||
+              import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+              'https://bjwxsbcohqcpfftylovq.supabase.co';
+
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY ||
+              import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+              'sb_publishable_CIjXChnI0S1dHqf6COOqgQ_01U6t0S1';
+
+  return createClient(url, key);
+};
 
 import HeroSection from './marketing/HeroSection';
 import ProblemSection from './marketing/ProblemSection';
