@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { Loader2, Sparkles, ShoppingBag, Heart, Home, Smartphone, HelpCircle } from 'lucide-react';
 
 interface ProductImageProps {
@@ -138,14 +139,14 @@ export default function ProductImage({ src, alt, className = "w-full h-full obje
   return (
     <div className="relative w-full h-full overflow-hidden bg-transparent flex items-center justify-center min-h-[90px]">
       {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-50/90 z-10 space-y-1.5 animate-pulse">
-          <Loader2 className="w-5 h-5 text-[#FE2C55] animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B0B11]/90 z-10 space-y-1.5 animate-pulse">
+          <Loader2 className="w-4 h-4 text-[#FE2C55] animate-spin" />
           <span className="text-[8px] text-[#8888AA] font-black tracking-widest uppercase">Carregando Imagem...</span>
         </div>
       )}
       
       {currentSrc ? (
-        <img
+        <ImageWithSkeleton
           src={currentSrc}
           alt={alt}
           className={`${className} ${loading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} transition-all duration-300`}

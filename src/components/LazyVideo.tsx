@@ -16,7 +16,10 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
           }
         });
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.01,
+        rootMargin: '300px' // Começa a carregar o vídeo 300px antes de entrar na tela (ideal para mobile!)
+      }
     );
 
     if (videoRef.current) {
@@ -25,6 +28,18 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
 
     return () => observer.disconnect();
   }, []);
+
+  // Forçar reprodução no mobile assim que o vídeo estiver visível e marcado como autoPlay
+  useEffect(() => {
+    if (isIntersecting && autoPlay && videoRef.current) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Tratar restrição de interação do navegador silenciosamente
+        });
+      }
+    }
+  }, [isIntersecting, autoPlay]);
 
   const posterOptimized = poster ? getOptimizedImageUrl(poster, 400) : undefined;
 
@@ -41,12 +56,9 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
         muted={muted}
         playsInline={playsInline}
         autoPlay={autoPlay}
-        preload="none"
-        onCanPlay={(e) => {
+        preload="auto"
+        onLoadedData={() => {
           setLoaded(true);
-          if (autoPlay) {
-            e.currentTarget.play().catch(() => {});
-          }
         }}
         className={`w-full h-full object-cover transition-opacity duration-300 rounded-inherit ${loaded ? 'opacity-100' : 'opacity-0'}`}
         {...props}
