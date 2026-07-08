@@ -108,7 +108,7 @@ export default function PricingSection({
             <div>
               <h4 className="text-2xl font-black text-white tracking-tight">Mensal</h4>
               <p className="text-sm text-gray-400 mt-2 font-medium">
-                Acesso completo ao Shopsy com flexibilidade total.
+                Acesso completo com flexibilidade total.
               </p>
               
               {/* Cost layout exactly like image */}
