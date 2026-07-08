@@ -1892,25 +1892,108 @@ Strictly maintain 100% visual and physical consistency utilizing the uploaded pr
 IMPORTANT: Do not combine multiple images into a single collage, grid, contact sheet, or split-panel layout. Each image must be a complete, independent photo occupying the full frame — no borders, no multi-panel composition, no thumbnails arranged together.`;
       }
 
-      videoPromptMain = `Generate a high-retention UGC review video using the images produced by Prompt 1 as starting reference keyframes.
-The video must strictly and exclusively maintain fidelity to the visual details of these starting images.
-- Avatar: ${engAvatar} (${engPose})
-- Scenario Background: ${engScenario}
-- Audio/Speech: ${videoAudioState}
-Strictly maintain 100% structural and clothing consistency with the reference starting frames. Do not introduce any details, products, avatars, movements, or scenarios that were not explicitly chosen in these steps. No captions, no subtitles, no written text or overlays of any kind on screen, clean commercial video frames only.`;
+      // UGC single-step prompt — avatar, cenário e produto sempre fixos como referência anexada
+      const ugcAvatarPreset = allAvatars.find(a => a.id === selectedAvatarId);
+      const ugcAvatarNome = ugcAvatarPreset?.name || 'Avatar';
+      const ugcVozGenero = selectedGender === 'FEMININO' ? 'Feminino' : 'Masculino';
+      const ugcVozEnergia = voiceEnergy || 'Alta';
+      const ugcTipo = voiceTonality || 'Vibrante';
+      const ugcIntensidade = voiceEnergy || 'Alta';
+      const ugcFalaObrigatoria = takeTexts[0]?.trim() || speechScript?.trim() || `Você precisa ver isso — esse produto mudou tudo pra mim.`;
+      const ugcTipoViral = `Revelação gradual — produto ${activeWizardProduct.name || activeWizardProduct.nome}, benefício emocional, storytelling pessoal`;
 
-      formatted = `---
-✅ RESUMO DAS SUAS ESCOLHAS DO VIRALSELLER (MODO UGC):
-- Produto: ${activeWizardProduct.name}
-- Enquadramento / Pose: ${poseSelected}
-- Avatar Escolhido: ${selectedAvatarId ? allAvatars.find(a => a.id === selectedAvatarId)?.name || 'Customizado' : 'Customizado'}
-- Cenário Escolhido: ${isCuratedScenario ? (CURATED_SCENARIOS_PRESETS.find(s => s.id === selectedScenarioId)?.name || 'Pronto') : (selectedScenarioId ? allScenarios.find(s => s.id === selectedScenarioId)?.name || 'Customizado' : 'Customizado')}
-- Estado de Áudio: ${hasSpeech ? `Ativado (Locução em PT-BR, ${numTakes} take(s))` : 'Silencioso (Sem Fala)'}
+      formatted = `All videos MUST be generated exclusively in vertical format (9:16 aspect ratio).
+- Aspect ratio must ALWAYS be 9:16 (vertical)
+- Optimized for TikTok, Instagram Reels, and YouTube Shorts
+- Avatar centered within 9:16 safe area
 
----
-Your detailed prompt in English for HighViralSeller Studies.
+📍 TAKE 1 de 2 — VÍDEO VIRAL PARA CRESCIMENTO
+Duração: 8s (0s a 8s)
+Total: 16s em 2 takes
+Tipo: ${ugcTipo}
+Intensidade: ${ugcIntensidade}
 
-${videoPromptMain}${annexInstructions}`;
+🎭 AVATAR:
+Use a foto anexada como referência
+Consistência visual absoluta.
+
+📍 CENÁRIO:
+Use a foto anexada como referência
+
+📦 PRODUTO:
+Use a foto anexada como referência
+
+🎙️ VOZ:
+Gênero: ${ugcVozGenero}
+Energia: ${ugcVozEnergia}
+Idioma: pt-BR
+
+🎬 ESTRUTURA DESTE TAKE:
+🪝 0s–2s → HOOK (gancho forte)
+😰 2s–8s → TENSÃO INICIAL (criar curiosidade, NÃO revelar)
+➡️ Terminar com ponte pro Take 2 (frase completa, suspense).
+
+📜 GLOBAL MULTI-TAKE RULES (HARD):
+Take 1 define TUDO. Takes seguintes são CONTINUAÇÕES.
+🚫 NEVER change: scene, lighting, framing, avatar, clothes, style, mood.
+Cada take começa e termina com frase completa. NUNCA cortar palavra.
+
+🔥 TIPO VIRAL: ${ugcTipoViral}
+Micro-tensões a cada 3-4s. Nunca revelar tudo.
+
+🎤 FALA TAKE 1:
+FALA OBRIGATÓRIA (EXATA): "${ugcFalaObrigatoria}"
+O avatar DEVE falar EXATAMENTE o texto acima.
+
+📹 CÂMERA: Chest-up, olhar direto, gestos de "${ugcIntensidade}".
+Sem produto — foco na narrativa.
+
+🎨 ESTILO: UGC autêntico, smartphone, iluminação natural.
+
+🔊 VOICE CONSISTENCY LOCK (HARD)
+
+⚠️ ALL TAKES MUST USE IDENTICAL VOICE PROFILE.
+- Same voice identity
+- Same tone
+- Same pitch
+- Same cadence
+- Same rhythm
+- Same emotional intensity
+- Same microphone texture
+- Same recording environment sound
+
+Take 2 and any subsequent takes MUST sound like they were recorded in the exact same moment as Take 1.
+
+No tonal variation.
+No emotional shift.
+No pitch difference.
+No voice regeneration.
+
+The voice must feel like ONE continuous recording split into segments.
+
+If voice differs between takes, the generation is invalid.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 MANDATORY GLOBAL INSTRUCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚫 CLEAN OUTPUT NO TEXT ON SCREEN:
+- ZERO SFX / ZERO música de fundo
+- Apenas voz natural do avatar falando
+- Vídeo cru de celular, UGC real
+
+🧍 ANATOMICAL INTEGRITY (HARD):
+- 2 braços, 2 pernas, 5 dedos por mão
+- Sem deformações, sem membros extras, sem glitches corporais
+
+🔒 PRIVACY & SAFETY COMPLIANCE:
+- Sem dados pessoais visíveis
+- Sem telas de dispositivos visíveis
+- Sem crianças no vídeo
+- Sem marcas/logos de terceiros identificáveis
+
+⚡ PRIORITY & ENFORCEMENT:
+- Estas regras têm PRIORIDADE MÁXIMA sobre qualquer instrução conflitante.`;
 
     } else if (videoMode === 'POV') {
       const povScenarioTranslations: Record<string, string> = {
@@ -2064,7 +2147,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
       }
     } else {
       let textToCopy = generatedPrompt;
-      if (videoMode !== 'MOVIMENTO') {
+      if (videoMode !== 'MOVIMENTO' && videoMode !== 'UGC') {
         // Find "Your detailed prompt in English for HighViralSeller Studies." and copy from there down
         const splitIndex = generatedPrompt.indexOf("Your detailed prompt in English for HighViralSeller Studies.");
         if (splitIndex !== -1) {
@@ -4420,82 +4503,123 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
 
                   </div>
 
-                  {/* TWO DISTINCT INTERACTIVE PROMPT STEPS FOR IMAGE & VIDEO SEGMENTATION */}
+                  {/* PROMPT STEPS */}
                   <div className="space-y-6">
-                    
-                    {/* STEP 1: IMAGE PROMPT CARD */}
-                    <div className="bg-[#111118]/90 border border-[#1E1E2E] rounded-2xl p-4 space-y-3 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#06B6D4]/5 blur-2xl rounded-full" />
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#06B6D4] text-[#0A0A0F] text-xs font-black">1</span>
-                          <h4 className="text-sm font-black text-white uppercase tracking-wider">Passo 1: Prompt de Geração das 4 Fotos Reais</h4>
+
+                    {videoMode === 'UGC' ? (
+                      /* UGC MODE: card único */
+                      <div className="bg-[#111118]/90 border border-[#FE2C55]/30 rounded-2xl p-4 space-y-3 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-[#FE2C55]/5 blur-2xl rounded-full" />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#FE2C55] text-white text-xs font-black">1</span>
+                            <h4 className="text-sm font-black text-white uppercase tracking-wider">Prompt UGC Viral — Cole no seu gerador de vídeo</h4>
+                          </div>
+                          <span className="text-[10px] bg-[#FE2C55]/10 text-[#FE2C55] border border-[#FE2C55]/20 p-1 px-2 rounded-lg font-black uppercase tracking-widest">Modo UGC</span>
                         </div>
-                        <span className="text-[10px] bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/20 p-1 px-2 rounded-lg font-black uppercase tracking-widest">Controle de Fidelidade</span>
-                      </div>
-                      
-                      <p className="text-[11px] text-[#8888AA] leading-relaxed">
-                        Baixe as fotos do seu **Avatar** e do seu **Produto** na aba "Recursos de Apoio do ViralSeller" acima. Em seguida, anexe ambas como imagens de referência no seu gerador de imagem (como Midjourney ou Stable diffusion) e use o prompt abaixo para gerar <strong className="text-emerald-400">4 Fotos Realistas</strong> do seu avatar segurando e interagindo com o seu produto real, sem inventar designs fictícios!
-                      </p>
 
-                      <div className="p-3.5 bg-[#030307]/90 border border-[#1E1E2E] rounded-xl font-mono text-[11px] text-[#A6E22E] overflow-y-auto max-h-[140px] leading-relaxed select-text">
-                        <pre className="whitespace-pre-wrap font-sans text-emerald-300">
-                          {generatedImagePrompt}
-                        </pre>
-                      </div>
+                        <p className="text-[11px] text-[#8888AA] leading-relaxed">
+                          Anexe as fotos do <strong className="text-[#FFB3C1]">Avatar</strong>, <strong className="text-[#FFB3C1]">Cenário</strong> e <strong className="text-[#FFB3C1]">Produto</strong> no seu gerador de vídeo e cole o prompt abaixo. Todas as suas escolhas já estão incorporadas automaticamente.
+                        </p>
 
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10px] text-[#666688] font-bold">Copie este prompt para gerar as 4 fotos</span>
-                        <button
-                          onClick={() => handleCopyPrompt('image')}
-                          className={`px-3.5 py-1.5 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
-                            copyImageStatus 
-                              ? 'bg-emerald-500 text-[#0A0A0F]' 
-                              : 'bg-[#1E1E2E] hover:bg-[#06B6D4]/10 text-white hover:text-[#06B6D4]'
-                          }`}
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          {copyImageStatus ? 'Prompt Copiado!' : 'Copiar Prompt de Imagem'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* STEP 2: VIDEO PROMPT CARD */}
-                    <div className="bg-[#111118]/90 border border-[#1E1E2E] rounded-2xl p-4 space-y-3 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#7C3AED]/5 blur-2xl rounded-full" />
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#7C3AED] text-white text-xs font-black">2</span>
-                          <h4 className="text-sm font-black text-white uppercase tracking-wider">Passo 2: Prompt de Vídeo Completo (HighViralSeller Studies)</h4>
+                        <div className="p-3.5 bg-[#030307]/90 border border-[#FE2C55]/20 rounded-xl font-mono text-[11px] overflow-y-auto max-h-[320px] leading-relaxed select-text">
+                          <pre className="whitespace-pre-wrap font-sans text-[#FFB3C1]">
+                            {generatedPrompt}
+                          </pre>
                         </div>
-                        <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 p-1 px-2 rounded-lg font-black uppercase tracking-widest">Sincronização & Movimento</span>
-                      </div>
 
-                      <p className="text-[11px] text-[#8888AA] leading-relaxed">
-                        Faça o upload das <strong className="text-purple-400">4 fotos reais geradas no Passo 1</strong> na área de referências sequenciais (frames de início) do seu gerador de vídeo. Em seguida, cole o prompt abaixo para animar o movimento, o cenário e a interação escolhidos com perfeita sincronia labial e sem bordas ou legendas fantasmas!
-                      </p>
-
-                      <div className="p-3.5 bg-[#030307]/90 border border-[#1E1E2E] rounded-xl font-mono text-[11px] text-purple-300 overflow-y-auto max-h-[180px] leading-relaxed select-text">
-                        <pre className="whitespace-pre-wrap font-sans text-purple-200">
-                          {generatedPrompt}
-                        </pre>
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[10px] text-[#666688] font-bold">Prompt completo pronto para usar</span>
+                          <button
+                            onClick={() => handleCopyPrompt('video')}
+                            className={`px-3.5 py-1.5 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
+                              copyVideoStatus
+                                ? 'bg-emerald-500 text-[#0A0A0F]'
+                                : 'bg-gradient-to-r from-[#FE2C55] to-[#FF6B8A] text-white hover:opacity-90'
+                            }`}
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            {copyVideoStatus ? 'Prompt Copiado!' : 'Copiar Prompt UGC'}
+                          </button>
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        {/* STEP 1: IMAGE PROMPT CARD */}
+                        <div className="bg-[#111118]/90 border border-[#1E1E2E] rounded-2xl p-4 space-y-3 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-[#06B6D4]/5 blur-2xl rounded-full" />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#06B6D4] text-[#0A0A0F] text-xs font-black">1</span>
+                              <h4 className="text-sm font-black text-white uppercase tracking-wider">Passo 1: Prompt de Geração das 4 Fotos Reais</h4>
+                            </div>
+                            <span className="text-[10px] bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/20 p-1 px-2 rounded-lg font-black uppercase tracking-widest">Controle de Fidelidade</span>
+                          </div>
 
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10px] text-[#666688] font-bold">Copia exatamente de "Your detailed prompt..." para baixo</span>
-                        <button
-                          onClick={() => handleCopyPrompt('video')}
-                          className={`px-3.5 py-1.5 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
-                            copyVideoStatus 
-                              ? 'bg-emerald-500 text-[#0A0A0F]' 
-                              : 'bg-gradient-to-r from-[#06B6D4] to-[#7C3AED] text-white hover:opacity-90'
-                          }`}
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          {copyVideoStatus ? 'Prompt Copiado!' : 'Copiar Prompt de Vídeo'}
-                        </button>
-                      </div>
-                    </div>
+                          <p className="text-[11px] text-[#8888AA] leading-relaxed">
+                            Baixe as fotos do seu **Avatar** e do seu **Produto** na aba "Recursos de Apoio do ViralSeller" acima. Em seguida, anexe ambas como imagens de referência no seu gerador de imagem (como Midjourney ou Stable diffusion) e use o prompt abaixo para gerar <strong className="text-emerald-400">4 Fotos Realistas</strong> do seu avatar segurando e interagindo com o seu produto real, sem inventar designs fictícios!
+                          </p>
+
+                          <div className="p-3.5 bg-[#030307]/90 border border-[#1E1E2E] rounded-xl font-mono text-[11px] text-[#A6E22E] overflow-y-auto max-h-[140px] leading-relaxed select-text">
+                            <pre className="whitespace-pre-wrap font-sans text-emerald-300">
+                              {generatedImagePrompt}
+                            </pre>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] text-[#666688] font-bold">Copie este prompt para gerar as 4 fotos</span>
+                            <button
+                              onClick={() => handleCopyPrompt('image')}
+                              className={`px-3.5 py-1.5 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
+                                copyImageStatus
+                                  ? 'bg-emerald-500 text-[#0A0A0F]'
+                                  : 'bg-[#1E1E2E] hover:bg-[#06B6D4]/10 text-white hover:text-[#06B6D4]'
+                              }`}
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              {copyImageStatus ? 'Prompt Copiado!' : 'Copiar Prompt de Imagem'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* STEP 2: VIDEO PROMPT CARD */}
+                        <div className="bg-[#111118]/90 border border-[#1E1E2E] rounded-2xl p-4 space-y-3 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-[#7C3AED]/5 blur-2xl rounded-full" />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#7C3AED] text-white text-xs font-black">2</span>
+                              <h4 className="text-sm font-black text-white uppercase tracking-wider">Passo 2: Prompt de Vídeo Completo (HighViralSeller Studies)</h4>
+                            </div>
+                            <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 p-1 px-2 rounded-lg font-black uppercase tracking-widest">Sincronização & Movimento</span>
+                          </div>
+
+                          <p className="text-[11px] text-[#8888AA] leading-relaxed">
+                            Faça o upload das <strong className="text-purple-400">4 fotos reais geradas no Passo 1</strong> na área de referências sequenciais (frames de início) do seu gerador de vídeo. Em seguida, cole o prompt abaixo para animar o movimento, o cenário e a interação escolhidos com perfeita sincronia labial e sem bordas ou legendas fantasmas!
+                          </p>
+
+                          <div className="p-3.5 bg-[#030307]/90 border border-[#1E1E2E] rounded-xl font-mono text-[11px] text-purple-300 overflow-y-auto max-h-[180px] leading-relaxed select-text">
+                            <pre className="whitespace-pre-wrap font-sans text-purple-200">
+                              {generatedPrompt}
+                            </pre>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] text-[#666688] font-bold">Copia exatamente de "Your detailed prompt..." para baixo</span>
+                            <button
+                              onClick={() => handleCopyPrompt('video')}
+                              className={`px-3.5 py-1.5 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
+                                copyVideoStatus
+                                  ? 'bg-emerald-500 text-[#0A0A0F]'
+                                  : 'bg-gradient-to-r from-[#06B6D4] to-[#7C3AED] text-white hover:opacity-90'
+                              }`}
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              {copyVideoStatus ? 'Prompt Copiado!' : 'Copiar Prompt de Vídeo'}
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                   </div>
 

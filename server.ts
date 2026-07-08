@@ -4015,6 +4015,122 @@ app.get("/api/admin/users", (req, res) => {
   res.json(dbState.profiles);
 });
 
+// POST Admin Create User Account Direct
+app.post("/api/admin/users/create", async (req, res) => {
+  const { name, email, password, role, plan } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "E-mail e senha são obrigatórios." });
+  }
+
+  const cleanRole = (role === "admin" || role === "superadmin") ? role : "client";
+  const cleanPlan = (plan === "starter" || plan === "pro" || plan === "agency") ? plan : "free";
+
+  // Define credits based on plan
+  let textCredits = 10;
+  let imageCredits = 5;
+  let videoCredits = 0;
+  if (cleanPlan === "pro") {
+    textCredits = 200;
+    imageCredits = 100;
+    videoCredits = 15;
+  } else if (cleanPlan === "agency") {
+    textCredits = 999;
+    imageCredits = 500;
+    videoCredits = 60;
+  } else if (cleanPlan === "starter") {
+    textCredits = 50;
+    imageCredits = 30;
+    videoCredits = 3;
+  }
+  const totalCredits = textCredits + imageCredits + videoCredits;
+
+  const newUser: any = {
+    id: `user-${Date.now()}`,
+    name: name || email.split("@")[0],
+    email: email,
+    plan: cleanPlan,
+    role: cleanRole,
+    credits_text: textCredits,
+    credits_image: imageCredits,
+    credits_video: videoCredits,
+    plano: cleanPlan,
+    creditos: totalCredits,
+    ativo: true,
+    created_at: new Date().toISOString()
+  };
+
+  // Real Supabase operations
+  const supabaseAdmin = getSupabaseAdminClient();
+  if (supabaseAdmin) {
+    try {
+      console.log(`[Admin Create User] Criando usuário ${email} no Supabase...`);
+      // check if exists
+      let userId = await findUserIdByEmail(email, supabaseAdmin);
+      if (userId) {
+        return res.status(400).json({ error: "Este e-mail já está cadastrado no sistema." });
+      }
+
+      // Create in auth.users
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: email,
+        password: password,
+        email_confirm: true,
+        user_metadata: {
+          name: name || email.split("@")[0]
+        }
+      });
+
+      if (authError) {
+        console.error(`[Admin Create User] Erro no Supabase Auth:`, authError.message);
+        return res.status(400).json({ error: `Erro no Supabase Auth: ${authError.message}` });
+      }
+
+      if (authData?.user) {
+        userId = authData.user.id;
+        newUser.id = userId; // update local state item id with real uuid
+      }
+
+      if (userId) {
+        // Upsert/Insert profile in public.profiles
+        const profilePayload = {
+          id: userId,
+          name: name || email.split("@")[0],
+          email: email,
+          plan: cleanPlan,
+          role: cleanRole,
+          credits_text: textCredits,
+          credits_image: imageCredits,
+          credits_video: videoCredits,
+          plano: cleanPlan,
+          creditos: totalCredits,
+          ativo: true,
+          created_at: new Date().toISOString()
+        };
+
+        const { error: profileError } = await supabaseAdmin
+          .from("profiles")
+          .upsert([profilePayload]);
+
+        if (profileError) {
+          console.error(`[Admin Create User] Erro ao criar perfil no banco de dados:`, profileError.message);
+          return res.status(500).json({ error: `Usuário criado no Auth, mas falhou ao criar perfil: ${profileError.message}` });
+        }
+      }
+    } catch (err: any) {
+      console.error(`[Admin Create User] Exceção:`, err);
+      return res.status(500).json({ error: `Erro interno no servidor: ${err.message}` });
+    }
+  }
+
+  // Sync with local memory DB state
+  dbState.profiles.push(newUser);
+
+  logAudit("CREATE_USER_MANUAL", "profiles", { email, role: cleanRole, plan: cleanPlan });
+  broadcastEvent("USERS_UPDATE");
+
+  return res.json({ success: true, message: "Usuário criado com sucesso!", user: newUser });
+});
+
 // POST Admin Update User Plan Manual
 app.post("/api/admin/users/plan", (req, res) => {
   const { userId, plan } = req.body;

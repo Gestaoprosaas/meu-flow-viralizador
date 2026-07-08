@@ -39,6 +39,15 @@ export default function ScreenAdmin({
   const [userSearch, setUserSearch] = useState('');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [usersVisibleCount, setUsersVisibleCount] = useState(10);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'client',
+    plan: 'free'
+  });
+  const [isSavingUser, setIsSavingUser] = useState(false);
 
   // === SEÇÃO PARCEIROS ===
   const [parceiros, setParceiros] = useState<any[]>([]);
@@ -145,6 +154,40 @@ export default function ScreenAdmin({
       notify(`Status atualizado para ${!ativoAtual ? 'ATIVO' : 'INATIVO'}`, 'success');
     } else {
       notify('Erro ao atualizar status', 'error');
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserForm.email || !newUserForm.password) {
+      notify('E-mail e senha são obrigatórios.', 'error');
+      return;
+    }
+    
+    setIsSavingUser(true);
+    try {
+      const response = await fetch('/api/admin/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newUserForm),
+      });
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        notify(data.error || 'Erro ao criar usuário', 'error');
+      } else {
+        notify(data.message || 'Usuário criado com sucesso!', 'success');
+        setIsCreatingUser(false);
+        setNewUserForm({ name: '', email: '', password: '', role: 'client', plan: 'free' });
+        // Refresh users list
+        carregarDados();
+      }
+    } catch (err: any) {
+      console.error(err);
+      notify('Erro de conexão ao criar usuário', 'error');
+    } finally {
+      setIsSavingUser(false);
     }
   };
 
@@ -322,9 +365,18 @@ export default function ScreenAdmin({
           {activeTab === 'users' && (
             <div className="space-y-6 animate-fade-in">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-black tracking-tight">Usuários</h1>
-                  <p className="text-zinc-400 text-sm mt-1">Gerencie os acessos e permissões da plataforma.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div>
+                    <h1 className="text-3xl font-black tracking-tight">Usuários</h1>
+                    <p className="text-zinc-400 text-sm mt-1">Gerencie os acessos e permissões da plataforma.</p>
+                  </div>
+                  <button
+                    onClick={() => setIsCreatingUser(!isCreatingUser)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#FE2C55] to-[#813EF6] hover:brightness-110 active:scale-95 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-[#FE2C55]/10 shrink-0 self-start sm:self-center"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Criar Conta</span>
+                  </button>
                 </div>
                 
                 <div className="flex gap-4 w-full md:w-auto">
@@ -342,6 +394,122 @@ export default function ScreenAdmin({
                   </div>
                 </div>
               </div>
+
+              {/* FORMULÁRIO DE NOVA CONTA */}
+              {isCreatingUser && (
+                <div className="bg-[#0D0D1A] border-2 border-[#FE2C55]/30 rounded-2xl p-6 space-y-4 animate-fade-in relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FE2C55] via-[#813EF6] to-[#FE2C55]"></div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-white flex items-center gap-2">
+                        <Plus className="w-5 h-5 text-[#FE2C55]" />
+                        Criar Novo Usuário
+                      </h3>
+                      <p className="text-xs text-zinc-400 mt-0.5">Cadastre uma conta diretamente no Supabase Auth e tabela de perfis.</p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setIsCreatingUser(false)}
+                      className="text-zinc-500 hover:text-white px-2 py-1 bg-zinc-900 rounded-lg text-xs font-bold transition-colors"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Nome Completo</label>
+                      <input 
+                        type="text" 
+                        placeholder="Ex: João Silva"
+                        required
+                        value={newUserForm.name}
+                        onChange={e => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                        className="w-full bg-zinc-900/50 border border-[#1E1E35] focus:border-[#FE2C55]/50 outline-none text-white px-4 py-3 rounded-xl text-sm transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">E-mail</label>
+                      <input 
+                        type="email" 
+                        placeholder="Ex: joao@email.com"
+                        required
+                        value={newUserForm.email}
+                        onChange={e => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                        className="w-full bg-zinc-900/50 border border-[#1E1E35] focus:border-[#FE2C55]/50 outline-none text-white px-4 py-3 rounded-xl text-sm transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Senha de Acesso</label>
+                      <input 
+                        type="password" 
+                        placeholder="Defina uma senha robusta"
+                        required
+                        minLength={6}
+                        value={newUserForm.password}
+                        onChange={e => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                        className="w-full bg-zinc-900/50 border border-[#1E1E35] focus:border-[#FE2C55]/50 outline-none text-white px-4 py-3 rounded-xl text-sm transition-colors"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Cargo</label>
+                        <select 
+                          value={newUserForm.role}
+                          onChange={e => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                          className="w-full bg-zinc-900/50 border border-[#1E1E35] focus:border-[#FE2C55]/50 outline-none text-white px-4 py-3 rounded-xl text-sm transition-colors cursor-pointer"
+                        >
+                          <option value="client">Cliente</option>
+                          <option value="admin">Admin</option>
+                          <option value="superadmin">Superadmin</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Plano de Créditos</label>
+                        <select 
+                          value={newUserForm.plan}
+                          onChange={e => setNewUserForm({ ...newUserForm, plan: e.target.value })}
+                          className="w-full bg-zinc-900/50 border border-[#1E1E35] focus:border-[#FE2C55]/50 outline-none text-white px-4 py-3 rounded-xl text-sm transition-colors cursor-pointer"
+                        >
+                          <option value="free">Free (Grátis)</option>
+                          <option value="starter">Starter</option>
+                          <option value="pro">Pro</option>
+                          <option value="agency">Agency</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="col-span-full pt-2 flex justify-end gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => setIsCreatingUser(false)}
+                        className="px-5 py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold rounded-xl transition-colors text-sm"
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        type="submit"
+                        disabled={isSavingUser}
+                        className="px-6 py-3 bg-gradient-to-r from-[#FE2C55] to-[#813EF6] hover:brightness-110 active:scale-95 text-white font-bold rounded-xl transition-all text-sm flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+                      >
+                        {isSavingUser ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>Salvando...</span>
+                          </>
+                        ) : (
+                          <span>Criar Conta</span>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               <div className="relative">
                 <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
