@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, Copy, Check, X, Crown, ArrowRight, Play, Video, ExternalLink } from 'lucide-react';
+import { Sparkles, Copy, Check, X, Crown, ArrowRight, Play, ExternalLink, Lock, Hourglass, Gift } from 'lucide-react';
+import { LazyVideo } from './LazyVideo';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 
 interface PromptCard {
   id: string;
@@ -7,14 +9,13 @@ interface PromptCard {
   categoria: string;
   prompt: string;
   icone: string;
-  previewUrl?: string; // Link de pré-visualização cadastrado no código
+  previewUrl?: string;
 }
 
 const isVideoUrl = (url?: string): boolean => {
   if (!url) return false;
   const lower = url.toLowerCase();
   
-  // Se contiver extensões de imagem comuns, com certeza NÃO é um vídeo
   if (
     lower.includes('.png') ||
     lower.includes('.jpg') ||
@@ -28,7 +29,6 @@ const isVideoUrl = (url?: string): boolean => {
     return false;
   }
   
-  // Se contiver extensões de vídeo comuns, com certeza é um vídeo
   if (
     lower.endsWith('.mp4') ||
     lower.endsWith('.webm') ||
@@ -45,7 +45,6 @@ const isVideoUrl = (url?: string): boolean => {
     return true;
   }
   
-  // Caso de fallback: se não tiver extensão explícita, mas for do supabase, assumir que é imagem
   return false;
 };
 
@@ -64,7 +63,7 @@ const PROMPTS_PREMIUM: PromptCard[] = [
     categoria: 'VIRAIS',
     icone: '⭐',
     prompt: "Use the first image ONLY as an environment + pose reference.\nUse the second image as the ONLY avatar identity reference.\nUse the third image as the ONLY TOP clothing/product reference.\nUse the fourth image as the ONLY BOTTOM clothing/product reference.\n\nIMPORTANT CONTEXT:\nThe first image may contain a model.\nThat model must be used ONLY to extract:\n• Camera angle\n• Body orientation\n• Pose\n• Distance to camera\n• Framing\n• Perspective\nThe identity of the model in the first image must NEVER be reused.\n\n────────────────────────\nENVIRONMENT + POSE EXTRACTION (CRITICAL)\n────────────────────────\n• Extract ONLY the environment from Image 1.\n• Completely remove the original model from Image 1.\n• The environment must look originally empty.\n\nFROM IMAGE 1, PRESERVE EXACTLY:\n• Camera angle\n• Camera height\n• Camera tilt\n• Distance from camera to subject\n• Body orientation\n• Pose silhouette\n• Framing and crop\n• Perspective and depth\n• Lighting direction and softness.\n\n────────────────────────\nAVATAR INSERTION (CRITICAL)\n────────────────────────\n• Insert the avatar from Image 2 into the extracted environment.\n• Keep ONLY the identity from Image 2.\n• Do NOT reuse the woman from Image 1.\n• Match the exact pose and framing from Image 1.\n• Keep the arms naturally straight and relaxed.\n\n────────────────────────\nTOP PRODUCT APPLICATION (IMAGE 3)\n────────────────────────\n• Apply ONLY the product/clothing from Image 3.\n• Replicate it exactly as shown.\n• Preserve the exact fit, positioning, proportions, and style.\n• If it sits higher or lower on the body, preserve that exact placement.\n• No creative changes.\n\n────────────────────────\nBOTTOM PRODUCT APPLICATION (IMAGE 4)\n────────────────────────\n• Apply ONLY the product/clothing from Image 4.\n• Replicate it exactly as shown.\n• Preserve the exact waist height, fit, proportions, and style.\n• If it is low waist, keep it low waist.\n• If it is high waist, keep it high waist.\n• No creative changes.\n\n────────────────────────\nLIGHTING & INTEGRATION\n────────────────────────\n• Match environment lighting exactly.\n• Natural shadows consistent with Image 1.\n• Ultra realistic photographic realism.\n• No CGI look.\n• No beauty filter.\n• No stylization.\n• No text or watermarks.\n\n────────────────────────\nFINAL RESULT\n────────────────────────\nA realistic scene where:\n• Image 1 = environment + pose.\n• Image 2 = the ONLY avatar identity.\n• Image 3 = top product.\n• Image 4 = bottom product.\n\nThe final image must look like the woman from Image 2 was originally photographed in the environment from Image 1 while wearing the exact products from Images 3 and 4.",
-    previewUrl: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/BIBLIOTECA%20PREMIUM/AMBIENTE+MODELO+PROD+PROD.png_2K_202607062212.jpeg"
+    previewUrl: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/BIBLIOTECA%20PREMIUM/AMBIENTE+MODELO+PROD+PROD.png"
   },
   {
     id: '3',
@@ -73,6 +72,46 @@ const PROMPTS_PREMIUM: PromptCard[] = [
     icone: '💰',
     prompt: "Crie 3 chamadas para ação (CTAs) de encerramento de vídeo que gerem senso de urgência e FOMO (Fear Of Missing Out). O objetivo é fazer a pessoa clicar no link da bio ou no botão de compra imediatamente.\n\nProduto: [INSERIR PRODUTO]\nOferta: [INSERIR OFERTA OU DESCONTO]",
     previewUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  },
+  {
+    id: '4',
+    titulo: 'Storytelling de Produto',
+    categoria: 'UGC',
+    icone: '🎯',
+    prompt: "Crie um roteiro de storytelling de 30 segundos contando a história de como esse produto resolveu um problema muito irritante que quase todo mundo tem.\n\nUse o formato: Problema > Frustração > Descoberta do Produto > Solução > CTA.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: '5',
+    titulo: 'Gatilho de Escassez',
+    categoria: 'Vendas',
+    icone: '⚡',
+    prompt: "Escreva um texto curto e persuasivo para colocar na tela (overlay de texto) de um vídeo, focando inteiramente no gatilho mental de escassez e urgência de tempo/estoque.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  },
+  {
+    id: '6',
+    titulo: 'Comparativo Antes/Depois',
+    categoria: 'Conteúdo',
+    icone: '✨',
+    prompt: "Estruture um roteiro visual para um vídeo de transição 'Antes e Depois'.\n\nDescreva exatamente o que deve aparecer na tela durante os primeiros 5 segundos (o problema) e depois a transição impactante mostrando o resultado nos próximos 5 segundos.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: '7',
+    titulo: 'Unboxing com Emoção',
+    categoria: 'UGC',
+    icone: '📦',
+    prompt: "Crie um roteiro para um vídeo de unboxing estilo ASMR/UGC, descrevendo as emoções, expressões faciais e o texto que deve ser narrado ao abrir a caixa e ver o produto pela primeira vez.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  },
+  {
+    id: '8',
+    titulo: 'Objeção Destruída',
+    categoria: 'Vendas',
+    icone: '🎤',
+    prompt: "Liste as 3 principais objeções (motivos para não comprar) que um cliente teria sobre este produto e crie um roteiro de 20 segundos que quebre todas essas objeções de forma lógica e emocional.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80"
   },
 ];
 
@@ -84,46 +123,121 @@ export default function ScreenBibliotecaPremium() {
   const [filtroCategoria, setFiltroCategoria] = useState<string>('Todos');
   const [promptSelecionado, setPromptSelecionado] = useState<PromptCard | null>(null);
 
+  // Simulação de dias do cliente na plataforma
+  const diasComoCliente = 2;
+
   const promptsFiltrados = filtroCategoria === 'Todos' 
     ? PROMPTS_PREMIUM 
     : PROMPTS_PREMIUM.filter(p => p.categoria === filtroCategoria);
 
   return (
     <div className="w-full max-w-7xl mx-auto animate-fade-in">
-      {/* Hero */}
-      <div className="relative w-full rounded-3xl overflow-hidden mb-8" style={{ minHeight: '340px' }}>
-        <img
-          src="https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES%20DAS%20ETAPAS/Large_3D_letters_VIRALSELLER_night_202607062127.jpeg"
-          alt="Biblioteca Premium"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        {/* Overlay gradiente escuro */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-        
-        {/* Conteúdo centralizado sobre a imagem */}
-        <div className="relative z-10 flex flex-col items-center justify-center h-full min-h-[340px] text-center px-6 py-12">
-          <div className="flex items-center gap-2 mb-4">
-            <Crown className="w-5 h-5 text-amber-400" />
-            <span className="text-amber-400 text-xs font-black uppercase tracking-widest">Biblioteca Premium</span>
+      {!showGallery ? (
+        <div className="animate-fade-in space-y-8">
+          {/* Hero */}
+          <div className="relative w-full rounded-3xl overflow-hidden" style={{ minHeight: '340px' }}>
+            <img
+              src="https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES%20DAS%20ETAPAS/Large_3D_letters_VIRALSELLER_night_202607062127.jpeg"
+              alt="Biblioteca Premium"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Overlay gradiente escuro */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            
+            {/* Conteúdo centralizado sobre a imagem */}
+            <div className="relative z-10 flex flex-col items-center justify-center h-full min-h-[340px] text-center px-6 py-12">
+              <div className="flex items-center gap-2 mb-4">
+                <Crown className="w-5 h-5 text-amber-400" />
+                <span className="text-amber-400 text-xs font-black uppercase tracking-widest">Biblioteca Premium</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
+                Prompts que <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FE2C55] to-[#813EF6]">Vendem</span>
+              </h1>
+              <p className="text-zinc-300 text-sm max-w-md mb-8 leading-relaxed">
+                Prompts testados e validados para criar conteúdo viral no TikTok Shop. Copie, cole e venda.
+              </p>
+              <button
+                onClick={() => setShowGallery(true)}
+                className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#FE2C55] to-[#813EF6] text-white font-black text-sm rounded-2xl shadow-2xl shadow-[#FE2C55]/30 hover:shadow-[#FE2C55]/50 hover:scale-105 transition-all duration-300"
+              >
+                <Sparkles className="w-5 h-5" />
+                Crie Agora
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-            Prompts que <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FE2C55] to-[#813EF6]">Vendem</span>
-          </h1>
-          <p className="text-zinc-300 text-sm max-w-md mb-8 leading-relaxed">
-            Prompts testados e validados para criar conteúdo viral no TikTok Shop. Copie, cole e venda.
-          </p>
-          <button
-            onClick={() => setShowGallery(true)}
-            className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#FE2C55] to-[#813EF6] text-white font-black text-sm rounded-2xl shadow-2xl shadow-[#FE2C55]/30 hover:shadow-[#FE2C55]/50 hover:scale-105 transition-all duration-300"
-          >
-            <Sparkles className="w-5 h-5" />
-            Crie Agora
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-      </div>
 
-      {showGallery && (
+          {/* Seção Clube de Clientes Fiéis */}
+          <div className="w-full bg-[#0A0A14] rounded-3xl relative overflow-hidden shadow-2xl">
+            {/* Borda superior em gradiente */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#FE2C55] to-[#813EF6]"></div>
+            
+            <div className="p-8 md:p-12">
+              <div className="text-center mb-10">
+                <h2 className="text-2xl md:text-3xl font-black text-white flex items-center justify-center gap-2 mb-3">
+                  🏆 CLUBE DE CLIENTES FIÉIS
+                </h2>
+                <p className="text-zinc-400 text-sm md:text-base">
+                  Benefícios exclusivos para quem está com a gente há mais tempo
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                {/* Card 1 */}
+                <div className="bg-[#111118] border border-[#1E1E35] p-6 rounded-2xl">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FE2C55]/20 to-[#813EF6]/20 flex items-center justify-center mb-4 border border-[#FE2C55]/20">
+                    <Lock className="w-6 h-6 text-[#FE2C55]" />
+                  </div>
+                  <h3 className="text-white font-bold mb-3">Aba Exclusiva</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    Esta biblioteca é reservada para clientes que demonstram comprometimento com a plataforma. Conteúdo premium selecionado a dedo pela nossa equipe.
+                  </p>
+                </div>
+
+                {/* Card 2 */}
+                <div className="bg-[#111118] border border-[#1E1E35] p-6 rounded-2xl">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FE2C55]/20 to-[#813EF6]/20 flex items-center justify-center mb-4 border border-[#FE2C55]/20">
+                    <Hourglass className="w-6 h-6 text-[#FE2C55]" />
+                  </div>
+                  <h3 className="text-white font-bold mb-3">Como Liberar</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    Após 7 dias como cliente ativo, você receberá acesso automático a todo o conteúdo desta biblioteca. Fique atento ao seu email!
+                  </p>
+                </div>
+
+                {/* Card 3 */}
+                <div className="bg-[#111118] border border-[#1E1E35] p-6 rounded-2xl">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FE2C55]/20 to-[#813EF6]/20 flex items-center justify-center mb-4 border border-[#FE2C55]/20">
+                    <Gift className="w-6 h-6 text-[#FE2C55]" />
+                  </div>
+                  <h3 className="text-white font-bold mb-3">Benefícios Exclusivos</h3>
+                  <ul className="text-zinc-400 text-sm space-y-2">
+                    <li className="flex items-start gap-2"><span className="text-[#813EF6]">•</span> Templates premium de alta conversão</li>
+                    <li className="flex items-start gap-2"><span className="text-[#813EF6]">•</span> Prompts avançados testados e validados</li>
+                    <li className="flex items-start gap-2"><span className="text-[#FE2C55]">•</span> Estratégias secretas de afiliados top</li>
+                    <li className="flex items-start gap-2"><span className="text-[#FE2C55]">•</span> Atualizações semanais de conteúdo</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Barra de Progresso */}
+              <div className="max-w-2xl mx-auto bg-[#111118] border border-[#1E1E35] p-6 rounded-2xl text-center">
+                <div className="flex justify-between text-xs font-bold text-zinc-300 mb-3 px-1">
+                  <span>Seu progresso para desbloquear:</span>
+                  <span className="text-[#FE2C55]">7 dias necessários</span>
+                </div>
+                <div className="w-full bg-[#1E1E35] h-3 rounded-full overflow-hidden mb-3">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#FE2C55] to-[#813EF6] rounded-full animate-pulse" 
+                    style={{ width: `${Math.min((diasComoCliente / 7) * 100, 100)}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-zinc-500 font-medium">Continue usando a plataforma para desbloquear</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
         <div className="animate-fade-in space-y-6">
           {/* Filtros */}
           <div className="flex flex-wrap items-center gap-2">
@@ -158,7 +272,7 @@ export default function ScreenBibliotecaPremium() {
                   <div className="absolute inset-0 z-0 bg-black overflow-hidden w-full h-full">
                     {hasPreview ? (
                       isVideo ? (
-                        <video
+                        <LazyVideo
                           src={card.previewUrl}
                           className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
                           autoPlay
@@ -167,7 +281,7 @@ export default function ScreenBibliotecaPremium() {
                           playsInline
                         />
                       ) : (
-                        <img
+                        <ImageWithSkeleton
                           src={card.previewUrl}
                           alt={card.titulo}
                           className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
@@ -295,7 +409,7 @@ export default function ScreenBibliotecaPremium() {
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       />
                     ) : isVideoUrl(promptSelecionado.previewUrl) ? (
-                      <video
+                      <LazyVideo
                         src={promptSelecionado.previewUrl}
                         className="absolute inset-0 w-full h-full object-cover rounded-2xl"
                         autoPlay
@@ -305,7 +419,7 @@ export default function ScreenBibliotecaPremium() {
                         controls
                       />
                     ) : (
-                      <img
+                      <ImageWithSkeleton
                         src={promptSelecionado.previewUrl}
                         alt="Preview"
                         className="absolute inset-0 w-full h-full object-cover rounded-2xl"

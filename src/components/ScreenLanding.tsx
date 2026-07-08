@@ -69,6 +69,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
   const [regName, setRegName] = useState<string>('');
   const [regEmail, setRegEmail] = useState<string>('');
   const [regPassword, setRegPassword] = useState<string>('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState<string>('');
 
   // Status and feedback
   const [loading, setLoading] = useState<boolean>(false);
@@ -175,8 +176,19 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
   // Realize Sign Up (Auth & Profile persistence)
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim() || !regEmail.trim() || regPassword.trim().length < 6) {
-      setErrorMsg('Preencha nome completo, e-mail de acesso e senha (mínimo 6 caracteres).');
+    
+    if (!regName.trim() || !regEmail.trim() || !regPassword.trim() || !regConfirmPassword.trim()) {
+      setErrorMsg('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    
+    if (regPassword !== regConfirmPassword) {
+      setErrorMsg('❌ As senhas não coincidem. Tente novamente.');
+      return;
+    }
+    
+    if (regPassword.length < 6) {
+      setErrorMsg('❌ A senha deve ter no mínimo 6 caracteres.');
       return;
     }
 
@@ -558,6 +570,18 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
                     />
                   </div>
 
+                  <div className="space-y-1.5">
+                    <label className="text-slate-400 text-xs font-semibold">Confirmar Senha</label>
+                    <input
+                      type="password"
+                      className="w-full bg-slate-950 border border-white/[0.08] rounded-xl p-3 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:bg-slate-950/80 transition"
+                      placeholder="Repita a senha"
+                      value={regConfirmPassword}
+                      disabled={loading}
+                      onChange={(e) => setRegConfirmPassword(e.target.value)}
+                    />
+                  </div>
+
                   <button
                     type="submit"
                     disabled={loading}
@@ -656,39 +680,8 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
                 <div className="text-center pt-2 space-y-3">
                   <p className="text-[11px] text-[#8888AA]">
-                    Ainda não possui login? Adquira um plano acima para registrar sua chave ou use um atalho rápido:
+                    Ainda não possui login? Adquira um plano acima para registrar sua chave.
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowLogin(false);
-                        setSignupPlan('pro');
-                        setShowSignup(true);
-                      }}
-                      className="text-xs text-purple-400 hover:text-purple-300 font-extrabold underline cursor-pointer bg-transparent border-none"
-                    >
-                      Criar Conta (Simular Checkout)
-                    </button>
-                    <span className="hidden sm:inline text-[11px] text-gray-700">|</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onEnter({
-                          name: 'Gestão Pro Admin',
-                          email: 'gestaoprosaas@gmail.com',
-                          plan: 'agency',
-                          role: 'admin',
-                          supabaseUrl,
-                          supabaseKey
-                        });
-                        setShowLogin(false);
-                      }}
-                      className="text-xs text-[#69C9D0] hover:text-teal-300 font-extrabold underline cursor-pointer bg-transparent border-none"
-                    >
-                      Acesso Direto gestaoprosaas@gmail.com
-                    </button>
-                  </div>
                 </div>
               </motion.div>
             </div>
@@ -697,32 +690,6 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
         {/* Floating high-performance Glassmorphic Lens scanning effect */}
         <GlassmorphicLens />
-
-        {/* Developer helper floating HUD for checkout simulation */}
-        <div className="fixed bottom-4 left-4 z-40 bg-slate-950/95 border border-[#FE2C55]/30 p-4 rounded-2xl shadow-2xl max-w-sm text-xs backdrop-blur-md">
-          <div className="flex items-center gap-1.5 text-[#FE2C55] font-bold mb-1.5 font-display">
-            <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
-            <span>Atalho de Configuração / Simular Checkout</span>
-          </div>
-          <p className="text-[10px] text-gray-400 leading-normal mb-3">
-            Simule o fluxo de retorno de pagamento aprovado do gateway de checkout para criar um usuário de teste e validar seu Supabase.
-          </p>
-
-          <div className="flex gap-2">
-            <button 
-              onClick={() => handleSimulateReturn('starter')}
-              className="flex-1 py-1.5 px-2 bg-[#FE2C55]/20 border border-[#FE2C55]/40 text-[9px] text-white rounded-lg hover:scale-105 active:scale-95 duration-150 font-semibold cursor-pointer"
-            >
-              Simular Plano Mensal
-            </button>
-            <button 
-              onClick={() => handleSimulateReturn('pro')}
-              className="flex-1 py-1.5 px-2 bg-[#FE2C55]/20 border border-[#FE2C55]/40 text-[9px] text-white rounded-lg hover:scale-105 active:scale-95 duration-150 font-semibold cursor-pointer"
-            >
-              Simular Plano Vitalício
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>

@@ -1,25 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Ticket, Package, Settings, Search, Shield, ShieldAlert, CheckCircle, XCircle, Trash2, Edit2, Play, Sparkles, Copy, Share2, RefreshCw, Power, Server, Lock, ExternalLink, ChevronDown, ChevronUp, UserX, UserCheck, ArrowLeft, Flame, Plus, Bell } from 'lucide-react';
+import { Users, Ticket, Package, Settings, Search, Shield, ShieldAlert, CheckCircle, XCircle, Trash2, Edit2, Play, Sparkles, Copy, Share2, RefreshCw, Power, Server, Lock, ExternalLink, ChevronDown, ChevronUp, UserX, UserCheck, ArrowLeft, Flame, Plus, Bell, Activity } from 'lucide-react';
 import { getSupabase } from '../lib/supabaseClient';
 import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { startFictitiousNotifications, stopFictitiousNotifications } from './FictitiousNotifications';
+import { PRODUTOS_PRONTOS } from '../data/produtosProntos';
 
 interface ScreenAdminProps {
   onNavigate: (path: string) => void;
   onRefreshProjectState?: () => void;
   profile?: any;
+  simulatedSalesMinMin?: number;
+  setSimulatedSalesMinMin?: (val: number) => void;
+  simulatedSalesMaxMin?: number;
+  setSimulatedSalesMaxMin?: (val: number) => void;
+  simulatedSalesSound?: boolean;
+  setSimulatedSalesSound?: (val: boolean) => void;
 }
 
-export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'parceiros' | 'sistema'>('users');
+export default function ScreenAdmin({
+  onNavigate,
+  profile,
+  simulatedSalesMinMin,
+  setSimulatedSalesMinMin,
+  simulatedSalesMaxMin,
+  setSimulatedSalesMaxMin,
+  simulatedSalesSound,
+  setSimulatedSalesSound
+}: ScreenAdminProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'parceiros' | 'sistema' | 'dashboard' | 'notificacoes'>('users');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [embaralhado, setEmbaralhado] = useState(false);
+  const [restaurado, setRestaurado] = useState(false);
 
   // === SEÇÃO USUÁRIOS ===
   const [users, setUsers] = useState<any[]>([]);
   const [userSearch, setUserSearch] = useState('');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [usersVisibleCount, setUsersVisibleCount] = useState(10);
 
   // === SEÇÃO PARCEIROS ===
   const [parceiros, setParceiros] = useState<any[]>([]);
@@ -37,6 +56,19 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
   const supabase = getSupabase();
   const isSuperAdmin = profile?.role === 'superadmin';
   const isAdmin = profile?.role === 'admin' || isSuperAdmin;
+
+  // === SEÇÃO DASHBOARD CONFIG ===
+  const [dashboardConfig, setDashboardConfig] = useState<any[]>(() => {
+    const saved = localStorage.getItem('dashboard_config_admin');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { }
+    }
+    return [
+      { id: '1', name: 'Score de Viralização Geral', value: '82%', subValue: '+12.4%', icon: '🚀', color: 'cyan' },
+      { id: '2', name: 'Faturamento Estimado', value: 'R$ 54.200', subValue: '18.5%', icon: '💰', color: 'red' },
+      { id: '3', name: 'Conversão das Copias', value: '21.5%', subValue: '+4.2%', icon: '📈', color: 'indigo' }
+    ];
+  });
 
   useEffect(() => {
     if (profile && !isAdmin && !isSuperAdmin) {
@@ -145,17 +177,31 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
 
     if (isEditingParceiro && parceiroForm.id) {
       const { error } = await supabase.from('cupons_admins').update(payload).eq('id', parceiroForm.id);
-      if (!error) notify('Parceiro atualizado!', 'success');
-      else notify('Erro ao atualizar parceiro', 'error');
+      if (!error) {
+        notify('Parceiro atualizado!', 'success');
+        setParceiroForm({ id: '', admin_nome: '', admin_email: '', cupom: '', checkout_url_mensal: '', checkout_url_vitalicio: '', limite_cupons: 2 });
+        setIsEditingParceiro(false);
+        carregarDados();
+      } else {
+        const errorMsg = error.code === '23505'
+          ? `O cupom "${payload.cupom}" já está em uso por outro parceiro. Escolha outro código.`
+          : `Erro ao atualizar parceiro: ${error.message}`;
+        notify(errorMsg, 'error');
+      }
     } else {
       const { error } = await supabase.from('cupons_admins').insert([payload]);
-      if (!error) notify('Parceiro cadastrado com sucesso!', 'success');
-      else notify('Erro ao cadastrar parceiro', 'error');
+      if (!error) {
+        notify('Parceiro cadastrado com sucesso!', 'success');
+        setParceiroForm({ id: '', admin_nome: '', admin_email: '', cupom: '', checkout_url_mensal: '', checkout_url_vitalicio: '', limite_cupons: 2 });
+        setIsEditingParceiro(false);
+        carregarDados();
+      } else {
+        const errorMsg = error.code === '23505'
+          ? `O cupom "${payload.cupom}" já está em uso por outro parceiro. Escolha outro código.`
+          : `Erro ao cadastrar parceiro: ${error.message}`;
+        notify(errorMsg, 'error');
+      }
     }
-    
-    setParceiroForm({ id: '', admin_nome: '', admin_email: '', cupom: '', checkout_url_mensal: '', checkout_url_vitalicio: '', limite_cupons: 2 });
-    setIsEditingParceiro(false);
-    carregarDados();
   };
 
   const excluirParceiro = async (id: string) => {
@@ -167,10 +213,15 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
 
 
   // Filtering
-  const filteredUsers = users.filter(u => 
-    (u.name || '').toLowerCase().includes(userSearch.toLowerCase()) || 
-    (u.email || '').toLowerCase().includes(userSearch.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const isTemp = (u.email || '').toLowerCase().includes('@example.com') || (u.name || '').toLowerCase().startsWith('temp_user_');
+    if (isTemp) return false;
+    
+    return (u.name || '').toLowerCase().includes(userSearch.toLowerCase()) || 
+           (u.email || '').toLowerCase().includes(userSearch.toLowerCase());
+  });
+  
+  const usuariosExibidos = userSearch ? filteredUsers : filteredUsers.slice(0, usersVisibleCount);
   
   const adminsCount = users.filter(u => u.role === 'admin').length;
   const clientsCount = users.filter(u => u.role !== 'admin').length;
@@ -217,8 +268,19 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
           </button>
           )}
 
+          {isSuperAdmin && (
           <button
-            onClick={() => setActiveTab('notificacoes' as any)}
+            onClick={() => setActiveTab('dashboard')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'dashboard' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
+            }`}
+          >
+            <Activity className="w-4 h-4" /> Dashboard
+          </button>
+          )}
+
+          <button
+            onClick={() => setActiveTab('notificacoes')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               activeTab === 'notificacoes' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
             }`}
@@ -432,7 +494,7 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                       <div className="p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 text-xs text-zinc-400 space-y-1">
                         <p className="flex justify-between"><span>Desconto Fixo:</span> <strong className="text-emerald-400">40%</strong></p>
                         <p className="flex justify-between"><span>Preço Original:</span> <span>R$ 497,00</span></p>
-                        <p className="flex justify-between"><span>Preço Final:</span> <strong className="text-white">R$ 297,00</strong></p>
+                        <p className="flex justify-between"><span>Preço Final:</span> <strong className="text-white">R$ 298,20</strong></p>
                       </div>
 
                       <div className="pt-2 flex gap-2">
@@ -500,6 +562,79 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
             </div>
           )}
 
+
+          {/* TAB: DASHBOARD */}
+          {activeTab === 'dashboard' && isSuperAdmin && (
+            <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight">Dashboard Config</h1>
+                <p className="text-zinc-400 text-sm mt-1">Configure as métricas exibidas na tela principal.</p>
+              </div>
+              
+              <div className="space-y-4">
+                {dashboardConfig.map((item, index) => (
+                  <div key={item.id} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-5 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-white font-bold text-sm">Métrica {index + 1}</h3>
+                      <button onClick={() => {
+                        setDashboardConfig(dashboardConfig.filter((_, i) => i !== index));
+                      }} className="text-red-400 hover:text-red-300 text-xs font-bold bg-red-400/10 px-2 py-1 rounded">Remover</button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Nome</label>
+                        <input type="text" value={item.name} onChange={e => {
+                          const newConfig = [...dashboardConfig];
+                          newConfig[index].name = e.target.value;
+                          setDashboardConfig(newConfig);
+                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Valor</label>
+                        <input type="text" value={item.value} onChange={e => {
+                          const newConfig = [...dashboardConfig];
+                          newConfig[index].value = e.target.value;
+                          setDashboardConfig(newConfig);
+                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Ícone/Emoji</label>
+                        <input type="text" value={item.icon} onChange={e => {
+                          const newConfig = [...dashboardConfig];
+                          newConfig[index].icon = e.target.value;
+                          setDashboardConfig(newConfig);
+                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Cor</label>
+                        <select value={item.color} onChange={e => {
+                          const newConfig = [...dashboardConfig];
+                          newConfig[index].color = e.target.value;
+                          setDashboardConfig(newConfig);
+                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none">
+                          <option value="cyan">Cyan</option>
+                          <option value="red">Red</option>
+                          <option value="indigo">Indigo</option>
+                          <option value="emerald">Emerald</option>
+                          <option value="amber">Amber</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-4 pt-4">
+                <button onClick={() => {
+                  setDashboardConfig([...dashboardConfig, { id: Date.now().toString(), name: 'Nova Métrica', value: '0', subValue: '+0%', icon: '📊', color: 'cyan' }]);
+                }} className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm rounded-xl transition">Adicionar Métrica</button>
+                <button onClick={() => {
+                  localStorage.setItem('dashboard_config_admin', JSON.stringify(dashboardConfig));
+                  notify('Configurações do dashboard salvas com sucesso!', 'success');
+                }} className="px-6 py-3 bg-gradient-to-r from-[#FE2C55] to-[#813EF6] text-white font-bold text-sm rounded-xl transition shadow-lg hover:opacity-90">Salvar Alterações</button>
+              </div>
+            </div>
+          )}
 
           {/* TAB: SISTEMA */}
           {activeTab === 'sistema' && (
@@ -596,6 +731,76 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                   </div>
                 </div>
               </div>
+
+              <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-3xl p-8 mt-6">
+                <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-indigo-500" />
+                  Configuração Global de Som (Simulação de Vendas)
+                </h2>
+                
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest block mb-3">Intervalo Mínimo (Minutos)</label>
+                      <input 
+                        type="number" 
+                        min="0.1"
+                        step="0.1"
+                        value={simulatedSalesMinMin || 0.1}
+                        onChange={(e) => setSimulatedSalesMinMin?.(Number(e.target.value))}
+                        className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-white outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest block mb-3">Intervalo Máximo (Minutos)</label>
+                      <input 
+                        type="number" 
+                        min="0.1"
+                        step="0.1"
+                        value={simulatedSalesMaxMin || 1.5}
+                        onChange={(e) => setSimulatedSalesMaxMin?.(Number(e.target.value))}
+                        className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-white outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-[#111118] border border-[#1E1E35] rounded-xl">
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Som de Venda Ativado</h3>
+                      <p className="text-xs text-zinc-500 mt-1">Toca o som de caixa registradora periodicamente</p>
+                    </div>
+                    <button
+                      onClick={() => setSimulatedSalesSound?.(!simulatedSalesSound)}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${simulatedSalesSound ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                    >
+                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${simulatedSalesSound ? 'left-[26px]' : 'left-[2px]'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => {
+                        if (simulatedSalesMinMin) localStorage.setItem('local_simulated_sales_min_min', String(simulatedSalesMinMin));
+                        if (simulatedSalesMaxMin) localStorage.setItem('local_simulated_sales_max_min', String(simulatedSalesMaxMin));
+                        if (simulatedSalesSound !== undefined) localStorage.setItem('local_simulated_sales_sound', String(simulatedSalesSound));
+                        notify('Configurações de som salvas!', 'success');
+                      }}
+                      className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-sm rounded-xl transition shadow-lg"
+                    >
+                      Salvar Configurações
+                    </button>
+                    <button
+                      onClick={() => {
+                        const audio = new Audio('/sounds/default-cash-register.mp3');
+                        audio.play().catch(console.error);
+                      }}
+                      className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm rounded-xl transition flex items-center gap-2"
+                    >
+                      🔊 Testar Som
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -626,6 +831,43 @@ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
                     <h4 className="font-bold text-white">Kalodata API</h4>
                     <p className="text-xs text-emerald-400 font-bold mt-1">Token Válido</p>
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-6">
+                <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-[#FE2C55]" /> Gerenciamento de Produtos
+                </h3>
+                <p className="text-xs text-zinc-400 mb-6">
+                  Embaralhe ou restaure a ordem de exibição de todos os produtos do sistema para todos os usuários.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    onClick={() => {
+                      const indices = PRODUTOS_PRONTOS.map((_, i) => i);
+                      for (let i = indices.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [indices[i], indices[j]] = [indices[j], indices[i]];
+                      }
+                      localStorage.setItem('produtos_ordem_embaralhada', JSON.stringify(indices));
+                      setEmbaralhado(true);
+                      setTimeout(() => setEmbaralhado(false), 2000);
+                    }}
+                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#813EF6] to-[#FE2C55] text-white rounded-xl font-bold text-sm hover:opacity-90 transition shadow-lg shadow-[#FE2C55]/10"
+                  >
+                    {embaralhado ? '✅ Embaralhado!' : '🔀 Embaralhar Produtos'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('produtos_ordem_embaralhada');
+                      setRestaurado(true);
+                      setTimeout(() => setRestaurado(false), 2000);
+                    }}
+                    className="flex items-center gap-2 px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl font-bold text-sm transition border border-[#1E1E35]"
+                  >
+                    {restaurado ? '✅ Restaurado!' : '↺ Restaurar Ordem Original'}
+                  </button>
                 </div>
               </div>
 

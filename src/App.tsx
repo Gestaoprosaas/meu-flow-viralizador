@@ -576,6 +576,8 @@ export default function App() {
 
   // Unified trigger-sound-play helper which plays custom URL or default MP3/WebAudio
   const triggerSoundPlay = () => {
+    // Verificar se é admin antes de tocar o som
+    if (profile?.role !== 'admin' && profile?.role !== 'superadmin') return;
     if (!simulatedSalesSound) return;
     try {
       if (simulatedSalesSoundUrl) {
@@ -1002,8 +1004,8 @@ export default function App() {
     { name: 'Avatar Studio', icon: Users, path: '/influenciadores' },
     { name: 'Viralizar Perfil', icon: Flame, path: '/afiliados' },
     { name: 'Movimentos', icon: Sparkles, path: '/movimentos' },
-    { name: 'Segurança', icon: Shield, path: '/seguranca' },
     { name: 'Biblioteca Premium', icon: Crown, path: '/biblioteca-premium' },
+    { name: 'Segurança', icon: Shield, path: '/seguranca' },
     ...(profile.role === 'admin' || profile.role === 'superadmin'
       ? [{ name: 'Painel Admin', icon: ShieldAlert, path: '/admin' }]
       : [])
@@ -1569,6 +1571,12 @@ export default function App() {
                       onNavigate={handleNavigate}
                       onRefreshProjectState={refreshFullState}
                       profile={profile}
+                      simulatedSalesMinMin={simulatedSalesMinMin}
+                      setSimulatedSalesMinMin={setSimulatedSalesMinMin}
+                      simulatedSalesMaxMin={simulatedSalesMaxMin}
+                      setSimulatedSalesMaxMin={setSimulatedSalesMaxMin}
+                      simulatedSalesSound={simulatedSalesSound}
+                      setSimulatedSalesSound={setSimulatedSalesSound}
                     />
                   )
                 )}

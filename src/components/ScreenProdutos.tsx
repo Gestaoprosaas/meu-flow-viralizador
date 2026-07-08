@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { LazyVideo } from './LazyVideo';
 import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { 
@@ -49,6 +50,23 @@ import { MODOS_GERACAO } from '../data/modosGeracao';
 import { PRODUTOS_PRONTOS } from '../data/produtosProntos';
 import { PRODUTOS_EM_ALTA } from '../data/produtos';
 import { motion } from 'motion/react';
+
+const getProdutosOrdenados = () => {
+  const ordemSalva = localStorage.getItem('produtos_ordem_embaralhada');
+  if (ordemSalva) {
+    try {
+      const indices = JSON.parse(ordemSalva);
+      if (Array.isArray(indices)) {
+        return indices
+          .filter((i: number) => i < PRODUTOS_PRONTOS.length)
+          .map((i: number) => PRODUTOS_PRONTOS[i]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  return PRODUTOS_PRONTOS;
+};
 
 
 const PROMPT_CENARIO_PRONTO_FIXO = `Use the first image ONLY as an environment + pose reference.
@@ -193,23 +211,19 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
         </div>
       )}
 
-      <div className="relative h-28 xs:h-36 sm:h-48 md:h-56 lg:h-64 overflow-hidden bg-zinc-900">
+      <div className="relative h-40 xs:h-48 sm:h-56 md:h-64 lg:h-72 overflow-hidden bg-zinc-900">
         {av.videoUrl ? (
           <LazyVideo
             ref={videoRef}
+            src={av.videoUrl}
             autoPlay
             loop
             muted
             playsInline
-            preload="auto"
+            preload="none"
             poster={av.imageUrl}
             className="w-full h-full object-cover"
-            onLoadedData={(e) => {
-              e.currentTarget.play().catch(() => {});
-            }}
-          >
-            <source src={av.videoUrl} type="video/mp4" />
-          </LazyVideo>
+          />
         ) : (
           <ImageWithSkeleton 
             src={av.imageUrl} 
@@ -272,23 +286,19 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
         </div>
       )}
 
-      <div className={`relative ${isLarge ? 'aspect-[2/3] min-h-[420px] sm:min-h-[480px]' : 'h-20 xs:h-24 sm:h-36'} overflow-hidden bg-zinc-900 w-full`}>
+      <div className={`relative ${isLarge ? 'aspect-[2/3] min-h-[420px] sm:min-h-[480px]' : 'h-32 xs:h-36 sm:h-44'} overflow-hidden bg-zinc-900 w-full`}>
         {sc.videoUrl ? (
           <LazyVideo
             ref={videoRef}
+            src={sc.videoUrl}
             autoPlay
             loop
             muted
             playsInline
-            preload="auto"
+            preload="none"
             poster={sc.imageUrl}
             className="w-full h-full object-cover object-center"
-            onLoadedData={(e) => {
-              e.currentTarget.play().catch(() => {});
-            }}
-          >
-            <source src={sc.videoUrl} type="video/mp4" />
-          </LazyVideo>
+          />
         ) : (
           <ImageWithSkeleton 
             src={sc.imageUrl} 
@@ -412,19 +422,15 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
             return (
               <LazyVideo
                 ref={videoRef}
+                src={mv.videoUrl}
                 autoPlay
                 loop
                 muted
                 playsInline
-                preload="auto"
+                preload="none"
                 poster={mv.imageUrl}
                 className="w-full h-full object-cover"
-                onLoadedData={(e) => {
-                  e.currentTarget.play().catch(() => {});
-                }}
-              >
-                <source src={mv.videoUrl} type="video/mp4" />
-              </LazyVideo>
+              />
             );
           })()
         ) : (
@@ -797,13 +803,25 @@ export default function ScreenProdutos({
   };
 
   useEffect(() => {
+    // Check if the order saved in localStorage has changed relative to what was cached in sessionStorage
+    const ordemSalva = localStorage.getItem('produtos_ordem_embaralhada');
+    const ultimaOrdemAplicada = sessionStorage.getItem('produtos_cache_ultima_ordem');
+    if (ordemSalva !== ultimaOrdemAplicada) {
+      sessionStorage.removeItem('produtos_cache_v3_viral');
+      if (ordemSalva) {
+        sessionStorage.setItem('produtos_cache_ultima_ordem', ordemSalva);
+      } else {
+        sessionStorage.removeItem('produtos_cache_ultima_ordem');
+      }
+    }
+
     // 1. Load Viral Products (PRODUTOS_PRONTOS + PRODUTOS_EM_ALTA)
     const cacheViral = sessionStorage.getItem('produtos_cache_v3_viral');
     const cacheTimeViral = sessionStorage.getItem('produtos_cache_v3_time_viral');
     if (cacheViral && cacheTimeViral && Date.now() - Number(cacheTimeViral) < 30 * 60 * 1000) {
       setViralItems(JSON.parse(cacheViral));
     } else {
-      const enrichedProntos = (PRODUTOS_PRONTOS || []).map(enrichProduct).filter(Boolean);
+      const enrichedProntos = (getProdutosOrdenados() || []).map(enrichProduct).filter(Boolean);
       const enrichedEmAlta = (PRODUTOS_EM_ALTA || []).map(enrichProduct).filter(Boolean);
       const combined = [...enrichedProntos, ...enrichedEmAlta];
       const unique: any[] = [];
@@ -920,8 +938,15 @@ export default function ScreenProdutos({
 
   // Temporário para diagnóstico - remover depois
   useEffect(() => {
-    console.log('[Modal estado]', { showVideoModal, selectedVideoProduct });
-  }, [showVideoModal, selectedVideoProduct]);
+    if (showVideoModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showVideoModal]);
 
   // UGC Wizard States inside Modal
   const [ugcAvatarId, setUgcAvatarId] = useState<string>('giovanna');
@@ -1342,6 +1367,15 @@ export default function ScreenProdutos({
   const [hasSpeech, setHasSpeech] = useState<boolean>(true);
   const [speechScript, setSpeechScript] = useState<string>('');
   const [showVoiceSettings, setShowVoiceSettings] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (videoMode === 'UGC') {
+      setHasSpeech(true);
+    } else if (videoMode === 'POV') {
+      setHasSpeech(true);
+    }
+    // MOVIMENTO: não alterar
+  }, [videoMode]);
 
   // Fictional visual badges config
   const [salesBadgesEnabled, setSalesBadgesEnabled] = useState<boolean>(true);
@@ -2830,21 +2864,21 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     </div>
 
                     {/* Section 1: Pose & Avatar */}
-                    <div className="bg-[#0A0A0F]/50 border border-[#1E1E2E] p-4 rounded-2xl space-y-4">
-                      <h4 className="text-xs font-black text-[#FE2C55] uppercase tracking-wider flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-[#FE2C55]" /> 1. Pose & Seleção do Avatar
+                    <div className="bg-[#0A0A0F]/50 border border-[#1E1E2E] p-5 rounded-2xl space-y-5">
+                      <h4 className="text-sm font-black text-[#FE2C55] uppercase tracking-wider flex items-center gap-2">
+                        <User className="w-4 h-4 text-[#FE2C55]" /> 1. Pose & Seleção do Avatar
                       </h4>
                       
                       {/* Pose Selector slider */}
-                      <div className="space-y-2">
-                        <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wide block">Pose / Enquadramento:</span>
-                        <div className="flex flex-wrap gap-1.5">
+                      <div className="space-y-2.5">
+                        <span className="text-xs text-zinc-400 font-extrabold uppercase tracking-wide block">Pose / Enquadramento:</span>
+                        <div className="flex flex-wrap gap-2">
                           {['De Frente', 'De Lado', 'Ângulo 3/4', 'Sentado(a)', 'Andando'].map((pose) => (
                             <button
                               key={pose}
                               type="button"
                               onClick={() => setPoseSelected(pose)}
-                              className={`px-3 py-1 text-[10px] font-black rounded-lg border transition-all ${
+                              className={`px-4 py-1.5 text-xs font-black rounded-lg border transition-all ${
                                 poseSelected === pose
                                   ? 'bg-[#FE2C55]/10 border-[#FE2C55] text-white'
                                   : 'bg-[#030307] border-[#1E1E2E] text-[#8888AA] hover:text-white hover:border-[#8888AA]'
@@ -2857,11 +2891,11 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       </div>
 
                       {/* Avatar Grid */}
-                      <div className="space-y-2.5 pt-1">
+                      <div className="space-y-3 pt-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wide">Influenciador de IA:</span>
+                          <span className="text-xs text-zinc-400 font-extrabold uppercase tracking-wide">Influenciador de IA:</span>
                           {/* Gender Filter */}
-                          <div className="flex items-center gap-0.5 bg-[#030307] p-0.5 border border-[#1E1E2E] rounded-lg">
+                          <div className="flex items-center gap-1 bg-[#030307] p-1 border border-[#1E1E2E] rounded-lg">
                             {(['TODOS', 'FEMININO', 'MASCULINO'] as const).map((filter) => (
                               <button
                                 key={filter}
@@ -2871,7 +2905,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                                   setAvatarText(' ');
                                   setTimeout(() => setAvatarText(''), 10);
                                 }}
-                                className={`px-2 py-0.5 text-[9px] font-extrabold rounded capitalize transition-all ${
+                                className={`px-3 py-1 text-[10px] font-extrabold rounded capitalize transition-all ${
                                   ((window as any).avatarFilter || 'TODOS') === filter
                                     ? 'bg-[#FE2C55]/10 text-[#FE2C55]'
                                     : 'text-[#8888AA] hover:text-white'
@@ -2883,7 +2917,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[190px] overflow-y-auto pr-1">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[380px] overflow-y-auto pr-1">
                           {allAvatars.filter((av) => {
                             const currentFilter = (window as any).avatarFilter || 'TODOS';
                             if (currentFilter === 'TODOS') return true;
@@ -2909,16 +2943,16 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           value={avatarText}
                           onChange={(e) => setAvatarText(e.target.value)}
                           placeholder="Características estéticas adicionais do avatar..."
-                          rows={2}
-                          className="w-full bg-[#030307] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none resize-none transition"
+                          rows={3}
+                          className="w-full bg-[#030307] border border-[#1E1E2E] rounded-xl p-3 text-xs text-white focus:border-[#FE2C55] outline-none resize-none transition"
                         />
                       </div>
                     </div>
 
                     {/* Section 2: Scenario Selection */}
-                    <div className="bg-[#0A0A0F]/50 border border-[#1E1E2E] p-4 rounded-2xl space-y-4">
-                      <h4 className="text-xs font-black text-[#FE2C55] uppercase tracking-wider flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#FE2C55]" /> 2. Cenário do Vídeo
+                    <div className="bg-[#0A0A0F]/50 border border-[#1E1E2E] p-5 rounded-2xl space-y-5">
+                      <h4 className="text-sm font-black text-[#FE2C55] uppercase tracking-wider flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-[#FE2C55]" /> 2. Cenário do Vídeo
                       </h4>
 
                       <div className="flex gap-2 bg-[#030307] p-0.5 border border-[#1E1E2E] rounded-xl">
@@ -2956,7 +2990,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[130px] overflow-y-auto pr-1">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[280px] overflow-y-auto pr-1">
                         {activeScenarioCategory === 'standard' ? (
                           allScenarios.map((sc) => {
                             const isSelected = !isCuratedScenario && selectedScenarioId === sc.id;
@@ -2998,50 +3032,60 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                         value={scenarioText}
                         onChange={(e) => setScenarioText(e.target.value)}
                         placeholder="Escreva detalhes adicionais ou ajuste o cenário..."
-                        className="w-full bg-[#030307] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#FE2C55] outline-none transition"
+                        className="w-full bg-[#030307] border border-[#1E1E2E] rounded-xl p-3 text-xs text-white focus:border-[#FE2C55] outline-none transition"
                       />
                     </div>
 
                     {/* Section 3: Speech, Locution and Scripting */}
-                    <div className="bg-[#0A0A0F]/50 border border-[#1E1E2E] p-4 rounded-2xl space-y-4">
-                      <h4 className="text-xs font-black text-[#FE2C55] uppercase tracking-wider flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5 text-[#FE2C55]" /> 3. Locução & Roteiro de Fala
+                    <div className="bg-[#0A0A0F]/50 border border-[#1E1E2E] p-5 rounded-2xl space-y-5">
+                      <h4 className="text-sm font-black text-[#FE2C55] uppercase tracking-wider flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-[#FE2C55]" /> 3. Locução & Roteiro de Fala
                       </h4>
 
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           type="button"
+                          disabled={videoMode === 'UGC'}
                           onClick={() => setHasSpeech(true)}
-                          className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-[10px] font-black transition-all ${
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-xs font-black transition-all ${
                             hasSpeech
                               ? 'bg-[#FE2C55]/10 border-[#FE2C55] text-white'
                               : 'bg-[#030307] border-[#1E1E2E] text-[#8888AA]'
-                          }`}
+                          } ${videoMode === 'UGC' ? 'cursor-not-allowed opacity-90' : ''}`}
+                          title={videoMode === 'UGC' ? "Modo UGC sempre inclui fala do avatar" : undefined}
                         >
-                          <Volume2 className="w-3.5 h-3.5" /> Com Fala (Português)
+                          <Volume2 className="w-4 h-4" /> Com Fala (Português)
                         </button>
 
                         <button
                           type="button"
+                          disabled={videoMode === 'UGC'}
                           onClick={() => setHasSpeech(false)}
-                          className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-[10px] font-black transition-all ${
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-xs font-black transition-all ${
                             !hasSpeech
                               ? 'bg-[#FE2C55]/10 border-[#FE2C55] text-white'
                               : 'bg-[#030307] border-[#1E1E2E] text-[#8888AA]'
-                          }`}
+                          } ${videoMode === 'UGC' ? 'opacity-30 cursor-not-allowed border-zinc-800' : ''}`}
+                          title={videoMode === 'UGC' ? "Modo UGC sempre inclui fala do avatar" : undefined}
                         >
-                          <VolumeX className="w-3.5 h-3.5" /> Sem Fala (Apenas Vídeo)
+                          <VolumeX className="w-4 h-4" /> Sem Fala (Apenas Vídeo)
                         </button>
                       </div>
+
+                      {videoMode === 'UGC' && (
+                        <p className="text-xs text-amber-500 font-bold mt-1.5 flex items-center gap-1.5">
+                          <AlertCircle className="w-4 h-4 shrink-0" /> Modo UGC sempre inclui fala do avatar
+                        </p>
+                      )}
 
                       {hasSpeech && (
                         <div className="space-y-4 pt-1 animate-fade-in text-xs text-[#8888AA]">
                           {/* Voice Configuration Slider */}
-                          <div className="bg-[#030307] p-3 rounded-xl border border-[#1E1E2E] space-y-3">
-                            <span className="text-[9px] font-black uppercase text-zinc-400 block tracking-widest">Ajuste da Voz</span>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[9px]">
+                          <div className="bg-[#030307] p-4 rounded-xl border border-[#1E1E2E] space-y-3">
+                            <span className="text-[10px] font-black uppercase text-zinc-400 block tracking-widest">Ajuste da Voz</span>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[10px]">
                               <div>
-                                <label className="text-[8px] font-bold block mb-1">Gênero</label>
+                                <label className="text-[9px] font-bold block mb-1.5">Gênero</label>
                                 <div className="flex gap-1">
                                   {(['FEMININO', 'MASCULINO'] as const).map((g) => (
                                     <button
@@ -3059,7 +3103,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                               </div>
 
                               <div>
-                                <label className="text-[8px] font-bold block mb-1">Tonalidade</label>
+                                <label className="text-[9px] font-bold block mb-1.5">Tonalidade</label>
                                 <div className="flex gap-1">
                                   {['Vibrante', 'Profissional'].map((t) => (
                                     <button
@@ -3077,7 +3121,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                               </div>
 
                               <div>
-                                <label className="text-[8px] font-bold block mb-1">Energia</label>
+                                <label className="text-[9px] font-bold block mb-1.5">Energia</label>
                                 <div className="flex gap-1">
                                   {['Alta', 'Média'].map((en) => (
                                     <button
@@ -3095,7 +3139,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                               </div>
 
                               <div>
-                                <label className="text-[8px] font-bold block mb-1">Estilo de Tom</label>
+                                <label className="text-[9px] font-bold block mb-1.5">Estilo de Tom</label>
                                 <div className="flex gap-1">
                                   {['Amigável', 'Autoridade'].map((st) => (
                                     <button
@@ -3115,9 +3159,9 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                           </div>
 
                           {/* Takes and script auto-fill */}
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-extrabold text-zinc-400">Takes Ativos:</span>
+                              <span className="text-xs font-extrabold text-zinc-400">Takes Ativos:</span>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -3155,12 +3199,12 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                             </div>
 
                             {/* Render active takes textarea directly in line */}
-                            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                               {Array.from({ length: numTakes }).map((_, idx) => (
-                                <div key={idx} className="bg-[#030307] p-2.5 rounded-xl border border-[#1E1E2E] space-y-1">
-                                  <span className="text-[8.5px] font-black text-[#FE2C55] uppercase block">Take {idx + 1} ({idx * 8}s - {(idx + 1) * 8}s)</span>
+                                <div key={idx} className="bg-[#030307] p-3 rounded-xl border border-[#1E1E2E] space-y-2">
+                                  <span className="text-[9px] font-black text-[#FE2C55] uppercase block">Take {idx + 1} ({idx * 8}s - {(idx + 1) * 8}s)</span>
                                   <textarea
-                                    rows={1}
+                                    rows={2}
                                     value={takeTexts[idx] || ''}
                                     onChange={(e) => {
                                       const next = [...takeTexts];
@@ -3168,7 +3212,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                                       setTakeTexts(next);
                                     }}
                                     placeholder="Roteiro comercial curto..."
-                                    className="w-full bg-[#111118] border border-[#1E1E2E] rounded-lg p-1.5 text-xs text-white outline-none resize-none"
+                                    className="w-full bg-[#111118] border border-[#1E1E2E] rounded-lg p-2 text-xs text-white outline-none resize-none"
                                   />
                                 </div>
                               ))}
@@ -3795,24 +3839,12 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     </>
                   )}
 
-                  {/* Toggle / Checkbox for Voice Settings in Movimento Mode */}
-                  {videoMode === 'MOVIMENTO' && (
-                    <div className="flex items-center gap-3 bg-[#0A0A0F]/60 border border-[#1E1E2E] p-4 rounded-2xl select-none">
-                      <input
-                        id="toggle-voice-settings"
-                        type="checkbox"
-                        checked={showVoiceSettings}
-                        onChange={(e) => setShowVoiceSettings(e.target.checked)}
-                        className="w-4 h-4 rounded border-[#1E1E2E] text-[#FE2C55] focus:ring-[#FE2C55] bg-[#030307] cursor-pointer"
-                      />
-                      <label htmlFor="toggle-voice-settings" className="text-xs font-black text-white cursor-pointer select-none flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-[#FE2C55]" /> Configurar Locuções e Falas do Avatar
-                      </label>
-                    </div>
-                  )}
-
                   {/* Locução / Fala do Avatar (Com Fala vs Sem Fala) */}
-                  {(videoMode !== 'MOVIMENTO' || showVoiceSettings) && (
+                  {videoMode === 'MOVIMENTO' ? (
+                    <div className="flex items-center justify-center p-4 bg-[#0A0A0F]/60 border border-[#1E1E2E] rounded-2xl">
+                      <p className="text-xs text-zinc-500 font-bold tracking-wide">Modo Movimento: sem locução, apenas ação cinematográfica</p>
+                    </div>
+                  ) : (
                     <div className="space-y-3 bg-[#0A0A0F]/60 border border-[#1E1E2E] p-3 sm:p-4 rounded-2xl">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 pb-2 border-b border-[#1E1E2E]/60">
                       <div>
@@ -3823,35 +3855,91 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setHasSpeech(true)}
-                        className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all ${
-                          hasSpeech
-                            ? 'bg-[#25F4EE]/10 border-[#25F4EE] text-white shadow-md shadow-[#25F4EE]/5'
-                            : 'bg-[#030307] border-[#1E1E2E] text-[#8888AA] hover:text-white_90'
-                        }`}
-                      >
-                        <Volume2 className={`w-4 h-4 ${hasSpeech ? 'text-[#25F4EE]' : ''}`} />
-                        Com Fala (Português)
-                      </button>
+                    {videoMode === 'UGC' ? (
+                      <div className="space-y-3 pt-1">
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            disabled
+                            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all bg-[#25F4EE]/10 border-[#25F4EE] text-white shadow-md shadow-[#25F4EE]/5 cursor-not-allowed"
+                            title="Modo UGC sempre inclui fala do avatar"
+                          >
+                            <Volume2 className="w-4 h-4 text-[#25F4EE]" />
+                            Com Fala (Português)
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setHasSpeech(false)}
-                        className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all ${
-                          !hasSpeech
-                            ? 'bg-[#FE2C55]/10 border-[#FE2C55] text-white shadow-md shadow-[#FE2C55]/5'
-                            : 'bg-[#030307] border-[#1E1E2E] text-[#8888AA] hover:text-white_90'
-                        }`}
-                      >
-                        <VolumeX className={`w-4 h-4 ${!hasSpeech ? 'text-[#FE2C55]' : ''}`} />
-                        Sem Fala (Apenas Vídeo)
-                      </button>
-                    </div>
+                          <button
+                            type="button"
+                            disabled
+                            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all bg-[#030307] border-[#1E1E2E] text-[#8888AA] opacity-30 cursor-not-allowed"
+                            title="Modo UGC sempre inclui fala do avatar"
+                          >
+                            <VolumeX className="w-4 h-4 text-zinc-600" />
+                            Sem Fala (Apenas Vídeo)
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-[#25F4EE] font-bold mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[#25F4EE]" /> Modo UGC sempre inclui fala do avatar
+                        </p>
+                      </div>
+                    ) : videoMode === 'POV' ? (
+                      <div className="space-y-3 pt-1">
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            disabled
+                            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all bg-[#25F4EE]/10 border-[#25F4EE] text-white shadow-md shadow-[#25F4EE]/5 cursor-not-allowed"
+                            title="Modo POV sempre inclui narração"
+                          >
+                            <Volume2 className="w-4 h-4 text-[#25F4EE]" />
+                            Com Fala (Português)
+                          </button>
 
-                    {hasSpeech && (
+                          <button
+                            type="button"
+                            disabled
+                            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all bg-[#030307] border-[#1E1E2E] text-[#8888AA] opacity-30 cursor-not-allowed"
+                            title="Modo POV sempre inclui narração"
+                          >
+                            <VolumeX className="w-4 h-4 text-zinc-600" />
+                            Sem Fala (Apenas Vídeo)
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-[#25F4EE] font-bold mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[#25F4EE]" /> Modo POV sempre inclui narração
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setHasSpeech(true)}
+                          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all ${
+                            hasSpeech
+                              ? 'bg-[#25F4EE]/10 border-[#25F4EE] text-white shadow-md shadow-[#25F4EE]/5'
+                              : 'bg-[#030307] border-[#1E1E2E] text-[#8888AA] hover:text-white_90'
+                          }`}
+                        >
+                          <Volume2 className={`w-4 h-4 ${hasSpeech ? 'text-[#25F4EE]' : ''}`} />
+                          Com Fala (Português)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setHasSpeech(false)}
+                          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-black transition-all ${
+                            !hasSpeech
+                              ? 'bg-[#FE2C55]/10 border-[#FE2C55] text-white shadow-md shadow-[#FE2C55]/5'
+                              : 'bg-[#030307] border-[#1E1E2E] text-[#8888AA] hover:text-white_90'
+                          }`}
+                        >
+                          <VolumeX className={`w-4 h-4 ${!hasSpeech ? 'text-[#FE2C55]' : ''}`} />
+                          Sem Fala (Apenas Vídeo)
+                        </button>
+                      </div>
+                    )}
+
+                    {(hasSpeech || videoMode === 'UGC') && (
                       <div className="mt-4 space-y-5 border-t border-[#1E1E2E] pt-4 animate-fade-in text-xs text-[#8888AA]">
                         {/* 1. Voice properties config bar */}
                         <div className="bg-[#030307]/80 p-3 sm:p-4 rounded-2xl border border-[#1E1E2E]/80 space-y-3.5">
@@ -4891,14 +4979,14 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
           </div>
         )}
 
-        {showVideoModal && (
+        {showVideoModal && createPortal(
           <div 
-            className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md animate-fade-in"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in"
             onClick={(e) => { if (e.target === e.currentTarget) setShowVideoModal(false); }}
           >
-            <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative w-full max-w-4xl mx-4 max-h-[95vh] overflow-y-auto bg-[#030307] border border-[#1E1E2E] hover:border-[#FE2C55]/20 rounded-3xl shadow-2xl shadow-[#FE2C55]/10 flex flex-col p-5 sm:p-6 space-y-5">
               {selectedVideoProduct ? (
-            <div className="bg-[#030307] border border-[#1E1E2E] hover:border-[#FE2C55]/20 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl shadow-[#FE2C55]/10 flex flex-col relative p-5 sm:p-6 space-y-5 my-8">
+                <>
               
               {/* Header */}
               <div className="flex items-center justify-between border-b border-[#1E1E2E] pb-3">
@@ -4966,12 +5054,13 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                       >
                         <div className="relative w-full aspect-[9/16] bg-[#030307]">
                           {modo.videoUrl ? (
-                            <video
+                            <LazyVideo
                               src={modo.videoUrl}
                               autoPlay
                               loop
                               muted
                               playsInline
+                              preload="none"
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -4997,12 +5086,13 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                 </div>
               </div>
 
-            </div>
+            </>
             ) : (
               <div className="text-white text-sm">Carregando...</div>
             )}
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Fullscreen Movement Preview Modal */}
@@ -5040,6 +5130,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     muted
                     playsInline
                     controls
+                    preload="none"
                     className="w-full h-full object-cover"
                   />
                 ) : (

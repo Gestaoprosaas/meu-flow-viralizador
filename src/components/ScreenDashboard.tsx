@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import {
   Sparkles,
   Plus,
@@ -83,6 +84,27 @@ export default function ScreenDashboard({
   onUpgradeClick,
   onNewCampaignClick
 }: ScreenDashboardProps) {
+
+  // Dashboard admin configuration
+  const [dashboardConfig, setDashboardConfig] = useState<any[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('dashboard_config_admin');
+    if (saved) {
+      try { setDashboardConfig(JSON.parse(saved)); } catch (e) { }
+    }
+  }, []);
+
+  const getColorClasses = (color: string) => {
+    switch(color) {
+      case 'cyan': return { border: 'hover:border-cyan-500/30', glow: 'bg-cyan-500/5', icon: 'text-cyan-400' };
+      case 'red': return { border: 'hover:border-red-500/30', glow: 'bg-red-500/5', icon: 'text-red-400' };
+      case 'indigo': return { border: 'hover:border-indigo-500/30', glow: 'bg-indigo-500/5', icon: 'text-indigo-400' };
+      case 'emerald': return { border: 'hover:border-emerald-500/30', glow: 'bg-emerald-500/5', icon: 'text-emerald-400' };
+      case 'amber': return { border: 'hover:border-amber-500/30', glow: 'bg-amber-500/5', icon: 'text-amber-400' };
+      default: return { border: 'hover:border-cyan-500/30', glow: 'bg-cyan-500/5', icon: 'text-cyan-400' };
+    }
+  };
 
   // ViralSeller pathway highlights
   const [highlightedPath, setHighlightedPath] = useState<string | null>(null);
@@ -190,6 +212,26 @@ export default function ScreenDashboard({
       {/* Three high-fidelity mockup KPI widgets (Row 1) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
+        {dashboardConfig && dashboardConfig.length > 0 ? (
+          dashboardConfig.map((item: any, i: number) => {
+            const colors = getColorClasses(item.color);
+            return (
+              <div key={item.id || i} className={`bg-[#010101] border border-[#1E1E2E] rounded-2xl p-5 ${colors.border} transition relative overflow-hidden group`}>
+                <div className={`absolute top-0 right-0 w-24 h-24 ${colors.glow} rounded-full blur-2xl group-hover:scale-125 transition-transform duration-300`} />
+                <div className="flex items-center justify-between mb-3 border-b border-[#1E1E2E] pb-2">
+                  <span className="text-xs text-[#8888AA] font-bold uppercase tracking-wider block">{item.name}</span>
+                </div>
+                <div className="flex items-center gap-4 py-1">
+                  <div className="text-3xl" title={item.icon}>{item.icon}</div>
+                  <div className="space-y-1">
+                    <span className="text-2xl font-black text-white tracking-tight">{item.value}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <>
         {/* KPI 1: Global Growth Score (Retention / Conversion Core) */}
         <div className="bg-[#010101] border border-[#1E1E2E] rounded-2xl p-5 hover:border-cyan-500/30 transition relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-300" />
@@ -306,6 +348,8 @@ export default function ScreenDashboard({
             </div>
           </div>
         </div>
+        </>
+        )}
 
       </div>
 
@@ -534,7 +578,7 @@ export default function ScreenDashboard({
 
                 {/* Floating Avatar Face (Matches mockup beautifully!) */}
                 <div className="w-6 h-6 rounded-full border border-[#1E1E2E] overflow-hidden group-hover:scale-125 group-hover:border-white transition-all shadow-md">
-                  <img src={item.avatar} alt="User mask" className="w-full h-full object-cover" />
+                  <ImageWithSkeleton src={item.avatar} alt="User mask" className="w-full h-full object-cover" />
                 </div>
 
                 {/* Custom Gradient Rounded Vertical Bar Progress */}

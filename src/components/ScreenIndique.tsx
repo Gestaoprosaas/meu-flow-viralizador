@@ -6,7 +6,8 @@ import { getSupabase } from '../lib/supabaseClient';
 export function ScreenIndique({ profile }: { profile?: any }) {
   const [etapa, setEtapa] = useState<1 | 2>(1);
   const [modo, setModo] = useState<'lucrar' | 'presentear' | null>(null);
-  const [cupom, setCupom] = useState<any>(null);
+  const [cupomAdmin, setCupomAdmin] = useState<any>(null);
+  const [erro, setErro] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
   const [animating, setAnimating] = useState(false);
@@ -14,6 +15,8 @@ export function ScreenIndique({ profile }: { profile?: any }) {
   const [count, setCount] = useState(3);
   const [showCupomResult, setShowCupomResult] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const cupom = cupomAdmin;
 
   useEffect(() => {
     if (animPhase === 3) {
@@ -23,42 +26,77 @@ export function ScreenIndique({ profile }: { profile?: any }) {
     }
   }, [animPhase]);
 
-  useEffect(() => {
-    const fetchCupom = async () => {
-      const supabase = getSupabase();
-      if (!supabase) {
-        setLoading(false);
+  const buscarCupomAdmin = async (tentativa = 1) => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      console.error('[Indique] Supabase não inicializado');
+      setLoading(false);
+      return;
+    }
+
+    let emailAdmin = profile?.email?.toLowerCase().trim();
+    if (!emailAdmin) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        emailAdmin = session?.user?.email?.toLowerCase().trim();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    console.log('[Indique] Email do admin logado:', emailAdmin);
+
+    if (!emailAdmin) {
+      console.error('[Indique] Email não disponível ainda — aguardando perfil carregar');
+      if (tentativa < 3) {
+        console.warn(`[Indique] Tentativa ${tentativa} falhou, tentando novamente em ${tentativa * 1000}ms`);
+        setTimeout(() => buscarCupomAdmin(tentativa + 1), tentativa * 1000);
         return;
       }
-      
-      // se não passar profile, tentamos pegar o user atual (mas vamos usar api/admin/meu-cupom tb)
-      try {
-        let userEmail = profile?.email;
-        if (!userEmail) {
-          const { data: { session } } = await supabase.auth.getSession();
-          userEmail = session?.user?.email;
-        }
+      setLoading(false);
+      return;
+    }
 
-        if (userEmail) {
-          const { data, error } = await supabase
-            .from('cupons_admins')
-            .select('*')
-            .eq('admin_email', userEmail)
-            .single();
-            
-          if (data && !error) {
-            setCupom(data);
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+    // Verificar sessão antes de buscar
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('[Indique] Sessão ativa:', !!session);
+    console.log('[Indique] Buscando cupom para:', emailAdmin, '| Tentativa:', tentativa);
+
+    const { data, error } = await supabase
+      .from('cupons_admins')
+      .select('*')
+      .ilike('admin_email', emailAdmin) // ilike = case insensitive
+      .eq('ativo', true)
+      .single();
+
+    console.log('[Indique] Resultado:', data, '| Erro:', error);
+
+    if (error || !data) {
+      if (tentativa < 3) {
+        // Retry automático até 3 tentativas com delay crescente
+        console.warn(`[Indique] Tentativa ${tentativa} falhou, tentando novamente em ${tentativa * 1000}ms`);
+        setTimeout(() => buscarCupomAdmin(tentativa + 1), tentativa * 1000);
+        return;
       }
-    };
-    
-    fetchCupom();
-  }, [profile]);
+      setCupomAdmin(null);
+      setErro('Nenhum cupom configurado. Peça ao admin para cadastrar seu cupom.');
+      setLoading(false);
+      return;
+    }
+
+    setCupomAdmin(data);
+    setErro('');
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    // Só buscar quando o email estiver disponível
+    if (!profile?.email) {
+      console.log('[Indique] Aguardando email do perfil...');
+      return;
+    }
+    buscarCupomAdmin();
+  }, [profile?.email]);
 
   const handleCreateAnimation = () => {
     if (!cupom) return;
@@ -110,10 +148,10 @@ export function ScreenIndique({ profile }: { profile?: any }) {
                 <DollarSign className="w-6 h-6 text-amber-500" />
               </div>
               
-              <h3 className="text-lg font-bold text-white mb-3">Você recebe 50% do valor da compra e seu amigo ganha 20% de desconto.</h3>
+              <h3 className="text-lg font-bold text-white mb-3">Você recebe 50% do valor da compra e seu amigo ganha 40% de desconto.</h3>
               
               <ul className="space-y-2.5 mb-8 flex-1">
-                {["50% direto no seu bolso", "20% de desconto pro amigo", "Sem limite de indicações"].map((bullet, i) => (
+                {["50% direto no seu bolso", "40% de desconto pro amigo", "Sem limite de indicações"].map((bullet, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-[#8888AA]">
                     <Check className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
                     <span>{bullet}</span>
@@ -173,13 +211,27 @@ export function ScreenIndique({ profile }: { profile?: any }) {
             </button>
           </div>
 
-          {!cupom ? (
-            <div className="bg-[#111118] border border-[#1E1E2E] rounded-3xl p-10 text-center max-w-md w-full">
+          {!cupomAdmin ? (
+            <div className="bg-[#111118] border border-[#1E1E2E] rounded-3xl p-10 text-center max-w-md w-full space-y-4 animate-fade-in">
               <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                 <Flame className="w-8 h-8 text-red-500" />
               </div>
-              <h3 className="text-lg font-bold text-white">Nenhum cupom configurado pelo administrador ainda.</h3>
-              <p className="text-sm text-[#8888AA] mt-2">Peça ao admin para cadastrar o seu parceiro na aba de cupons.</p>
+              <h3 className="text-lg font-bold text-white">{erro || "Nenhum cupom configurado pelo administrador ainda."}</h3>
+              <p className="text-sm text-[#8888AA]">Peça ao admin para cadastrar o seu parceiro na aba de cupons.</p>
+              
+              <div className="pt-4 border-t border-[#1E1E2E] space-y-2">
+                <p className="text-zinc-400 text-xs">Não encontramos seu cupom?</p>
+                <button
+                  onClick={() => {
+                    setLoading(true);
+                    buscarCupomAdmin();
+                  }}
+                  className="px-4 py-2 bg-[#FE2C55]/20 border border-[#FE2C55]/30 text-[#FE2C55] rounded-xl text-xs font-bold hover:bg-[#FE2C55]/30 transition inline-flex items-center gap-1.5"
+                >
+                  🔄 Tentar Novamente
+                </button>
+                <p className="text-zinc-600 text-[10px]">Email buscado: {profile?.email || 'Aguardando...'}</p>
+              </div>
             </div>
           ) : (
             <div className="w-full max-w-3xl space-y-8">
@@ -227,7 +279,7 @@ export function ScreenIndique({ profile }: { profile?: any }) {
                     <Flame className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl lg:text-3xl font-black text-white tracking-tight">🎬 Gerador de Cupons </h2>
+                    <h2 className="text-2xl lg:text-3xl font-black text-white tracking-tight">🎬 Gerador de Cupons para Live</h2>
                     <p className="text-zinc-400 mt-2 max-w-lg mx-auto text-sm">Crie escassez real e aumente conversões. Durante sua live, ative seu cupom exclusivo com uma animação impactante.</p>
                   </div>
                   
@@ -235,7 +287,7 @@ export function ScreenIndique({ profile }: { profile?: any }) {
                     onClick={handleCreateAnimation}
                     className="mt-4 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-90 text-white font-black text-sm lg:text-base uppercase tracking-widest rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-all active:scale-95 flex items-center gap-3"
                   >
-                    <Sparkles className="w-5 h-5 fill-white" /> GERAR MEU CUPOM EXCLUSIVO
+                    <Sparkles className="w-5 h-5 fill-white" /> GERAR MEU CUPOM DE LIVE
                   </button>
                 </div>
               </div>
@@ -321,6 +373,13 @@ export function ScreenIndique({ profile }: { profile?: any }) {
         </div>
       )}
 
+      {(profile?.role === 'admin' || profile?.role === 'superadmin') && (
+        <div className="text-center mt-6">
+          <p className="text-zinc-700 text-[10px] bg-[#0A0A0F] px-3 py-1.5 rounded-lg inline-block border border-[#1E1E2E] font-mono">
+            Debug: buscando por "{profile?.email}" | Cupom: {cupomAdmin?.cupom || 'não encontrado'}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
