@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import AvatarStep from './AvatarStep';
 import { LazyVideo } from './LazyVideo';
 import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { 
@@ -185,14 +186,7 @@ interface AvatarCardProps {
 }
 
 function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
-  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      videoRef.current.play().catch(() => {});
-    }
-  }, [videoRef, av.videoUrl, isInView]);
+  const { isMobile, isInView, containerRef } = useMobileAndIntersection();
 
   return (
     <button
@@ -213,17 +207,24 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
 
       <div className="relative h-40 xs:h-48 sm:h-56 md:h-64 lg:h-72 overflow-hidden bg-zinc-900">
         {av.videoUrl ? (
-          <LazyVideo
-            ref={videoRef}
-            src={av.videoUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="none"
-            poster={av.imageUrl}
-            className="w-full h-full object-cover"
-          />
+          <>
+            <ImageWithSkeleton 
+              src={av.imageUrl} 
+              alt={av.name} 
+              className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
+              referrerPolicy="no-referrer"
+            />
+            <LazyVideo
+              key={av.id}
+              src={av.videoUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover z-10"
+              style={{ objectFit: 'cover' }}
+            />
+          </>
         ) : (
           <ImageWithSkeleton 
             src={av.imageUrl} 
@@ -260,14 +261,7 @@ interface ScenarioCardProps {
 }
 
 function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) {
-  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      videoRef.current.play().catch(() => {});
-    }
-  }, [videoRef, sc.videoUrl, isInView]);
+  const { isMobile, isInView, containerRef } = useMobileAndIntersection();
 
   return (
     <button
@@ -276,7 +270,7 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
       onClick={onSelect}
       className={`group text-left bg-[#0A0A0F] border rounded-2xl overflow-hidden transition-all duration-100 ease-out active:scale-95 relative w-full ${
         isSelected 
-          ? 'ring-2 ring-[#FE1E4E] border-[#FE1E4E] scale-[0.98]' 
+          ? 'ring-2 ring-[#FE1E4E] border-[#FE1E4E]' 
           : 'border-[#1E1E2E] hover:border-[#FE1E4E]/40'
       }`}
     >
@@ -286,24 +280,33 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
         </div>
       )}
 
-      <div className={`relative ${isLarge ? 'aspect-[2/3] min-h-[420px] sm:min-h-[480px]' : 'h-32 xs:h-36 sm:h-44'} overflow-hidden bg-zinc-900 w-full`}>
+      <div className={`relative ${isLarge ? 'h-64 sm:h-72' : 'h-32 xs:h-36 sm:h-44'} overflow-hidden bg-zinc-900 w-full`}>
         {sc.videoUrl ? (
-          <LazyVideo
-            ref={videoRef}
-            src={sc.videoUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="none"
-            poster={sc.imageUrl}
-            className="w-full h-full object-cover object-center"
-          />
+          <>
+            <ImageWithSkeleton 
+              src={sc.imageUrl} 
+              alt={sc.name} 
+              className="absolute inset-0 w-full h-full object-cover object-center opacity-40 z-0"
+              style={{ aspectRatio: 'unset' }}
+              referrerPolicy="no-referrer"
+            />
+            <LazyVideo
+              key={sc.id}
+              src={sc.videoUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover object-center z-10"
+              style={{ objectFit: 'cover', aspectRatio: 'unset' }}
+            />
+          </>
         ) : (
           <ImageWithSkeleton 
             src={sc.imageUrl} 
             alt={sc.name} 
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-all duration-500"
+            className="w-full h-full object-cover object-center transition-all duration-500"
+            style={{ aspectRatio: 'unset' }}
             referrerPolicy="no-referrer"
           />
         )}
@@ -338,14 +341,7 @@ function extractYoutubeId(url: string): string | null {
 function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const { isMobile, isInView, containerRef, videoRef } = useMobileAndIntersection();
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      videoRef.current.play().catch(() => {});
-    }
-  }, [videoRef, mv.videoUrl, isInView]);
+  const { isMobile, isInView, containerRef } = useMobileAndIntersection();
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -420,17 +416,26 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
             }
 
             return (
-              <LazyVideo
-                ref={videoRef}
-                src={mv.videoUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="none"
-                poster={mv.imageUrl}
-                className="w-full h-full object-cover"
-              />
+              <>
+                <ImageWithSkeleton
+                  src={mv.imageUrl}
+                  alt={mv.name}
+                  className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
+                  referrerPolicy="no-referrer"
+                />
+                <video
+                  src={mv.videoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="absolute inset-0 w-full h-full object-cover z-10"
+                  style={{ objectFit: 'cover' }}
+                  onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              </>
             );
           })()
         ) : (
@@ -672,7 +677,6 @@ function useMobileAndIntersection() {
   const [isMobile, setIsMobile] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const containerRef = useRef<any>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -689,9 +693,6 @@ function useMobileAndIntersection() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsInView(entry.isIntersecting);
-        if (!entry.isIntersecting && videoRef.current) {
-          videoRef.current.pause();
-        }
       },
       { rootMargin: '100px' }
     );
@@ -699,20 +700,12 @@ function useMobileAndIntersection() {
       observer.observe(containerRef.current);
     }
     
-    // Capture the current ref value for cleanup
-    const currentVideo = videoRef.current;
-    
     return () => {
       observer.disconnect();
-      if (currentVideo) {
-        currentVideo.pause();
-        currentVideo.src = '';
-        currentVideo.load();
-      }
     };
   }, [isMobile]);
 
-  return { isMobile, isInView, containerRef, videoRef };
+  return { isMobile, isInView, containerRef };
 }
 
 export default function ScreenProdutos({
@@ -727,6 +720,11 @@ export default function ScreenProdutos({
   const [headerColapsado, setHeaderColapsado] = useState(false);
 
   const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    console.log('[Etapa5] Primeiro movimento:', MOVEMENTS_PRESETS[0]);
+    console.log('[Etapa5] Campo de vídeo:', MOVEMENTS_PRESETS[0]?.videoUrl);
+  }, []);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -3268,70 +3266,27 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                 )}
 
                 {videoMode === 'MOVIMENTO' && (
-                  <div className="space-y-5">
-                    {/* MOVIMENTO Avatar Selection */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-cyan-400 font-black uppercase tracking-widest block">ETAPA 2 — AVATAR (MOVIMENTO)</span>
-                        <h3 className="text-lg font-black text-white">Escolha seu Avatar</h3>
-                        <p className="text-xs text-[#8888AA]">Selecione um apresentador premium para demonstrar as transições e movimentos do produto.</p>
-                      </div>
-
-                      {/* Gender Filters */}
-                      <div className="flex items-center gap-1 bg-[#0A0A0F]/90 p-1 border border-[#1E1E2E] rounded-xl self-stretch sm:self-auto">
-                        {(['TODOS', 'FEMININO', 'MASCULINO'] as const).map((filter) => (
-                          <button
-                            key={filter}
-                            type="button"
-                            onClick={() => {
-                              (window as any).avatarFilter = filter;
-                              setAvatarText('');
-                              setSelectedAvatarId('');
-                              setAvatarText(' ');
-                              setTimeout(() => setAvatarText(''), 10);
-                            }}
-                            className={`px-3 py-1 text-[10px] font-extrabold rounded-lg capitalize transition-all text-center ${
-                              ((window as any).avatarFilter || 'TODOS') === filter
-                                ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400'
-                                : 'text-[#8888AA] hover:text-white'
-                            }`}
-                          >
-                            {filter === 'TODOS' ? 'Todos' : filter === 'FEMININO' ? 'Femenino' : 'Masculino'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60vh] sm:max-h-[380px] overflow-y-auto pr-1">
-                      {allAvatars.filter((av) => {
-                        const currentFilter = (window as any).avatarFilter || 'TODOS';
-                        if (currentFilter === 'TODOS') return true;
-                        return av.gender === currentFilter;
-                      }).map((av) => {
-                        const isSelected = selectedAvatarId === av.id;
-                        return (
-                          <AvatarCard
-                            key={av.id}
-                            av={av}
-                            isSelected={isSelected}
-                            onSelect={() => {
-                              setSelectedAvatarId(av.id);
-                              setAvatarText(av.description);
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-
-                    <textarea
-                      required
-                      value={avatarText}
-                      onChange={(e) => setAvatarText(e.target.value)}
-                      placeholder="Características estéticas personalizadas de forma manual se desejar..."
-                      rows={2}
-                      className="w-full bg-[#030307] border border-[#1E1E2E] rounded-xl p-2.5 text-xs text-white focus:border-[#25F4EE] outline-none resize-none transition"
-                    />
-                  </div>
+                  <AvatarStep
+                    avatarSelecionado={
+                      selectedAvatarId
+                        ? {
+                            id: selectedAvatarId,
+                            nome: allAvatars.find((a) => a.id === selectedAvatarId)?.name || '',
+                            genero: allAvatars.find((a) => a.id === selectedAvatarId)?.gender === 'FEMININO' ? 'Feminino' : 'Masculino',
+                            imagemUrl: allAvatars.find((a) => a.id === selectedAvatarId)?.imageUrl || '',
+                            descricao: allAvatars.find((a) => a.id === selectedAvatarId)?.description || '',
+                          }
+                        : null
+                    }
+                    onAvatarSelect={(avatar) => {
+                      setSelectedAvatarId(avatar.id);
+                      setAvatarText(avatar.descricao);
+                    }}
+                    onVoltar={() => setWizardStep(1)}
+                    onAvancar={() => setWizardStep(3)}
+                    caracteristicasCustom={avatarText}
+                    onCaracteristicasChange={setAvatarText}
+                  />
                 )}
               </div>
             )}
@@ -4522,7 +4477,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
             </div>
 
             {/* Form Footer Action Row (Prev / Next transitions) */}
-            <div className="border-t border-[#1E1E2E] pt-3 pb-3 sm:pb-0 sm:pt-4 sm:mt-6 mt-auto flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 sticky bottom-0 bg-[#111118] z-40 -mx-4 px-4 sm:-mx-6 sm:px-6 -mb-4 sm:-mb-6 shadow-[0_-10px_30px_rgba(17,17,24,0.9)]">
+            <div className={`border-t border-[#1E1E2E] pt-3 pb-3 sm:pb-0 sm:pt-4 sm:mt-6 mt-auto flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 sticky bottom-0 bg-[#111118] z-40 -mx-4 px-4 sm:-mx-6 sm:px-6 -mb-4 sm:-mb-6 shadow-[0_-10px_30px_rgba(17,17,24,0.9)] ${videoMode === 'MOVIMENTO' && wizardStep === 2 ? 'hidden' : ''}`}>
               
               {/* Back or Prev inside active wizard */}
               <div className="flex gap-2">

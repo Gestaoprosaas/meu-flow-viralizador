@@ -92,8 +92,8 @@ export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
     name: 'Fundo Espelho + Porta',
     type: 'Pronto',
     description: 'Ambiente interno de quarto com fundo de espelho e porta, iluminação natural suave.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.04.13.jpeg',
-    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.04.13.jpeg',
+    imageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.04.13.jpeg',
+    referenceImageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.04.13.jpeg',
     isCurated: true
   },
   {
@@ -101,8 +101,8 @@ export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
     name: 'Guarda Roupa Com Luminária Atrás',
     type: 'Pronto',
     description: 'Ambiente interno de quarto com guarda-roupa e luminária atrás, iluminação suave e aconchegante.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.18.04.jpeg',
-    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.18.04.jpeg',
+    imageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.18.04.jpeg',
+    referenceImageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.18.04.jpeg',
     isCurated: true
   },
   {
@@ -110,8 +110,8 @@ export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
     name: 'Sala + Cortina feixe de luz',
     type: 'Pronto',
     description: 'Ambiente interno de sala com cortina e feixe de luz, iluminação suave e aconchegante.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21.jpeg',
-    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21.jpeg',
+    imageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.31.21.jpeg',
+    referenceImageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.31.21.jpeg',
     isCurated: true
   },
   {
@@ -119,8 +119,8 @@ export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
     name: 'Quarto Rústico',
     type: 'Pronto',
     description: 'Ambiente interno de quarto rústico com elementos de madeira e texturas naturais.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21%20(1).jpeg',
-    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.21%20(1).jpeg',
+    imageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.31.21 (1).jpeg',
+    referenceImageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.31.21 (1).jpeg',
     isCurated: true
   },
   {
@@ -128,8 +128,8 @@ export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
     name: 'Parede Com Piso',
     type: 'Pronto',
     description: 'Ambiente interno com parede e piso em materiais naturais, criando um espaço acolhedor e rústico.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22%20(1).jpeg',
-    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.31.22%20(1).jpeg',
+    imageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.31.22 (1).jpeg',
+    referenceImageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.31.22 (1).jpeg',
     isCurated: true
   },
   {
@@ -137,8 +137,8 @@ export const CURATED_SCENARIOS_PRESETS: CuratedScenarioPreset[] = [
     name: 'Meio Da Cozinha Entre a Sala',
     type: 'Pronto',
     description: 'Ambiente interno com cozinha e sala conectadas, criando um espaço funcional e aconchegante.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.42.14.jpeg',
-    referenceImageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/WhatsApp%20Image%202026-06-28%20at%2014.42.14.jpeg',
+    imageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.42.14.jpeg',
+    referenceImageUrl: '/images/cenarios/WhatsApp Image 2026-06-28 at 14.42.14.jpeg',
     isCurated: true
   }
 ];
