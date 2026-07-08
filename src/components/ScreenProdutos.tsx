@@ -928,7 +928,7 @@ export default function ScreenProdutos({
     }, 4000);
   };
 
-  const [now, setNow] = useState<Date>(new Date());
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
   // Interactive Video Generation Modal States
   const [showVideoModal, setShowVideoModal] = useState(false);
@@ -1013,7 +1013,7 @@ export default function ScreenProdutos({
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setNow(new Date());
+      setNowMs(Date.now());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -1062,7 +1062,7 @@ export default function ScreenProdutos({
     };
   };
 
-  const { activeBlockIndex, countdownStr } = getTimelineInfo(now);
+  const { activeBlockIndex, countdownStr } = useMemo(() => getTimelineInfo(new Date(nowMs)), [nowMs]);
 
   // Sum detected revenue (safely parsed from .price or falls back with a random range)
   const totalRevenue = items.reduce((acc, item) => {
@@ -1260,6 +1260,10 @@ export default function ScreenProdutos({
   const [wizardStep, setWizardStep] = useState<number>(1); // Start directly at Step 1 (Product selection)
   const [videoMode, setVideoMode] = useState<'UGC' | 'POV' | 'MOVIMENTO'>('UGC');
 
+  // Pre-selection badge state (evita chamar localStorage diretamente no JSX, causando re-renders fantasma)
+  const [preSelectedVideoMode, setPreSelectedVideoMode] = useState<string | null>(() => localStorage.getItem('viralseller_video_mode'));
+  const [preSelectedAvatar, setPreSelectedAvatar] = useState<string | null>(() => localStorage.getItem('viralseller_avatar_pre'));
+
   // POV Specific State Variables
   const [povScenarioSelected, setPovScenarioSelected] = useState<string>('🛋️ Sala Moderna');
   const [povScenarioDesc, setPovScenarioDesc] = useState<string>('Ambiente sofisticado e aconchegante.');
@@ -1423,6 +1427,7 @@ export default function ScreenProdutos({
           setAvatarText(preAvatar.description || '');
           setSkippingMessage(`✅ Avatar: ${preAvatar.nome} (pré-selecionado)`);
           localStorage.removeItem('viralseller_avatar_pre');
+          setPreSelectedAvatar(null);
           
           setTimeout(() => {
             setSkippingMessage(null);
@@ -1551,6 +1556,7 @@ export default function ScreenProdutos({
       setWizardStep(2);
       setShowVideoModal(false);
       localStorage.removeItem('viralseller_video_mode');
+      setPreSelectedVideoMode(null);
       return;
     }
 
@@ -2336,7 +2342,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     headerColapsado ? 'max-h-0 opacity-0 mb-0 pointer-events-none' : 'max-h-[200px] opacity-100 mb-4'
                   }`}
                 >
-                  {(localStorage.getItem('viralseller_video_mode') || localStorage.getItem('viralseller_avatar_pre')) && (
+                  {(preSelectedVideoMode || preSelectedAvatar) && (
                     <div className="bg-gradient-to-r from-[#06B6D4]/10 to-[#7C3AED]/10 border border-[#06B6D4]/30 rounded-xl p-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#06B6D4]/20 flex items-center justify-center text-[#06B6D4]">
@@ -2344,7 +2350,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                         </div>
                         <div>
                           <h4 className="text-[11px] font-black text-white uppercase tracking-wider">
-                            {localStorage.getItem('viralseller_video_mode') ? `Modo ${localStorage.getItem('viralseller_video_mode')} Pré-selecionado` : 'Avatar Pré-selecionado'}
+                            {preSelectedVideoMode ? `Modo ${preSelectedVideoMode} Pré-selecionado` : 'Avatar Pré-selecionado'}
                           </h4>
                           <p className="text-[10px] text-gray-400">Suas seleções anteriores foram carregadas automaticamente.</p>
                         </div>

@@ -600,6 +600,13 @@ export default function App() {
 
   // Simulated sales background loop effect
   useEffect(() => {
+    // Apenas administradores e superadmins podem rodar a simulação de vendas e emitir qualquer alerta sonoro
+    if (profile?.role !== 'admin' && profile?.role !== 'superadmin') {
+      setActiveSale(null);
+      setShowCelebration(false);
+      return;
+    }
+
     if (!simulatedSalesEnabled || trendingProducts.length === 0) {
       setActiveSale(null);
       setShowCelebration(false);
@@ -681,7 +688,7 @@ export default function App() {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [simulatedSalesEnabled, simulatedSalesMinMin, simulatedSalesMaxMin, simulatedSalesSound, simulatedSalesSoundUrl, trendingProducts]);
+  }, [simulatedSalesEnabled, simulatedSalesMinMin, simulatedSalesMaxMin, simulatedSalesSound, simulatedSalesSoundUrl, trendingProducts, profile?.role]);
 
   const forceTriggerSimulatedSale = () => {
     if (trendingProducts.length === 0) return;
