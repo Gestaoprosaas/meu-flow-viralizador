@@ -137,7 +137,7 @@ export const PRODUTOS_PRONTOS: ProdutoPronto[] = [
     valor: 'R$ 69,90',
     tendencia: 'destaque',
     nicho: 'Moda',
-    imagem: 'https://p16-oec-general.tiktokcdn.com/tos-alisg-i-aphluv4xwc-sg/602b40f0bf5c4a3fa4d82dbd5cd8d398~tplv-aphluv4xwc-resize-png:630:840.png',
+    imagem: 'https://img.ltwebstatic.com/v4/p/spmp/2026/05/25/35/17796409264f27d971b4bc801e9c1d4b619e361286_thumbnail_560x.avif',
     comissao: '10%'
   },
   {

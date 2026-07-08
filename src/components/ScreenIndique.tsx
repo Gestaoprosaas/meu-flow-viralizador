@@ -287,7 +287,7 @@ export function ScreenIndique({ profile }: { profile?: any }) {
                     onClick={handleCreateAnimation}
                     className="mt-4 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-90 text-white font-black text-sm lg:text-base uppercase tracking-widest rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-all active:scale-95 flex items-center gap-3"
                   >
-                    <Sparkles className="w-5 h-5 fill-white" /> GERAR MEU CUPOM DE LIVE
+                    <Sparkles className="w-5 h-5 fill-white" /> GERAR MEU CUPOM
                   </button>
                 </div>
               </div>

@@ -493,6 +493,22 @@ export default function App() {
       return [];
     }
   });
+
+  // Preconnect ao domínio do Supabase Storage para reduzir latência de DNS+TLS nas mídias
+  useEffect(() => {
+    const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL as string | undefined;
+    if (!supabaseUrl) return;
+    try {
+      const origin = new URL(supabaseUrl).origin;
+      if (!document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = origin;
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+      }
+    } catch {}
+  }, []);
   const [referrals, setReferrals] = useState<AffiliateReferral[]>([]);
 
   // Theme state
@@ -725,13 +741,46 @@ export default function App() {
     }, 5000);
   };
 
-  // Fetch full backend states
+  // Carrega imagens e vídeos com prioridade máxima — dispara antes de tudo
+  const fetchMediaFast = async () => {
+    try {
+      const [iRes, vRes] = await Promise.all([
+        appFetch('/api/imagens'),
+        appFetch('/api/videos'),
+      ]);
+      if (iRes.ok) {
+        const iData = await iRes.json();
+        setImages(iData);
+        localStorage.setItem('local_images', JSON.stringify(iData));
+      }
+      if (vRes.ok) {
+        const vData = await vRes.json();
+        setVideos(vData);
+        localStorage.setItem('local_videos', JSON.stringify(vData));
+      }
+    } catch (err) {
+      console.warn("fetchMediaFast error:", err);
+    }
+  };
+
+  // Fetch full backend states — todos os requests em paralelo para carregamento instantâneo
   const refreshFullState = async () => {
     try {
+      const [
+        pRes, prRes, tRes, sRes, iRes, vRes, rRes
+      ] = await Promise.allSettled([
+        appFetch('/api/profile'),
+        appFetch('/api/projects'),
+        appFetch('/api/trending-products'),
+        appFetch('/api/roteiros'),
+        appFetch('/api/imagens'),
+        appFetch('/api/videos'),
+        appFetch('/api/afiliados'),
+      ]);
+
       // Profile
-      const pRes = await appFetch('/api/profile');
-      if (pRes.ok) {
-        const pData = await pRes.json();
+      if (pRes.status === 'fulfilled' && pRes.value.ok) {
+        const pData = await pRes.value.json();
         setProfile(prev => ({
           ...pData,
           role: (prev.role === 'superadmin' || prev.role === 'admin')
@@ -741,66 +790,40 @@ export default function App() {
       }
 
       // Projects
-      const prRes = await appFetch('/api/projects');
-      if (prRes.ok) {
-        const prData = await prRes.json();
+      if (prRes.status === 'fulfilled' && prRes.value.ok) {
+        const prData = await prRes.value.json();
         if (projects.length === 0) {
           setProjects(prData);
         }
       }
 
       // Trending Products
-      const tRes = await appFetch('/api/trending-products');
-      if (tRes.ok) {
-        let tData = await tRes.json();
-
-        // Apply image proxy for tiktokcdn and ibyteimg
+      if (tRes.status === 'fulfilled' && tRes.value.ok) {
+        let tData = await tRes.value.json();
         tData = tData.map((p: any) => {
           let img = p.image_url || p.imagem || '';
           if (img && (img.includes('tiktokcdn.com') || img.includes('ibyteimg.com'))) {
             img = `https://images.weserv.nl/?url=${img.replace('https://', '')}`;
           }
-          return {
-            ...p,
-            image_url: img,
-            imagem: img
-          };
+          return { ...p, image_url: img, imagem: img };
         });
-
         setTrendingProducts(tData);
       }
 
       // Scripts
-      const sRes = await appFetch('/api/roteiros');
-      if (sRes.ok) {
-        const sData = await sRes.json();
+      if (sRes.status === 'fulfilled' && sRes.value.ok) {
+        const sData = await sRes.value.json();
         if (scripts.length === 0) {
           setScripts(sData);
         }
       }
 
-      // Images
-      const iRes = await appFetch('/api/imagens');
-      if (iRes.ok) {
-        const iData = await iRes.json();
-        if (images.length === 0) {
-          setImages(iData);
-        }
-      }
-
-      // Videos
-      const vRes = await appFetch('/api/videos');
-      if (vRes.ok) {
-        const vData = await vRes.json();
-        if (videos.length === 0) {
-          setVideos(vData);
-        }
-      }
+      // Images e Videos — já carregados pelo fetchMediaFast, não sobrescrever
+      // (refreshFullState atualiza apenas se fetchMediaFast ainda não tiver respondido)
 
       // Referrals
-      const rRes = await appFetch('/api/afiliados');
-      if (rRes.ok) {
-        const rData = await rRes.json();
+      if (rRes.status === 'fulfilled' && rRes.value.ok) {
+        const rData = await rRes.value.json();
         setReferrals(rData);
       }
 
@@ -810,6 +833,8 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Dispara mídia primeiro para aparecer em 1-2s, resto do estado em paralelo
+    fetchMediaFast();
     refreshFullState();
 
     // EventSource configuration for Real-time database updates
