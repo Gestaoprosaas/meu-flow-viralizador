@@ -4067,7 +4067,7 @@ app.post("/api/admin/users/create", async (req, res) => {
       // check if exists
       let userId = await findUserIdByEmail(email, supabaseAdmin);
       if (userId) {
-        return res.status(400).json({ error: "Este e-mail já está cadastrado no sistema." });
+        return res.status(400).json({ error: "Este e-mail já está cadastrado no sistema. Se deseja alterar o cargo ou plano de créditos deste usuário, utilize os botões de ação rápida no card dele logo abaixo!" });
       }
 
       // Create in auth.users
@@ -4082,7 +4082,17 @@ app.post("/api/admin/users/create", async (req, res) => {
 
       if (authError) {
         console.error(`[Admin Create User] Erro no Supabase Auth:`, authError.message);
-        return res.status(400).json({ error: `Erro no Supabase Auth: ${authError.message}` });
+        let errorMsg = authError.message;
+        if (errorMsg.includes("already exists") || errorMsg.includes("already registered")) {
+          errorMsg = "Este e-mail já possui uma conta cadastrada no Supabase Auth.";
+        } else if (errorMsg.includes("weak") || errorMsg.includes("least 6 characters")) {
+          errorMsg = "A senha é muito fraca ou curta. Digite uma senha com pelo menos 6 caracteres.";
+        } else if (errorMsg.includes("valid") && errorMsg.includes("email")) {
+          errorMsg = "O endereço de e-mail fornecido não é válido.";
+        } else if (errorMsg.includes("authorized") || errorMsg.includes("JWT") || errorMsg.includes("claims")) {
+          errorMsg = "Não autorizado no Supabase. Verifique se a sua SUPABASE_SERVICE_ROLE_KEY está configurada corretamente nas variáveis de ambiente do servidor.";
+        }
+        return res.status(400).json({ error: errorMsg });
       }
 
       if (authData?.user) {
