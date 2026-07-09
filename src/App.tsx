@@ -1012,10 +1012,7 @@ export default function App() {
     { name: 'Viralizar Perfil', icon: Flame, path: '/afiliados' },
     { name: 'Movimentos', icon: Sparkles, path: '/movimentos' },
     { name: 'Biblioteca Premium', icon: Crown, path: '/biblioteca-premium' },
-    { name: 'Segurança', icon: Shield, path: '/seguranca' },
-    ...(profile.role === 'admin' || profile.role === 'superadmin'
-      ? [{ name: 'Painel Admin', icon: ShieldAlert, path: '/admin' }]
-      : [])
+    { name: 'Segurança', icon: Shield, path: '/seguranca' }
   ];
 
   // Helper to determine if a menu path is gated for the user's active plan

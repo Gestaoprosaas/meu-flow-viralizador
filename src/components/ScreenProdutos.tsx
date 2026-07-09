@@ -740,29 +740,9 @@ export default function ScreenProdutos({
   }, []);
 
   useEffect(() => {
-    if (isMobile) {
-      setHeaderColapsado(false);
-      return;
-    }
-
-    const sentinela = sentinelaRef.current;
-    if (!sentinela) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // Quando o sentinela sai da tela (scroll para baixo), colapsa o header
-        setHeaderColapsado(!entry.isIntersecting);
-      },
-      {
-        root: null, // observa o viewport da página inteira
-        threshold: 0,
-        rootMargin: '-60px 0px 0px 0px' // ajusta a altura do navbar fixo se tiver
-      }
-    );
-
-    observer.observe(sentinela);
-    return () => observer.disconnect();
-  }, [isMobile]);
+    // Desabilitado para evitar loops de layout/jitter ("modo fantasma") em telas Mac e dispositivos móveis.
+    setHeaderColapsado(false);
+  }, []);
 
   const [items, setItems] = useState<any[]>([]);
 

@@ -1,4 +1,4 @@
-export interface MovementPreset {
+﻿export interface MovementPreset {
   id: string;
   name: string;
   type: string;
