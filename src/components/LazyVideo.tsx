@@ -3,10 +3,23 @@ import { getOptimizedImageUrl } from './ImageWithSkeleton';
 
 export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = true, muted = true, playsInline = true, autoPlay, ...props }: any) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isIntersecting, setIsIntersecting] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const isLocal = src && (src.startsWith('/') || !src.startsWith('http'));
+  const [isIntersecting, setIsIntersecting] = useState(() => isLocal ? true : false);
+  const [loaded, setLoaded] = useState(() => isLocal ? true : false);
 
   useEffect(() => {
+    const local = src && (src.startsWith('/') || !src.startsWith('http'));
+    if (local) {
+      setIsIntersecting(true);
+      setLoaded(true);
+    } else {
+      setIsIntersecting(false);
+      setLoaded(false);
+    }
+  }, [src]);
+
+  useEffect(() => {
+    if (isIntersecting) return;
     // Safety fallback: if IntersectionObserver is not supported, or does not fire in 300ms
     // inside the nested iframe, we force loading to begin.
     const timer = setTimeout(() => {
@@ -37,7 +50,7 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
       clearTimeout(timer);
       observer.disconnect();
     };
-  }, []);
+  }, [isIntersecting]);
 
   // Forçar reprodução no mobile assim que o vídeo estiver visível e marcado como autoPlay
   useEffect(() => {

@@ -18,13 +18,15 @@ export const getOptimizedImageUrl = (url: string, width: number = 400) => {
 };
 
 export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName = 'w-full h-full', width = 400, onError, onLoad, ...props }: any) => {
-  const [loaded, setLoaded] = useState(false);
+  const isLocal = src && (src.startsWith('/') || !src.startsWith('http'));
+  const [loaded, setLoaded] = useState(() => isLocal ? true : false);
   const [error, setError] = useState(false);
   const [triedOriginal, setTriedOriginal] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(() => getOptimizedImageUrl(src, width));
 
   useEffect(() => {
-    setLoaded(false);
+    const local = src && (src.startsWith('/') || !src.startsWith('http'));
+    setLoaded(local ? true : false);
     setError(false);
     setTriedOriginal(false);
     setCurrentSrc(getOptimizedImageUrl(src, width));
@@ -81,8 +83,8 @@ export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName
         <img
           src={currentSrc}
           alt={alt || ''}
-          loading="lazy"
-          decoding="async"
+          loading={isLocal ? "eager" : "lazy"}
+          decoding={isLocal ? "sync" : "async"}
           className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 w-full h-full object-cover rounded-inherit`}
           onLoad={handleLoad}
           onError={handleError}

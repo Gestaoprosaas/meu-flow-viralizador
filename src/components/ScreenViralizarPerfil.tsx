@@ -941,7 +941,7 @@ export default function ScreenViralizarPerfil() {
                     loop
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                     className="w-full h-full object-cover rounded-xl"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />

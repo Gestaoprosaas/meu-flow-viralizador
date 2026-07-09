@@ -429,7 +429,7 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                   loop
                   muted
                   playsInline
-                  preload="metadata"
+                  preload="auto"
                   className="absolute inset-0 w-full h-full object-cover z-10"
                   style={{ objectFit: 'cover' }}
                   onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
@@ -5032,7 +5032,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                               loop
                               muted
                               playsInline
-                              preload="none"
+                              preload="auto"
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -5102,7 +5102,7 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     muted
                     playsInline
                     controls
-                    preload="none"
+                    preload="auto"
                     className="w-full h-full object-cover"
                   />
                 ) : (
