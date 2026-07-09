@@ -1,30 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getOptimizedImageUrl } from './ImageWithSkeleton';
 
-export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = true, muted = true, playsInline = true, autoPlay, ...props }: any) => {
+export const LazyVideo = ({ 
+  src, 
+  poster, 
+  className = 'w-full h-full', 
+  loop = true, 
+  muted = true, 
+  playsInline = true, 
+  autoPlay, 
+  showSkeleton = true,
+  ...props 
+}: any) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isLocal = src && (src.startsWith('/') || !src.startsWith('http'));
-  const [isIntersecting, setIsIntersecting] = useState(() => isLocal ? true : false);
-  const [loaded, setLoaded] = useState(() => isLocal ? true : false);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const local = src && (src.startsWith('/') || !src.startsWith('http'));
-    if (local) {
-      setIsIntersecting(true);
-      setLoaded(true);
-    } else {
-      setIsIntersecting(false);
-      setLoaded(false);
-    }
+    setIsIntersecting(false);
+    setLoaded(false);
   }, [src]);
 
   useEffect(() => {
     if (isIntersecting) return;
-    // Safety fallback: if IntersectionObserver is not supported, or does not fire in 300ms
+    
+    // Safety fallback: if IntersectionObserver is not supported, or does not fire in 400ms
     // inside the nested iframe, we force loading to begin.
     const timer = setTimeout(() => {
       setIsIntersecting(true);
-    }, 300);
+    }, 400);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -38,7 +42,7 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
       },
       { 
         threshold: 0.01,
-        rootMargin: '300px' // Começa a carregar o vídeo 300px antes de entrar na tela (ideal para mobile!)
+        rootMargin: '150px' // Começa a carregar o vídeo 150px antes de entrar na tela (ideal para mobile!)
       }
     );
 
@@ -50,7 +54,7 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
       clearTimeout(timer);
       observer.disconnect();
     };
-  }, [isIntersecting]);
+  }, [isIntersecting, src]);
 
   // Forçar reprodução no mobile assim que o vídeo estiver visível e marcado como autoPlay
   useEffect(() => {
@@ -79,7 +83,7 @@ export const LazyVideo = ({ src, poster, className = 'w-full h-full', loop = tru
 
   return (
     <div className={`relative ${className}`}>
-      {!loaded && (
+      {showSkeleton && !loaded && (
         <div className="absolute inset-0 bg-zinc-800 animate-pulse rounded-inherit" />
       )}
       <video

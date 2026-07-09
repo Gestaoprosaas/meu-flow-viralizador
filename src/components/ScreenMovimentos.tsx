@@ -65,6 +65,7 @@ function MovimentoCardItem({ movement, onSelect }: MovimentoCardItemProps) {
               <LazyVideo
                 key={movement.id}
                 src={videoSrc}
+                showSkeleton={false}
                 className="absolute inset-0 w-full h-full object-cover z-10"
                 style={{ objectFit: 'cover' }}
                 autoPlay

@@ -214,16 +214,19 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
               className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
               referrerPolicy="no-referrer"
             />
-            <LazyVideo
-              key={av.id}
-              src={av.videoUrl}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover z-10"
-              style={{ objectFit: 'cover' }}
-            />
+            {isInView && (
+              <LazyVideo
+                key={av.id}
+                src={av.videoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                showSkeleton={false}
+                className="absolute inset-0 w-full h-full object-cover z-10"
+                style={{ objectFit: 'cover' }}
+              />
+            )}
           </>
         ) : (
           <ImageWithSkeleton 
@@ -290,16 +293,19 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
               style={{ aspectRatio: 'unset' }}
               referrerPolicy="no-referrer"
             />
-            <LazyVideo
-              key={sc.id}
-              src={sc.videoUrl}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover object-center z-10"
-              style={{ objectFit: 'cover', aspectRatio: 'unset' }}
-            />
+            {isInView && (
+              <LazyVideo
+                key={sc.id}
+                src={sc.videoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                showSkeleton={false}
+                className="absolute inset-0 w-full h-full object-cover object-center z-10"
+                style={{ objectFit: 'cover', aspectRatio: 'unset' }}
+              />
+            )}
           </>
         ) : (
           <ImageWithSkeleton 
@@ -423,18 +429,19 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                   className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
                   referrerPolicy="no-referrer"
                 />
-                <video
-                  src={mv.videoUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  className="absolute inset-0 w-full h-full object-cover z-10"
-                  style={{ objectFit: 'cover' }}
-                  onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                {isInView && (
+                  <LazyVideo
+                    key={mv.id}
+                    src={mv.videoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    showSkeleton={false}
+                    className="absolute inset-0 w-full h-full object-cover z-10"
+                    style={{ objectFit: 'cover' }}
+                  />
+                )}
               </>
             );
           })()
