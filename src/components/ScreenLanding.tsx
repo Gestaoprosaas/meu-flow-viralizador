@@ -147,7 +147,19 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
   // Initialize client when we perform registration or login
   const getSupabaseClient = () => {
-    return getSupabase();
+    const client = getSupabase();
+    if (client) return client;
+
+    // Fallback: criar cliente diretamente com as keys
+    const url = import.meta.env.VITE_SUPABASE_URL ||
+                import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+                'https://bjwxsbcohqcpfftylovq.supabase.co';
+
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY ||
+                import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+                'sb_publishable_CIjXChnI0S1dHqf6COOqgQ_01U6t0S1';
+
+    return createClient(url, key);
   };
 
   // 1. Redirect to AppFly gateway URL
