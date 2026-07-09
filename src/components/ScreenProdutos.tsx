@@ -213,6 +213,8 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
               alt={av.name} 
               className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
               referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
             />
             {isInView && (
               <LazyVideo
@@ -223,6 +225,7 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
                 muted
                 playsInline
                 showSkeleton={false}
+                preload="none"
                 className="absolute inset-0 w-full h-full object-cover z-10"
                 style={{ objectFit: 'cover' }}
               />
@@ -234,6 +237,8 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
             alt={av.name} 
             className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
             referrerPolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
           />
         )}
         
@@ -292,6 +297,8 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
               className="absolute inset-0 w-full h-full object-cover object-center opacity-40 z-0"
               style={{ aspectRatio: 'unset' }}
               referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
             />
             {isInView && (
               <LazyVideo
@@ -302,6 +309,7 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
                 muted
                 playsInline
                 showSkeleton={false}
+                preload="none"
                 className="absolute inset-0 w-full h-full object-cover object-center z-10"
                 style={{ objectFit: 'cover', aspectRatio: 'unset' }}
               />
@@ -314,6 +322,8 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
             className="w-full h-full object-cover object-center transition-all duration-500"
             style={{ aspectRatio: 'unset' }}
             referrerPolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
           />
         )}
         
@@ -428,6 +438,8 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                   alt={mv.name}
                   className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
                   referrerPolicy="no-referrer"
+                  loading="lazy"
+                  decoding="async"
                 />
                 {isInView && (
                   <LazyVideo
@@ -438,6 +450,7 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                     muted
                     playsInline
                     showSkeleton={false}
+                    preload="none"
                     className="absolute inset-0 w-full h-full object-cover z-10"
                     style={{ objectFit: 'cover' }}
                   />
@@ -451,6 +464,8 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
             alt={mv.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             referrerPolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
           />
         )}
 
@@ -680,36 +695,35 @@ const enrichProduct = (p: any) => {
   };
 };
 
-function useMobileAndIntersection() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const containerRef = useRef<any>(null);
+// ── Mobile Breakpoint Context (único listener global) ──────────────
+const MobileContext = React.createContext(false);
 
+function MobileProvider({ children }: { children: React.ReactNode }) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler, { passive: true });
+    return () => window.removeEventListener('resize', handler);
   }, []);
+  return <MobileContext.Provider value={isMobile}>{children}</MobileContext.Provider>;
+}
+
+function useMobileAndIntersection() {
+  const isMobile = React.useContext(MobileContext);
+  const [isInView, setIsInView] = useState(!isMobile); // desktop: sempre true
+  const containerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!isMobile) {
-      setIsInView(true);
-      return;
-    }
+    if (!isMobile) { setIsInView(true); return; }
+    setIsInView(false); // reset ao detectar mobile
+    const el = containerRef.current;
+    if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { rootMargin: '100px' }
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { rootMargin: '150px', threshold: 0 }
     );
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-    
-    return () => {
-      observer.disconnect();
-    };
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [isMobile]);
 
   return { isMobile, isInView, containerRef };
@@ -2095,21 +2109,80 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
 
   const handleDownloadImagem = async (imageUrl: string, nomeProduto: string) => {
     try {
-      const proxyUrl = `/api/proxy-imagem?url=${encodeURIComponent(imageUrl)}`;
-      const response = await fetch(proxyUrl);
+      let response: Response;
+      const isLocal = imageUrl.startsWith('/') || imageUrl.startsWith(window.location.origin);
+
+      if (isLocal) {
+        // Se for um recurso local do próprio applet, baixar direto pelo navegador sem passar pelo proxy
+        response = await fetch(imageUrl);
+      } else {
+        // Se for um recurso externo, usar o proxy para contornar CORS
+        const proxyUrl = `/api/proxy-imagem?url=${encodeURIComponent(imageUrl)}`;
+        response = await fetch(proxyUrl);
+      }
+
       const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
+
+      // Detectar tipo MIME real do blob ou do header ou da própria URL original
+      const contentType = response.headers.get('content-type') || blob.type || '';
+      let ext = 'jpg';
+      let mimeType = 'image/jpeg';
+
+      if (contentType.includes('png')) {
+        ext = 'png';
+        mimeType = 'image/png';
+      } else if (contentType.includes('webp')) {
+        ext = 'webp';
+        mimeType = 'image/webp';
+      } else if (contentType.includes('gif')) {
+        ext = 'gif';
+        mimeType = 'image/gif';
+      } else if (contentType.includes('mp4') || imageUrl.endsWith('.mp4')) {
+        ext = 'mp4';
+        mimeType = 'video/mp4';
+      } else if (contentType.includes('quicktime') || imageUrl.endsWith('.mov')) {
+        ext = 'mov';
+        mimeType = 'video/quicktime';
+      } else if (contentType.includes('svg')) {
+        ext = 'svg';
+        mimeType = 'image/svg+xml';
+      } else {
+        const urlExtMatch = imageUrl.match(/\.([a-zA-Z0-9]+)(\?|$)/);
+        if (urlExtMatch) {
+          const detectedExt = urlExtMatch[1].toLowerCase();
+          if (detectedExt === 'mp4') {
+            ext = 'mp4';
+            mimeType = 'video/mp4';
+          } else if (detectedExt === 'mov') {
+            ext = 'mov';
+            mimeType = 'video/quicktime';
+          } else if (['png', 'webp', 'gif', 'svg'].includes(detectedExt)) {
+            ext = detectedExt;
+            mimeType = detectedExt === 'svg' ? 'image/svg+xml' : `image/${detectedExt}`;
+          }
+        }
+      }
+
+      // Forçar blob com tipo MIME correto
+      const typedBlob = new Blob([blob], { type: mimeType });
+      const objectUrl = URL.createObjectURL(typedBlob);
+
+      // Limpar nome do arquivo e aplicar a extensão correta
+      let fileName = nomeProduto.replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9\-]/g, '');
+      // Remover extensões anteriores para evitar duplicados (ex: beijo-cta.jpg.mp4 ou cenario.jpg.jpg)
+      fileName = fileName.replace(/\.(jpg|jpeg|png|webp|gif|mp4|mov)$/i, '');
+      fileName += `.${ext}`;
+
       const a = document.createElement('a');
       a.href = objectUrl;
-      a.download = `${nomeProduto.replace(/\s+/g, '-').toLowerCase()}`;
-      if (!a.download.endsWith('.jpg') && !a.download.endsWith('.png')) {
-        a.download += '.jpg';
-      }
+      a.download = fileName;
+      a.type = mimeType;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(objectUrl);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch {
+      // fallback: abrir em nova aba (usuário salva manualmente)
       window.open(imageUrl, '_blank');
     }
   };
@@ -2168,7 +2241,8 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
   const hidePanelsOnMobileMovimento = isMobile && videoMode === 'MOVIMENTO' && wizardStep === 2;
 
   return (
-    <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-12 select-none w-full">
+    <MobileProvider>
+      <div className="space-y-6 text-[#F0F0FF] animate-fade-in pb-12 select-none w-full">
       
       {/* Live Auto-Updating Trending Products TikTok Banner */}
       {!isMovimentoWizardStep && !hidePanelsOnMobileMovimento && (
@@ -4141,37 +4215,40 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     </div>
 
                     {/* Column 1: Avatar Image */}
-                    <div className="bg-[#0A0A0F] border border-[#1E1E2E] p-3 rounded-xl flex flex-col justify-between space-y-2.5">
-                      <span className="text-[10px] text-[#8888AA] font-bold uppercase tracking-wider block">1. Avatar Escolhido</span>
-                      
+                    <div className="bg-[#0A0A0F] border border-[#1E1E2E] p-3 rounded-xl flex flex-col gap-2.5">
+                      <span className="text-[10px] text-[#8888AA] font-bold uppercase tracking-wider">1. Avatar Escolhido</span>
+
                       {selectedAvatarId === 'CUSTOM_PHOTO' ? (
-                        <div className="flex flex-col items-center justify-center bg-[#111118] p-2.5 rounded-lg border border-dashed border-[#1E1E2E]/60 h-20 text-center">
-                          <ArrowUpFromLine className="w-5 h-5 text-[#8888AA] mb-1" />
-                          <span className="text-[10px] text-[#8888AA] font-bold leading-tight">Foto Própria do Usuário</span>
-                          <span className="text-[8px] text-[#666688]">Subirá direto no ViralSeller do vídeo</span>
+                        <div className="flex-1 flex flex-col items-center justify-center bg-[#111118] rounded-xl border border-dashed border-[#1E1E2E]/60 py-8 text-center min-h-[180px]">
+                          <ArrowUpFromLine className="w-6 h-6 text-[#8888AA] mb-2" />
+                          <span className="text-xs text-[#8888AA] font-bold leading-tight">Foto Própria do Usuário</span>
+                          <span className="text-[9px] text-[#666688] mt-1">Subirá direto no ViralSeller</span>
                         </div>
                       ) : (() => {
                         const avPreset = allAvatars.find(a => a.id === selectedAvatarId);
-                        const imgUrlToUse = avPreset?.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300';
+                        const imgUrlToUse = avPreset?.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
                         return (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3 bg-[#111118] p-2 rounded-lg border border-[#1E1E2E]">
-                              <ImageWithSkeleton 
-                                src={imgUrlToUse} 
-                                alt={avPreset?.name || 'Avatar'} 
+                          <div className="flex flex-col gap-2 flex-1">
+                            {/* Imagem grande */}
+                            <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-[#1E1E2E] bg-zinc-900 shrink-0">
+                              <ImageWithSkeleton
+                                src={imgUrlToUse}
+                                alt={avPreset?.name || 'Avatar'}
                                 referrerPolicy="no-referrer"
-                                className="w-12 h-12 rounded-lg object-cover border border-[#1E1E2E]"
+                                className="w-full h-full object-cover object-top"
+                                loading="lazy"
                               />
-                              <div className="flex-1 min-w-0">
-                                <span className="text-xs font-bold text-white block truncate">{avPreset?.name || 'Avatar Customizado'}</span>
-                                <span className="text-[9px] text-[#8888AA] block uppercase tracking-wider">{avPreset?.gender || 'PERSONALIZADO'}</span>
-                              </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-1.5 pt-1">
+                            {/* Nome */}
+                            <div className="bg-[#111118] rounded-lg px-2.5 py-1.5 border border-[#1E1E2E]">
+                              <span className="text-xs font-bold text-white block truncate">{avPreset?.name || 'Avatar Customizado'}</span>
+                              <span className="text-[9px] text-[#8888AA] uppercase tracking-wider">{avPreset?.gender || 'PERSONALIZADO'}</span>
+                            </div>
+                            {/* Botões */}
+                            <div className="grid grid-cols-2 gap-1.5">
                               <button
                                 onClick={() => handleDownloadImagem(imgUrlToUse, `${avPreset?.name || 'avatar'}.jpg`)}
-                                className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
-                                title="Baixar imagem do avatar"
+                                className="py-1.5 px-2 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                               >
                                 <Download className="w-3 h-3" /> Baixar
                               </button>
@@ -4183,10 +4260,9 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                                     setTimeout(() => setCopiedAvatarLink(false), 2000);
                                   } catch (err) {}
                                 }}
-                                className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-emerald-500/10 hover:text-emerald-400 text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
-                                title="Copiar link da imagem"
+                                className="py-1.5 px-2 bg-[#1E1E2E] hover:bg-emerald-500/10 hover:text-emerald-400 text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                               >
-                                {copiedAvatarLink ? "Copiado!" : "Copiar Link"}
+                                {copiedAvatarLink ? '✅ Copiado!' : 'Copiar Link'}
                               </button>
                             </div>
                           </div>
@@ -4195,82 +4271,81 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                     </div>
 
                     {/* Column 2: Product Image */}
-                    <div className="bg-[#0A0A0F] border border-[#1E1E2E] p-3 rounded-xl flex flex-col justify-between space-y-2.5">
-                      <span className="text-[10px] text-[#8888AA] font-bold uppercase tracking-wider block">2. Foto do Produto</span>
+                    <div className="bg-[#0A0A0F] border border-[#1E1E2E] p-3 rounded-xl flex flex-col gap-2.5">
+                      <span className="text-[10px] text-[#8888AA] font-bold uppercase tracking-wider">2. Foto do Produto</span>
+
                       {activeWizardProduct ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3 bg-[#111118] p-2 rounded-lg border border-[#1E1E2E]">
-                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#1E1E2E] shrink-0">
-                              <ProductImage 
-                                src={activeWizardProduct.imagem || activeWizardProduct.image_url} 
-                                alt={activeWizardProduct.name || activeWizardProduct.nome} 
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-xs font-bold text-white block truncate">{activeWizardProduct.name || activeWizardProduct.nome}</span>
-                              <span className="text-[9px] text-[#8888AA] block uppercase tracking-wider truncate">{activeWizardProduct.niche || activeWizardProduct.tags?.[0] || 'Produto'}</span>
-                            </div>
+                        <div className="flex flex-col gap-2 flex-1">
+                          {/* Imagem grande */}
+                          <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-[#1E1E2E] bg-zinc-900 shrink-0">
+                            <ProductImage
+                              src={activeWizardProduct.imagem || activeWizardProduct.image_url}
+                              alt={activeWizardProduct.name || activeWizardProduct.nome}
+                              className="w-full h-full object-cover object-center"
+                            />
                           </div>
-                          
-                          <div className="grid grid-cols-2 gap-1.5 pt-1">
+                          {/* Nome */}
+                          <div className="bg-[#111118] rounded-lg px-2.5 py-1.5 border border-[#1E1E2E]">
+                            <span className="text-xs font-bold text-white block truncate">{activeWizardProduct.name || activeWizardProduct.nome}</span>
+                            <span className="text-[9px] text-[#8888AA] uppercase tracking-wider truncate block">{activeWizardProduct.niche || activeWizardProduct.tags?.[0] || 'Produto'}</span>
+                          </div>
+                          {/* Botões */}
+                          <div className="grid grid-cols-2 gap-1.5">
                             <button
                               onClick={() => handleDownloadImagem(activeWizardProduct.imagem || activeWizardProduct.image_url, 'produto.jpg')}
-                              className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
-                              title="Baixar foto do produto"
+                              className="py-1.5 px-2 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                             >
                               <Download className="w-3 h-3" /> Baixar
                             </button>
                             <button
                               onClick={() => {
-                                  try {
-                                    navigator.clipboard.writeText(activeWizardProduct.imagem || activeWizardProduct.image_url);
-                                    setCopiedProductLink(true);
-                                    setTimeout(() => setCopiedProductLink(false), 2000);
-                                  } catch (err) {}
-                                }}
-                              className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-emerald-500/10 hover:text-emerald-400 text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
-                              title="Copiar link do produto"
+                                try {
+                                  navigator.clipboard.writeText(activeWizardProduct.imagem || activeWizardProduct.image_url);
+                                  setCopiedProductLink(true);
+                                  setTimeout(() => setCopiedProductLink(false), 2000);
+                                } catch (err) {}
+                              }}
+                              className="py-1.5 px-2 bg-[#1E1E2E] hover:bg-emerald-500/10 hover:text-emerald-400 text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                             >
-                              {copiedProductLink ? "Copiado!" : "Copiar Link"}
+                              {copiedProductLink ? '✅ Copiado!' : 'Copiar Link'}
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-center h-20 bg-[#111118] rounded-lg border border-[#1E1E2E]">
+                        <div className="flex-1 flex items-center justify-center min-h-[180px] bg-[#111118] rounded-xl border border-[#1E1E2E]">
                           <span className="text-[10px] text-[#8888AA]">Nenhum produto selecionado</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Column 2.5: Curated Scenario Image (Only shown if isCuratedScenario is active) */}
+                    {/* Column 2.5: Curated Scenario Image (only when isCuratedScenario) */}
                     {isCuratedScenario && (() => {
                       const scPreset = CURATED_SCENARIOS_PRESETS.find(s => s.id === selectedScenarioId);
-                      const scImgUrl = scPreset?.referenceImageUrl || scPreset?.imageUrl || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=300';
+                      const scImgUrl = scPreset?.referenceImageUrl || scPreset?.imageUrl || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=400';
                       return (
-                        <div className="bg-[#0A0A0F] border border-[#1E1E2E] p-3 rounded-xl flex flex-col justify-between space-y-2.5">
-                          <span className="text-[10px] text-[#8888AA] font-bold uppercase tracking-wider block">3. Cenário Escolhido</span>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3 bg-[#111118] p-2 rounded-lg border border-[#1E1E2E]">
-                              <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#1E1E2E] shrink-0">
-                                <ImageWithSkeleton 
-                                  src={scImgUrl} 
-                                  alt={scPreset?.name || 'Cenário'} 
-                                  referrerPolicy="no-referrer"
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <span className="text-xs font-bold text-white block truncate">{scPreset?.name || 'Cenário'}</span>
-                                <span className="text-[9px] text-[#8888AA] block uppercase tracking-wider truncate">{scPreset?.type || 'Pronto'}</span>
-                              </div>
+                        <div className="bg-[#0A0A0F] border border-[#1E1E2E] p-3 rounded-xl flex flex-col gap-2.5">
+                          <span className="text-[10px] text-[#8888AA] font-bold uppercase tracking-wider">3. Cenário Escolhido</span>
+                          <div className="flex flex-col gap-2 flex-1">
+                            {/* Imagem grande */}
+                            <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-[#1E1E2E] bg-zinc-900 shrink-0">
+                              <ImageWithSkeleton
+                                src={scImgUrl}
+                                alt={scPreset?.name || 'Cenário'}
+                                referrerPolicy="no-referrer"
+                                className="w-full h-full object-cover object-center"
+                                loading="lazy"
+                              />
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-1.5 pt-1">
+                            {/* Nome */}
+                            <div className="bg-[#111118] rounded-lg px-2.5 py-1.5 border border-[#1E1E2E]">
+                              <span className="text-xs font-bold text-white block truncate">{scPreset?.name || 'Cenário'}</span>
+                              <span className="text-[9px] text-[#8888AA] uppercase tracking-wider">{scPreset?.type || 'Pronto'}</span>
+                            </div>
+                            {/* Botões */}
+                            <div className="grid grid-cols-2 gap-1.5">
                               <button
                                 onClick={() => handleDownloadImagem(scImgUrl, `${scPreset?.name || 'cenario'}.jpg`)}
-                                className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
-                                title="Baixar foto do cenário"
+                                className="py-1.5 px-2 bg-[#1E1E2E] hover:bg-[#06B6D4]/10 hover:text-[#06B6D4] text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                               >
                                 <Download className="w-3 h-3" /> Baixar
                               </button>
@@ -4282,10 +4357,9 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
                                     setTimeout(() => setCopiedScenarioLink(false), 2000);
                                   } catch (err) {}
                                 }}
-                                className="py-1 px-1.5 bg-[#1E1E2E] hover:bg-emerald-500/10 hover:text-emerald-400 text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
-                                title="Copiar link do cenário"
+                                className="py-1.5 px-2 bg-[#1E1E2E] hover:bg-emerald-500/10 hover:text-emerald-400 text-[10px] font-black rounded-lg text-[#F0F0FF] transition-all flex items-center justify-center gap-1"
                               >
-                                {copiedScenarioLink ? "Copiado!" : "Copiar Link"}
+                                {copiedScenarioLink ? '✅ Copiado!' : 'Copiar Link'}
                               </button>
                             </div>
                           </div>
@@ -5174,5 +5248,6 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
         )}
 
       </div>
-    );
-  }
+    </MobileProvider>
+  );
+}
