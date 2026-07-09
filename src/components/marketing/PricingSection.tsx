@@ -108,7 +108,7 @@ export default function PricingSection({
             <div>
               <h4 className="text-2xl font-black text-white tracking-tight">Mensal</h4>
               <p className="text-sm text-gray-400 mt-2 font-medium">
-                Acesso completo com flexibilidade total.
+                Acesso completo ao Shopsy com flexibilidade total.
               </p>
               
               {/* Cost layout exactly like image */}
@@ -204,7 +204,7 @@ export default function PricingSection({
                   </div>
                   
                   <div className="text-base sm:text-lg font-black text-amber-300">
-                    ou 10x de R$ {((cupomAplicado.preco_com_desconto || 297.00) / 10).toFixed(2).replace('.', ',')}
+                    ou 12x R$31,75
                   </div>
                   
                   <div className="text-xs text-zinc-400 font-medium">

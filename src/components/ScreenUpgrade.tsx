@@ -221,7 +221,7 @@ export default function ScreenUpgrade({ profile, onRefreshProfile, onNavigate }:
         'Até 100 Roteiros de alta conversão/mês',
         '10 Vídeos com IA por mês',
         'Apenas 5 prompts de imagem por dia (Limite)',
-        'Otimizador de Prompts Premium para Flow/Flux',
+        'Otimizador de Prompts Premium para ViralSeller/Flux',
         'Criação de Webhooks e Configurações Ilimitados',
         'Acesso completo a Biblioteca Viral e Scripts',
         'Suporte por email prioritário'
@@ -241,7 +241,7 @@ export default function ScreenUpgrade({ profile, onRefreshProfile, onNavigate }:
         'Roteiros premium ilimitados para sempre',
         '50 Vídeos com IA por mês',
         'Apenas 5 prompts de imagem por dia (Limite)',
-        'Otimizador de Prompts Premium para Flow/Flux',
+        'Otimizador de Prompts Premium para ViralSeller/Flux',
         'Criação de Webhooks e Configurações Ilimitados',
         'Acesso completo a Biblioteca Viral e Scripts',
         'Suporte prioritário via WhatsApp'

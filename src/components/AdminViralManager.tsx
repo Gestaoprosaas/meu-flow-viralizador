@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { 
   Plus, 
   Trash2, 
@@ -358,7 +359,7 @@ export default function AdminViralManager({ onRefresh }: AdminViralManagerProps)
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <img 
+                    <ImageWithSkeleton 
                       src={temp.thumbnail_url} 
                       alt="" 
                       className="w-12 h-12 object-cover rounded-lg border border-[#1E1E2E]"
@@ -638,7 +639,7 @@ export default function AdminViralManager({ onRefresh }: AdminViralManagerProps)
                   className="w-full bg-[#030307] border border-[#1E1E2E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#25F4EE] h-20 resize-none"
                   required
                 />
-                <span className="text-[9px] text-[#666688] font-bold block mt-1">Este diálogo será acoplado diretamente na fala dublada do Avatar de IA no Flow.</span>
+                <span className="text-[9px] text-[#666688] font-bold block mt-1">Este diálogo será acoplado diretamente na fala dublada do Avatar de IA no ViralSeller.</span>
               </div>
 
               <div className="flex items-center gap-2 pt-2">

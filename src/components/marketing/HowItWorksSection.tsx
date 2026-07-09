@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { LazyVideo } from '../LazyVideo';
+import { ImageWithSkeleton } from '../ImageWithSkeleton';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -257,7 +259,7 @@ export default function HowItWorksSection() {
                       {/* Product Item 1 */}
                       <div className="bg-[#121019] border border-white/[0.04] rounded-2xl flex overflow-hidden">
                         <div className="relative w-24 h-24 shrink-0 bg-[#07050A]">
-                          <img 
+                          <ImageWithSkeleton 
                             src="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=150" 
                             alt="Legging" 
                             className="w-full h-full object-cover"
@@ -284,7 +286,7 @@ export default function HowItWorksSection() {
                       {/* Product Item 2 */}
                       <div className="bg-[#121019] border border-white/[0.04] rounded-2xl flex overflow-hidden">
                         <div className="relative w-24 h-24 shrink-0 bg-[#07050A]">
-                          <img 
+                          <ImageWithSkeleton 
                             src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&q=80&w=150" 
                             alt="Cinta" 
                             className="w-full h-full object-cover"
@@ -311,7 +313,7 @@ export default function HowItWorksSection() {
                       {/* Product Item 3 */}
                       <div className="bg-[#121019] border border-white/[0.04] rounded-2xl flex overflow-hidden">
                         <div className="relative w-24 h-24 shrink-0 bg-[#07050A]">
-                          <img 
+                          <ImageWithSkeleton 
                             src="https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&q=80&w=150" 
                             alt="Bermuda" 
                             className="w-full h-full object-cover"
@@ -338,7 +340,7 @@ export default function HowItWorksSection() {
                       {/* Product Item 4 */}
                       <div className="bg-[#121019] border border-white/[0.04] rounded-2xl flex overflow-hidden">
                         <div className="relative w-24 h-24 shrink-0 bg-[#07050A]">
-                          <img 
+                          <ImageWithSkeleton 
                             src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=150" 
                             alt="Vestido" 
                             className="w-full h-full object-cover"
@@ -435,7 +437,7 @@ export default function HowItWorksSection() {
                               : 'border-white/[0.04]'
                           }`}
                         >
-                          <img 
+                          <ImageWithSkeleton 
                             src={av.img} 
                             alt={av.name} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
@@ -641,7 +643,7 @@ export default function HowItWorksSection() {
                         
                         {/* Gradient backdrop background */}
                         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80 z-0" />
-                        <img 
+                        <ImageWithSkeleton 
                           src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200" 
                           alt="Model Video" 
                           className="absolute inset-0 w-full h-full object-cover z-0 opacity-60"
@@ -781,32 +783,32 @@ export default function HowItWorksSection() {
                 id: 1, 
                 title: 'Gancho Vestuário Brasil', 
                 views: '1.2M views', 
-                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Beijo%20+%20CTA.mp4',
-                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Beijo%20+%20CTA.mp4',
+                imgUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=350', 
+                videoUrl: '', // Adicione a URL do vídeo .mp4 aqui para tocar em loop
                 tag: 'Moda' 
               },
               { 
                 id: 2, 
                 title: 'Lifestyle Fit Selfie', 
                 views: '984K views', 
-                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Girl_stepping_forward_with_clothing_202606281557.mp4',
-                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Girl_stepping_forward_with_clothing_202606281557.mp4',
+                imgUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=350', 
+                videoUrl: '',
                 tag: 'Academia' 
               },
               { 
                 id: 3, 
                 title: 'Checked Dress Review', 
                 views: '1.4M views', 
-                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Person_presenting_clothing_POV_202606281521.mp4',
-                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Person_presenting_clothing_POV_202606281521.mp4',
+                imgUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=350', 
+                videoUrl: '',
                 tag: 'Dicas' 
               },
               { 
                 id: 4, 
                 title: 'Estilo Premium OOTD', 
                 views: '870K views', 
-                imgUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Tapar%20Camera.mp4',
-                videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES/Tapar%20Camera.mp4',
+                imgUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=350', 
+                videoUrl: '',
                 tag: 'Review' 
               }
             ].map((rc) => (
@@ -817,7 +819,7 @@ export default function HowItWorksSection() {
                 {/* Background image/video cover */}
                 <div className="absolute inset-0 z-0">
                   {rc.videoUrl ? (
-                    <video 
+                    <LazyVideo 
                       src={rc.videoUrl} 
                       autoPlay 
                       loop 
@@ -826,7 +828,7 @@ export default function HowItWorksSection() {
                       className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
                     />
                   ) : (
-                    <img 
+                    <ImageWithSkeleton 
                       src={rc.imgUrl} 
                       alt={rc.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition duration-700"

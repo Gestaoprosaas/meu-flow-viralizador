@@ -55,7 +55,7 @@ const PROMPTS_PREMIUM: PromptCard[] = [
     categoria: 'VIRAIS',
     icone: '🔥',
     prompt: "USE SEU AMBIENTE, AVATAR E CAMISETA.\n\nUse the first image ONLY as an environment + pose reference.\nUse the second image as the ONLY avatar identity reference.\nUse the third image ONLY as the TOP clothing/product reference.\nUse the fourth image ONLY as the BOTTOM clothing/product reference.\n\nIMPORTANT CONTEXT:\nThe first image may contain a model.\nThat model must be used ONLY to extract:\n• Camera angle\n• Body orientation\n• Pose\n• Distance to camera\n• Framing\n• Perspective\nThe identity of the model in the first image must NEVER be reused.\n\n────────────────────────\nENVIRONMENT + POSE EXTRACTION (CRITICAL)\n────────────────────────\n• Extract ONLY the environment from Image 1.\n• Completely remove the original model from Image 1.\n• The environment must look originally empty.\n\nFROM IMAGE 1, PRESERVE EXACTLY:\n• Camera angle\n• Camera height\n• Camera tilt\n• Distance from camera to subject\n• Body orientation\n• Pose silhouette\n• Framing and crop\n• Perspective and depth\n• Lighting direction and softness\n\n────────────────────────\nAVATAR INSERTION (CRITICAL)\n────────────────────────\n• Insert the avatar from Image 2 into the extracted environment.\n• Keep ONLY the identity from Image 2.\n• Do NOT reuse the woman from Image 1.\n• Match the exact pose and framing from Image 1.\n• Keep the arms naturally straight and relaxed.\n\n────────────────────────\nTOP PRODUCT APPLICATION (IMAGE 3)\n────────────────────────\n• Apply ONLY the product/clothing from Image 3.\n• Replicate it exactly as shown.\n• Preserve the exact fit, positioning, proportions, and style.\n• If it sits higher or lower on the body, preserve that exact placement.\n• No creative changes.\n\n────────────────────────\nBOTTOM PRODUCT APPLICATION (IMAGE 4)\n────────────────────────\n• Apply ONLY the product/clothing from Image 4.\n• Replicate it exactly as shown.\n• Preserve the exact waist height, fit, proportions, and style.\n• If it is low waist, keep it low waist.\n• If it is high waist, keep it high waist.\n• No creative changes.\n\n────────────────────────\nLIGHTING & INTEGRATION\n────────────────────────\n• Match environment lighting exactly.\n• Natural shadows consistent with Image 1.\n• Ultra realistic photographic realism.\n• No CGI look.\n• No beauty filter.\n• No stylization.\n• No text or watermarks.\n\n────────────────────────\nFINAL RESULT\n────────────────────────\nA realistic scene where:\n• Image 1 = environment + pose.\n• Image 2 = the ONLY avatar identity.\n• Image 3 = top product.\n• Image 4 = bottom product.\n\nThe final image must look like the woman from Image 2 was originally photographed in the environment from Image 1 while wearing the exact products from Images 3 and 4",
-    previewUrl: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/BIBLIOTECA%20PREMIUM/ambiente%20avatar%20camiseta.png"
+    previewUrl: "/images/cenarios/ambiente_avatar_camiseta.png"
   },
   {
     id: '2',
@@ -63,7 +63,55 @@ const PROMPTS_PREMIUM: PromptCard[] = [
     categoria: 'VIRAIS',
     icone: '⭐',
     prompt: "Use the first image ONLY as an environment + pose reference.\nUse the second image as the ONLY avatar identity reference.\nUse the third image as the ONLY TOP clothing/product reference.\nUse the fourth image as the ONLY BOTTOM clothing/product reference.\n\nIMPORTANT CONTEXT:\nThe first image may contain a model.\nThat model must be used ONLY to extract:\n• Camera angle\n• Body orientation\n• Pose\n• Distance to camera\n• Framing\n• Perspective\nThe identity of the model in the first image must NEVER be reused.\n\n────────────────────────\nENVIRONMENT + POSE EXTRACTION (CRITICAL)\n────────────────────────\n• Extract ONLY the environment from Image 1.\n• Completely remove the original model from Image 1.\n• The environment must look originally empty.\n\nFROM IMAGE 1, PRESERVE EXACTLY:\n• Camera angle\n• Camera height\n• Camera tilt\n• Distance from camera to subject\n• Body orientation\n• Pose silhouette\n• Framing and crop\n• Perspective and depth\n• Lighting direction and softness.\n\n────────────────────────\nAVATAR INSERTION (CRITICAL)\n────────────────────────\n• Insert the avatar from Image 2 into the extracted environment.\n• Keep ONLY the identity from Image 2.\n• Do NOT reuse the woman from Image 1.\n• Match the exact pose and framing from Image 1.\n• Keep the arms naturally straight and relaxed.\n\n────────────────────────\nTOP PRODUCT APPLICATION (IMAGE 3)\n────────────────────────\n• Apply ONLY the product/clothing from Image 3.\n• Replicate it exactly as shown.\n• Preserve the exact fit, positioning, proportions, and style.\n• If it sits higher or lower on the body, preserve that exact placement.\n• No creative changes.\n\n────────────────────────\nBOTTOM PRODUCT APPLICATION (IMAGE 4)\n────────────────────────\n• Apply ONLY the product/clothing from Image 4.\n• Replicate it exactly as shown.\n• Preserve the exact waist height, fit, proportions, and style.\n• If it is low waist, keep it low waist.\n• If it is high waist, keep it high waist.\n• No creative changes.\n\n────────────────────────\nLIGHTING & INTEGRATION\n────────────────────────\n• Match environment lighting exactly.\n• Natural shadows consistent with Image 1.\n• Ultra realistic photographic realism.\n• No CGI look.\n• No beauty filter.\n• No stylization.\n• No text or watermarks.\n\n────────────────────────\nFINAL RESULT\n────────────────────────\nA realistic scene where:\n• Image 1 = environment + pose.\n• Image 2 = the ONLY avatar identity.\n• Image 3 = top product.\n• Image 4 = bottom product.\n\nThe final image must look like the woman from Image 2 was originally photographed in the environment from Image 1 while wearing the exact products from Images 3 and 4.",
-    previewUrl: "https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/BIBLIOTECA%20PREMIUM/AMBIENTE+MODELO+PROD+PROD.png_2K_202607062212.jpeg"
+    previewUrl: "/images/cenarios/AMBIENTE_MODELO_PROD_PROD.png"
+  },
+  {
+    id: '3',
+    titulo: 'CTA Irresistível',
+    categoria: 'Conversão',
+    icone: '💰',
+    prompt: "Crie 3 chamadas para ação (CTAs) de encerramento de vídeo que gerem senso de urgência e FOMO (Fear Of Missing Out). O objetivo é fazer a pessoa clicar no link da bio ou no botão de compra imediatamente.\n\nProduto: [INSERIR PRODUTO]\nOferta: [INSERIR OFERTA OU DESCONTO]",
+    previewUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  },
+  {
+    id: '4',
+    titulo: 'Storytelling de Produto',
+    categoria: 'UGC',
+    icone: '🎯',
+    prompt: "Crie um roteiro de storytelling de 30 segundos contando a história de como esse produto resolveu um problema muito irritante que quase todo mundo tem.\n\nUse o formato: Problema > Frustração > Descoberta do Produto > Solução > CTA.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: '5',
+    titulo: 'Gatilho de Escassez',
+    categoria: 'Vendas',
+    icone: '⚡',
+    prompt: "Escreva um texto curto e persuasivo para colocar na tela (overlay de texto) de um vídeo, focando inteiramente no gatilho mental de escassez e urgência de tempo/estoque.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  },
+  {
+    id: '6',
+    titulo: 'Comparativo Antes/Depois',
+    categoria: 'Conteúdo',
+    icone: '✨',
+    prompt: "Estruture um roteiro visual para um vídeo de transição 'Antes e Depois'.\n\nDescreva exatamente o que deve aparecer na tela durante os primeiros 5 segundos (o problema) e depois a transição impactante mostrando o resultado nos próximos 5 segundos.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: '7',
+    titulo: 'Unboxing com Emoção',
+    categoria: 'UGC',
+    icone: '📦',
+    prompt: "Crie um roteiro para um vídeo de unboxing estilo ASMR/UGC, descrevendo as emoções, expressões faciais e o texto que deve ser narrado ao abrir a caixa e ver o produto pela primeira vez.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  },
+  {
+    id: '8',
+    titulo: 'Objeção Destruída',
+    categoria: 'Vendas',
+    icone: '🎤',
+    prompt: "Liste as 3 principais objeções (motivos para não comprar) que um cliente teria sobre este produto e crie um roteiro de 20 segundos que quebre todas essas objeções de forma lógica e emocional.\n\nProduto: [INSERIR PRODUTO]",
+    previewUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80"
   },
 ];
 
@@ -89,7 +137,7 @@ export default function ScreenBibliotecaPremium() {
           {/* Hero */}
           <div className="relative w-full rounded-3xl overflow-hidden" style={{ minHeight: '340px' }}>
             <img
-              src="https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/AVATARES%20DAS%20ETAPAS/Large_3D_letters_VIRALSELLER_night_202607062127.jpeg"
+              src="/images/avatares/Large_3D_letters_VIRALSELLER_night_202607062127.jpeg"
               alt="Biblioteca Premium"
               className="absolute inset-0 w-full h-full object-cover"
             />

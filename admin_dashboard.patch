@@ -1,0 +1,181 @@
+--- src/components/ScreenAdmin.tsx
++++ src/components/ScreenAdmin.tsx
+@@ -14,7 +14,7 @@
+ export default function ScreenAdmin({ onNavigate, profile }: ScreenAdminProps) {
+-  const [activeTab, setActiveTab] = useState<'users' | 'parceiros' | 'sistema'>('users');
++  const [activeTab, setActiveTab] = useState<'users' | 'parceiros' | 'sistema' | 'dashboard' | 'notificacoes'>('users');
+   const [loading, setLoading] = useState(false);
+   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+ 
+   // === SEÇÃO USUÁRIOS ===
+   const [users, setUsers] = useState<any[]>([]);
+   const [userSearch, setUserSearch] = useState('');
+   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
++  const [usersVisibleCount, setUsersVisibleCount] = useState(10);
+ 
+   // === SEÇÃO PARCEIROS ===
+   const [parceiros, setParceiros] = useState<any[]>([]);
+@@ -37,6 +37,21 @@
+   const supabase = getSupabase();
+   const isSuperAdmin = profile?.role === 'superadmin';
+   const isAdmin = profile?.role === 'admin' || isSuperAdmin;
++
++  // === SEÇÃO DASHBOARD CONFIG ===
++  const [dashboardConfig, setDashboardConfig] = useState<any[]>(() => {
++    const saved = localStorage.getItem('dashboard_config_admin');
++    if (saved) {
++      try { return JSON.parse(saved); } catch (e) { }
++    }
++    return [
++      { id: '1', name: 'Score de Viralização Geral', value: '82%', subValue: '+12.4%', icon: '🚀', color: 'cyan' },
++      { id: '2', name: 'Faturamento Estimado', value: 'R$ 54.200', subValue: '18.5%', icon: '💰', color: 'red' },
++      { id: '3', name: 'Conversão das Copias', value: '21.5%', subValue: '+4.2%', icon: '📈', color: 'indigo' }
++    ];
++  });
+ 
+   useEffect(() => {
+     if (profile && !isAdmin && !isSuperAdmin) {
+@@ -183,11 +198,14 @@
+ 
+   // Filtering
+-  const filteredUsers = users.filter(u => 
+-    (u.name || '').toLowerCase().includes(userSearch.toLowerCase()) || 
+-    (u.email || '').toLowerCase().includes(userSearch.toLowerCase())
++  const filteredUsers = users.filter(u => {
++    const nameMatch = (u.name || '').toLowerCase().includes(userSearch.toLowerCase());
++    const emailMatch = (u.email || '').toLowerCase().includes(userSearch.toLowerCase());
++    const isTemp = (u.email || '').includes('@example.com') || (u.name || '').startsWith('temp_user_');
++    if (isTemp) return false;
++    return nameMatch || emailMatch;
++  });
+   
++  const usersExibidos = userSearch ? filteredUsers : filteredUsers.slice(0, usersVisibleCount);
+   const adminsCount = users.filter(u => u.role === 'admin').length;
+   const clientsCount = users.filter(u => u.role !== 'admin').length;
+ 
+@@ -233,6 +251,17 @@
+           )}
+ 
++          {isSuperAdmin && (
+           <button
++            onClick={() => setActiveTab('dashboard')}
++            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
++              activeTab === 'dashboard' ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
++            }`}
++          >
++            <Activity className="w-4 h-4" /> Dashboard
++          </button>
++          )}
++
++          <button
+-            onClick={() => setActiveTab('notificacoes' as any)}
++            onClick={() => setActiveTab('notificacoes')}
+             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+               activeTab === 'notificacoes' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-white'
+@@ -312,7 +341,7 @@
+               ) : (
+-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+-                  {filteredUsers.map(user => (
++                <div className="space-y-4">
++                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
++                  {usersExibidos.map(user => (
+                     <div key={user.id} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-5 hover:border-[#FE2C55]/30 transition-colors flex flex-col h-full">
+                       <div className="flex items-start gap-4 mb-4">
+@@ -382,6 +411,18 @@
+                   )}
++                  </div>
++                  
++                  {filteredUsers.length > usersExibidos.length && !userSearch && (
++                    <div className="flex flex-col items-center gap-2 pt-4">
++                      <button 
++                        onClick={() => setUsersVisibleCount(prev => prev + 10)}
++                        className="px-6 py-2 bg-[#FE2C55]/10 text-[#FE2C55] font-bold text-sm rounded-xl hover:bg-[#FE2C55]/20 transition-colors"
++                      >
++                        Ver mais 10 usuários
++                      </button>
++                      <span className="text-xs text-zinc-500 font-bold">
++                        Exibindo {usersExibidos.length} de {filteredUsers.length} usuários
++                      </span>
++                    </div>
++                  )}
+                 </div>
+               )}
+@@ -517,6 +558,74 @@
+           )}
+ 
+ 
++          {/* TAB: DASHBOARD */}
++          {activeTab === 'dashboard' && isSuperAdmin && (
++            <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
++              <div>
++                <h1 className="text-3xl font-black tracking-tight">Dashboard Config</h1>
++                <p className="text-zinc-400 text-sm mt-1">Configure as métricas exibidas na tela principal.</p>
++              </div>
++              
++              <div className="space-y-4">
++                {dashboardConfig.map((item, index) => (
++                  <div key={item.id} className="bg-[#0D0D1A] border border-[#1E1E35] rounded-2xl p-5 space-y-4">
++                    <div className="flex justify-between items-center">
++                      <h3 className="text-white font-bold text-sm">Métrica {index + 1}</h3>
++                      <button onClick={() => {
++                        setDashboardConfig(dashboardConfig.filter((_, i) => i !== index));
++                      }} className="text-red-400 hover:text-red-300 text-xs font-bold bg-red-400/10 px-2 py-1 rounded">Remover</button>
++                    </div>
++                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
++                      <div>
++                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Nome</label>
++                        <input type="text" value={item.name} onChange={e => {
++                          const newConfig = [...dashboardConfig];
++                          newConfig[index].name = e.target.value;
++                          setDashboardConfig(newConfig);
++                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none" />
++                      </div>
++                      <div>
++                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Valor</label>
++                        <input type="text" value={item.value} onChange={e => {
++                          const newConfig = [...dashboardConfig];
++                          newConfig[index].value = e.target.value;
++                          setDashboardConfig(newConfig);
++                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none" />
++                      </div>
++                      <div>
++                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Ícone/Emoji</label>
++                        <input type="text" value={item.icon} onChange={e => {
++                          const newConfig = [...dashboardConfig];
++                          newConfig[index].icon = e.target.value;
++                          setDashboardConfig(newConfig);
++                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none" />
++                      </div>
++                      <div>
++                        <label className="text-xs font-semibold text-zinc-400 block mb-1">Cor</label>
++                        <select value={item.color} onChange={e => {
++                          const newConfig = [...dashboardConfig];
++                          newConfig[index].color = e.target.value;
++                          setDashboardConfig(newConfig);
++                        }} className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-2 text-sm text-white outline-none">
++                          <option value="cyan">Cyan</option>
++                          <option value="red">Red</option>
++                          <option value="indigo">Indigo</option>
++                          <option value="emerald">Emerald</option>
++                          <option value="amber">Amber</option>
++                        </select>
++                      </div>
++                    </div>
++                  </div>
++                ))}
++              </div>
++              
++              <div className="flex gap-4 pt-4">
++                <button onClick={() => {
++                  setDashboardConfig([...dashboardConfig, { id: Date.now().toString(), name: 'Nova Métrica', value: '0', subValue: '+0%', icon: '📊', color: 'cyan' }]);
++                }} className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm rounded-xl transition">Adicionar Métrica</button>
++                <button onClick={() => {
++                  localStorage.setItem('dashboard_config_admin', JSON.stringify(dashboardConfig));
++                  notify('Configurações do dashboard salvas com sucesso!', 'success');
++                }} className="px-6 py-3 bg-gradient-to-r from-[#FE2C55] to-[#813EF6] text-white font-bold text-sm rounded-xl transition shadow-lg hover:opacity-90">Salvar Alterações</button>
++              </div>
++            </div>
++          )}
++
+           {/* TAB: SISTEMA */}

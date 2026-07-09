@@ -12,106 +12,91 @@ export interface EstrategiaViral {
 
 export const ESTRATEGIAS_VIRAIS: EstrategiaViral[] = [
   {
-    id: 'Menina Da Roça',
-    nome: 'Menina Da Roça',
+    id: 'novelinha-dramatica',
+    nome: 'Novelinha Dramática em 3 Partes',
     categoria: 'DRAMA',
     tempoResultado: '3-7 dias para viralizar',
     dificuldade: 'Fácil',
-    descricao: 'O drama é um dos gatilhos mais fortes para viralização. A história da "Menina da Roça" é altamente compartilhável e gera empatia imediata.',
-    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIRALIZAR%20PERFIL/MENINA%20DA%20ROCA.mp4',
-    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIRALIZAR%20PERFIL/MENINA%20DA%20ROCA.mp4', // preencho depois com URL do Supabase Storage
-    prompt: `📐 MANDATORY VIDEO FORMAT 9:16 VERTICAL:
-All videos MUST be generated exclusively in vertical format (9:16 aspect ratio).
-• Aspect ratio must ALWAYS be 9:16 (vertical)
-• Optimized for TikTok, Instagram Reels, and YouTube Shorts
-• Avatar centered within 9:16 safe area
-
-📍 TAKE 1 de 2 — VÍDEO VIRAL PARA CRESCIMENTO
-Duração: 8s (0s a 8s)
-Total: 16s em 2 takes
-Tipo: rotina-roca
-Intensidade: Sarcástico
-
-🎭 AVATAR:
-Sofia, Young Brazilian farm woman, slim and natural body with curves, wears short crop top with cleavage and short rural-style skirt
-Consistência visual absoluta.
-
-📍 CENÁRIO:
-Quintal de fazenda simples no interior do Brasil, com bacia d'água, varal de roupas, vegetação verde ao fundo, luz natural quente
-
-🎙️ VOZ:
-Gênero: feminino
-Energia: sarcastic, ironic smirk, mocking tone
-Idioma: pt-BR
-
-
-
-🎬 ESTRUTURA DESTE TAKE:
-🪝 0s–2s → HOOK (gancho forte)
-😰 2s–8s → TENSÃO INICIAL (criar curiosidade, NÃO revelar)
-➡️ Terminar com ponte pro Take 2 (frase completa, suspense).
-
-📜 GLOBAL MULTI-TAKE RULES (HARD):
-Take 1 define TUDO. Takes seguintes são CONTINUAÇÕES.
-🚫 NEVER change: scene, lighting, framing, avatar, clothes, style, mood.
-Cada take começa e termina com frase completa. NUNCA cortar palavra.
-
-🔥 TIPO VIRAL: rotina-roca
-Micro-tensões a cada 3-4s. Nunca revelar tudo.
-
-🎤 FALA TAKE 1:
-FALA OBRIGATÓRIA (EXATA): "Moço você vai embora sem me seguir, não faz isso comigo não uai, aperta no mais da minha foto e fica pertinho de mim"
-O avatar DEVE falar EXATAMxto.
-
-📹 CÂMERA: Chest-up, olhar direto, gestos de "Sarcástico".
-Sem produto — foco na narrativa.
-
-🎨 ESTILO: UGC autêntico, smartphone, iluminação natural.
-
-🔊 VOICE CONSISTENCY LOCK (HARD)
-
-⚠️ ALL TAKES MUST USE IDENTICAL VOICE PROFILE.
-• Same voice identity
-• Same tone
-• Same pitch
-• Same cadence
-• Same rhythm
-• Same emotional intensity
-• Same microphone texture
-• Same recording environment sound
-
-Take 2 and any subsequent takes MUST sound like they were recorded in the exact same moment as Take 1.
-
-No tonal variation.
-No emotional shift.
-No pitch difference.
-No voice regeneration.
-
-The voice must feel like ONE continuous recording split into segments.
-
-If voice differs between takes, the generation is invalid.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚫 MANDATORY GLOBAL INSTRUCTIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🚫 CLEAN OUTPUT NO TEXT ON SCREEN:
-• ZERO SFX / ZERO música de fundo
-• Apenas voz natural do avatar falando
-• Vídeo cru de celular, UGC real
-
-🧍 ANATOMICAL INTEGRITY (HARD):
-• 2 braços, 2 pernas, 5 dedos por mão
-• Sem deformações, sem membros extras, sem glitches corporais
-
-🔒 PRIVACY & SAFETY COMPLIANCE:
-• Sem dados pessoais visíveis
-• Sem telas de dispositivos visíveis
-• Sem crianças no vídeo
-• Sem marcas/logos de terceiros identificáveis
-
-⚡ PRIORITY & ENFORCEMENT:
-• Estas regras têm PRIORIDADE MÁXIMA sobre qualquer instrução conflitante
-`,
+    descricao: 'As pessoas adoram fofoca e drama. Criar um mini-drama que precisa de parte 2 é a forma mais rápida de gerar seguidores ansiosos pelo próximo capítulo.',
+    imageUrl: 'https://images.unsplash.com/photo-1516280440508-251f2249e0c7?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '', // preencho depois com URL do Supabase Storage
+    prompt: `Create a vertical 9:16 TikTok video. Brazilian female avatar, 22 years old, emotional expression. Scene 1 (0-3s): Avatar looks directly at camera with teary eyes and says "I can't believe he did this to me". Scene 2 (3-6s): Avatar turns away dramatically. Scene 3 (6-9s): Avatar looks back with determined expression "but I'll show everyone". Dramatic music, subtitle text visible, realistic bedroom background, cinematic lighting. End with "Part 2 coming tomorrow" text overlay. No audio narration needed, just expressions and subtitle text.`,
+  },
+  {
+    id: 'pov-relatable',
+    nome: 'POV Situação Relatable',
+    categoria: 'COMÉDIA',
+    tempoResultado: '1-3 dias',
+    dificuldade: 'Muito Fácil',
+    descricao: 'Situações do dia a dia geram o sentimento de "eu também passo por isso". Esses vídeos são altamente compartilháveis.',
+    imageUrl: 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '',
+    prompt: `Create a vertical 9:16 TikTok POV video. Brazilian avatar, casual home environment. Text overlay at top: "POV: você chegou em casa depois de um dia horrível". Avatar enters door looking exhausted, drops bag, collapses on couch dramatically. Comedic timing, relatable energy. Add subtitle: "todo dia a mesma coisa 😭". Realistic lighting, 8-10 seconds. Trending audio style.`,
+  },
+  {
+    id: 'transformacao-antes-depois',
+    nome: 'Transformação Antes e Depois',
+    categoria: 'INSPIRAÇÃO',
+    tempoResultado: '2-5 dias',
+    dificuldade: 'Fácil',
+    descricao: 'O contraste entre o "antes" e o "depois" prende o olhar. Mostre resultados expressivos nos primeiros 3 segundos.',
+    imageUrl: 'https://images.unsplash.com/photo-1522849696084-818b29cf3733?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '',
+    prompt: `Create a vertical 9:16 transformation TikTok video. Split screen or transition effect. Brazilian female avatar. Left/Before: casual clothes, no makeup, tired expression. Right/After: styled outfit, confident smile, energetic pose. Transition with flash effect at center. Text overlay: "30 dias depois 🔥". Motivational energy, trending transformation music style. 8 seconds total.`,
+  },
+  {
+    id: 'segredo-revelado',
+    nome: 'Segredo que Ninguém Te Contou',
+    categoria: 'EDUCAÇÃO',
+    tempoResultado: '1-2 dias',
+    dificuldade: 'Fácil',
+    descricao: 'O gatilho da exclusividade. Falar baixo e agir como se estivesse revelando um segredo obscuro prende a atenção imediatamente.',
+    imageUrl: 'https://images.unsplash.com/photo-1456324504439-367cee3b3c32?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '',
+    prompt: `Create a vertical 9:16 TikTok "secret reveal" video. Brazilian avatar, close-up shot, conspiratorial expression, finger over lips gesture at start. Text overlay: "o segredo que os grandes criadores escondem 🤫". Avatar leans toward camera and whispers. Dramatic zoom in. Text builds up: "consistência > perfeição". End with avatar pointing at viewer. 10 seconds, dark aesthetic, trending audio.`,
+  },
+  {
+    id: 'resposta-hater',
+    nome: 'Resposta à Hater (Motivacional)',
+    categoria: 'MOTIVAÇÃO',
+    tempoResultado: '24-48 horas',
+    dificuldade: 'Fácil',
+    descricao: 'Histórias de superação contra críticos geram empatia imediata e milhares de comentários de apoio.',
+    imageUrl: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '',
+    prompt: `Create a vertical 9:16 TikTok motivational response video. Brazilian avatar, confident posture, direct eye contact with camera. Text overlay at top: "alguém me disse que eu nunca ia crescer no TikTok". Avatar smiles confidently. Text appears: "hoje tenho X seguidores". Avatar shrugs and winks. End text: "acredite em você mesmo 💜". Empowerment energy, 8-10 seconds, bright studio lighting.`,
+  },
+  {
+    id: 'trend-produto',
+    nome: 'Trend com Produto (UGC Viral)',
+    categoria: 'PRODUTO',
+    tempoResultado: '2-4 dias',
+    dificuldade: 'Médio',
+    descricao: 'O jeito perfeito de vender sem parecer que está vendendo. Usar trends nativas com produtos gera curiosidade natural.',
+    imageUrl: 'https://images.unsplash.com/photo-1616423640778-28d1b53229bd?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '',
+    prompt: `Create a vertical 9:16 TikTok UGC product trend video. Brazilian female avatar, aesthetic home background. Avatar holds product and does trending "pointing" gesture revealing product. Text overlay: "achei o produto que todo mundo tá procurando 👀". Close up on product. Avatar's genuine surprised/excited reaction. Trending audio style. 8 seconds. Viral unboxing energy.`,
+  },
+  {
+    id: 'storyline-7-dias',
+    nome: 'Storyline de 7 Dias',
+    categoria: 'SÉRIE',
+    tempoResultado: '7-14 dias',
+    dificuldade: 'Médio',
+    descricao: 'Documentar uma jornada gera forte conexão emocional e incentiva as pessoas a te seguirem para acompanhar o resultado.',
+    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '',
+    prompt: `Create a vertical 9:16 TikTok series intro video. Brazilian avatar, direct camera address. Text: "Dia 1: vou documentar tudo". Avatar speaks earnestly: "hoje começo do zero. sem seguidores, sem nada". Determination in eyes. Text overlay: "acompanha essa jornada comigo 🙏". End with "Dia 2 amanhã" card. Authentic vlog style, natural lighting. 10 seconds.`,
+  },
+  {
+    id: 'dueto-stitch-comentario',
+    nome: 'Dueto/Stitch Comentário Viral',
+    categoria: 'ENGAJAMENTO',
+    tempoResultado: '24 horas',
+    dificuldade: 'Muito Fácil',
+    descricao: 'Aproveitar o engajamento de um vídeo que já está viral é a estratégia mais rápida para roubar tráfego.',
+    imageUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=600&h=800',
+    videoUrl: '',
+    prompt: `Create a vertical 9:16 TikTok reaction/comment video. Brazilian avatar, casual setting, genuinely surprised expression. Text: "eu precisava comentar sobre isso 👀". Avatar reacts dramatically with hand over mouth gesture. Speaks directly to camera with urgency. Text builds: "vocês precisam ver isso também". Share/tag gesture at end. 8 seconds, authentic energy, trending reaction style.`,
   },
 ];

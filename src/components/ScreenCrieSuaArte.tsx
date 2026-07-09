@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { Sparkles, ImageIcon, Download, Bookmark, Layers, RefreshCw, Eye, Check, Clipboard, Image as LucideImage, AlertCircle, User, Upload } from 'lucide-react';
 import { ImageGeneration } from '../types';
 
@@ -121,7 +122,7 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
   const getGeneratorName = () => {
     switch (favGenerator) {
       case 'https://flux1ai.com/':
-        return 'Flow (Flux 1 AI)';
+        return 'ViralSeller (Flux 1 AI)';
       case 'https://huggingface.co/spaces/black-forest-labs/FLUX.1-schnell':
         return 'HuggingFace FLUX';
       case 'https://seaart.ai':
@@ -141,14 +142,14 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
         }
         return 'Gerador Customizado';
       default:
-        return 'Flow (Flux 1 AI)';
+        return 'ViralSeller (Flux 1 AI)';
     }
   };
 
   // Filter images to only show those that are generated as arts
   const arteImages = images.filter(img => 
     img.id.startsWith('arte-') || 
-    img.product_name?.includes('Flow') || 
+    img.product_name?.includes('ViralSeller') || 
     img.product_name === 'Arte Criativa' || 
     img.prompt_used?.length > 10
   );
@@ -173,7 +174,7 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
           prompt: prompt,
           aspectRatio: aspectRatio,
           estilo: estilo,
-          product_name: productName || 'Arte Otimizada para Flow',
+          product_name: productName || 'Arte Otimizada para ViralSeller',
           platform: 'instagram',
           hasOwnAvatar: hasOwnAvatar,
           avatarDetails: hasOwnAvatar ? avatarDetails : ''
@@ -239,7 +240,7 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
             <Sparkles className="w-6 h-6 text-[#25F4EE]" />
             Crie Arte
           </h1>
-          <p className="text-xs sm:text-sm text-[#8888AA]">Nossa inteligência converte ideias em fórmulas fotorrealistas em inglês para colar e gerar imagens 100% grátis no Flow/Flux!</p>
+          <p className="text-xs sm:text-sm text-[#8888AA]">Nossa inteligência converte ideias em fórmulas fotorrealistas em inglês para colar e gerar imagens 100% grátis no ViralSeller/Flux!</p>
         </div>
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 shrink-0">
           {limitInfo && (
@@ -413,7 +414,7 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
                       <div className="relative border border-dashed border-[#1E1E2E] hover:border-[#25F4EE]/40 rounded-lg p-3 transition duration-150 flex flex-col items-center justify-center bg-zinc-950/50">
                         {customAvatarImg ? (
                           <div className="flex items-center gap-3 w-full">
-                            <img 
+                            <ImageWithSkeleton 
                               src={customAvatarImg} 
                               alt="Avatar Próprio" 
                               className="w-10 h-10 object-cover rounded-lg border border-zinc-700 shrink-0" 
@@ -500,7 +501,7 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
                   onChange={(e) => savePreferredGenerator(e.target.value)}
                   className="w-full bg-[#0A0A12] border border-[#1E1E2E] rounded-xl py-2 px-3 text-xs text-emerald-400 font-extrabold outline-none focus:border-[#25F4EE] transition cursor-pointer"
                 >
-                  <option value="https://flux1ai.com/">Flux 1 AI (Site do "Flow" Oficial)</option>
+                  <option value="https://flux1ai.com/">Flux 1 AI (Site do "ViralSeller" Oficial)</option>
                   <option value="https://huggingface.co/spaces/black-forest-labs/FLUX.1-schnell">Hugging Face FLUX (Grátis & Ilimitado)</option>
                   <option value="https://seaart.ai">SeaArt AI (Excelente & Avançado)</option>
                   <option value="https://leonardo.ai">Leonardo AI (Profissional)</option>
@@ -671,7 +672,7 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
                       rel="noopener noreferrer" 
                       className="px-3 py-2 bg-[#0C0C14] hover:bg-[#111122] border border-[#1E1E2E] text-[#25F4EE] rounded-xl flex items-center justify-between font-bold"
                     >
-                      <span>Abrir {favGenerator === 'custom' ? 'Gerador' : 'Flow Oficial'}</span>
+                      <span>Abrir {favGenerator === 'custom' ? 'Gerador' : 'ViralSeller Oficial'}</span>
                       <span className="text-[8px] text-emerald-400 uppercase font-black">Grátis</span>
                     </a>
                     <a 
@@ -783,7 +784,7 @@ export default function ScreenCrieSuaArte({ images, onImageGenerated, profileCre
           className="fixed inset-0 bg-black/95 z-[999] flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
         >
           <div className="relative max-w-4xl max-h-[90vh] bg-zinc-900/50 p-2.5 rounded-2xl border border-zinc-800 backdrop-blur-md shadow-2xl flex items-center justify-center">
-            <img
+            <ImageWithSkeleton
               src={zoomImg}
               alt="Zoomed art"
               referrerPolicy="no-referrer"

@@ -7,7 +7,7 @@ export default function FaqSection() {
 
   const faqs = [
     {
-      q: 'O que faz a plataforma de IA do Projeto Vitão?',
+      q: 'O que faz a plataforma de IA do ViralSeller?',
       a: 'Nossa inteligência artificial mapeia as mecânicas de retenção mais bem-sucedidas no feed brasileiro e instantaneamente gera um funil completo de vendas: roteiros psicológicos de alta persuasão, fotos ambientadas em HD com estúdios virtuais de luxo, e locuções rítmicas super realistas em português para seus b-rolls.'
     },
     {

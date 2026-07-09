@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { 
   Users, 
   Search, 
@@ -479,7 +480,7 @@ Setting and composition:
             {AVATARS_PRESETS.filter(a => readyFilter === 'TODOS' || a.gender === readyFilter).map(avatar => (
               <div key={avatar.id} className="bg-[#050508] border border-[#1E1E2E] p-3 rounded-2xl flex flex-col gap-3 group relative overflow-hidden">
                 <div className="aspect-[3/4] rounded-xl overflow-hidden relative bg-[#1E1E2E]">
-                  <img src={avatar.imageUrl || (avatar as any).foto} alt={avatar.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <ImageWithSkeleton src={avatar.imageUrl || (avatar as any).foto} alt={avatar.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div>
                   <h4 className="font-bold text-white text-sm truncate">{avatar.name}</h4>

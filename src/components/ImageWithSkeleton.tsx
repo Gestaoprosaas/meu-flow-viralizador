@@ -47,6 +47,13 @@ export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName
     if (onLoad) onLoad(e);
   };
 
+  const isVideo = src && (
+    src.toLowerCase().endsWith('.mp4') || 
+    src.toLowerCase().endsWith('.webm') || 
+    src.toLowerCase().includes('.mp4?') || 
+    src.toLowerCase().includes('/videos/')
+  );
+
   return (
     <div className={`relative ${containerClassName}`}>
       {!loaded && !error && (
@@ -57,7 +64,20 @@ export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName
           <span className="text-zinc-600 text-[10px]">Indisponível</span>
         </div>
       )}
-      {src && (
+      {src && isVideo && (
+        <video
+          src={currentSrc}
+          loop
+          muted
+          playsInline
+          autoPlay
+          className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 w-full h-full object-cover rounded-inherit`}
+          onLoadedData={handleLoad}
+          onError={handleError}
+          {...props}
+        />
+      )}
+      {src && !isVideo && (
         <img
           src={currentSrc}
           alt={alt || ''}

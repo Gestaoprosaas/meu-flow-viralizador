@@ -1,281 +1,189 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, Sparkles, Gift } from 'lucide-react';
+import { Check, Zap, Sparkles } from 'lucide-react';
 
 interface PricingSectionProps {
-  onSelectPlan: (planKey: 'starter' | 'pro' | 'agency', customUrl?: string) => void;
-  cupomCode: string;
-  setCupomCode: (val: string) => void;
-  cupomAplicado: any;
-  cupomError: string;
-  setCupomError: (val: string) => void;
-  cupomLoading: boolean;
-  aplicarCupom: () => Promise<void>;
-  appflyMonthly: string;
-  appflyLifetime: string;
+  onSelectPlan: (planKey: 'starter' | 'pro' | 'agency') => void;
+  onSelectFree: () => void;
 }
 
-export default function PricingSection({
-  onSelectPlan,
-  cupomCode,
-  setCupomCode,
-  cupomAplicado,
-  cupomError,
-  setCupomError,
-  cupomLoading,
-  aplicarCupom,
-  appflyMonthly,
-  appflyLifetime
-}: PricingSectionProps) {
+export default function PricingSection({ onSelectPlan, onSelectFree }: PricingSectionProps) {
+  const [isAnnual, setIsAnnual] = useState(false);
 
-  const formatPrice = (value: any) => {
-    const parsed = parseFloat(value) || 0;
-    return `R$ ${parsed.toFixed(2).replace('.', ',')}`;
-  };
+  const plans = [
+    {
+      key: 'free' as const,
+      name: 'Free / Grátis',
+      price: 0,
+      desc: 'Ideal para experimentar o painel',
+      credits: '10 créditos de texto • 5 de imagem • 0 de vídeo',
+      features: [
+        'Modelos de roteamento básico',
+        'Imagens comerciais em baixa resolução',
+        'Central de mineração limitada',
+        'Copys de vendas calibradas de entrada',
+        'Sem suporte prioritário'
+      ],
+      popular: false,
+      btnText: 'Começar Gratuitamente',
+      highlightColor: 'border-white/10 hover:border-white/20'
+    },
+    {
+      key: 'starter' as const,
+      name: 'Starter',
+      price: isAnnual ? 77 : 97,
+      desc: 'Para afiliados e sellers acelerados',
+      credits: '50 créditos de texto • 30 de imagem • 3 de vídeo',
+      features: [
+        'Modelos de roteamento completos',
+        'Imagens ambientadas em HD',
+        '3 dublagens realistas de voz por mês',
+        'Exportação direta de criativos',
+        'Acesso completo a Central de Hooks',
+        'Suporte prioritário via e-mail'
+      ],
+      popular: false,
+      btnText: 'Adquirir Starter',
+      highlightColor: 'border-white/10 hover:border-[#69C9D0]/30'
+    },
+    {
+      key: 'pro' as const,
+      name: 'Pro',
+      price: isAnnual ? 147 : 197,
+      desc: 'O motor preferido dos Top Sellers BR',
+      credits: '200 créditos de texto • 100 de imagem • 15 de vídeo',
+      features: [
+        'Tudo do plano Starter incluso',
+        '15 dublagens realistas de IA premium',
+        'Copys persuasivas com modelo de ponta',
+        'Acesso total prioritário a tendências diárias',
+        'Acesso ao treinamento de tráfego pago',
+        'Suporte VIP individualizado via WhatsApp'
+      ],
+      popular: true,
+      btnText: 'Garantir PRO (Com Desconto)',
+      highlightColor: 'border-[#FE2C55] shadow-[0_0_30px_rgba(254,44,85,0.15)] bg-gradient-to-b from-[#111118] to-[#0D0D14]'
+    },
+    {
+      key: 'agency' as const,
+      name: 'Agency',
+      price: isAnnual ? 397 : 497,
+      desc: 'Para agências que operam múltiplas contas',
+      credits: '999 créditos de texto • 500 de imagem • 60 de vídeo',
+      features: [
+        'Tudo do plano Pro incluso',
+        'Acesso para até 5 colaboradores',
+        '60 dublagens comerciais exclusivas',
+        'Processamento VIP prioritário instantâneo',
+        'Consultoria estratégica individual de criativos',
+        'Suporte de contingência para páginas de vendas'
+      ],
+      popular: false,
+      btnText: 'Dominar Mercado',
+      highlightColor: 'border-white/10 hover:border-purple-500/30'
+    }
+  ];
 
   return (
-    <section id="pricing-section" className="relative w-full bg-[#0A0A0F]/45 backdrop-blur-md py-24 sm:py-32 px-6 md:px-12 border-b border-[#1E1E2E] overflow-hidden">
-      
-      {/* Ambient background blur */}
+    <section id="pricing-section-root" className="relative w-full bg-[#111118] py-24 sm:py-32 px-6 md:px-12 border-b border-[#1E1E2E] overflow-hidden">
       <div className="absolute right-0 bottom-0 w-96 h-96 bg-[#FE2C55]/2 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto space-y-12 relative z-10 font-sans text-center">
-        
-        {/* Title Group */}
-        <div className="space-y-4 max-w-3xl mx-auto">
-          <h2 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight">
-            Escolha o ritmo da sua <span className="bg-gradient-to-r from-[#FE2C55] via-[#FF5F7E] to-[#69C9D0] bg-clip-text text-transparent">criação.</span>
+      <div className="max-w-7xl mx-auto space-y-16 relative z-10 font-sans text-center">
+        <div className="space-y-4 max-w-2xl mx-auto">
+          <span className="text-xs text-[#69C9D0] font-black uppercase tracking-widest bg-[#69C9D0]/10 px-3.5 py-1.5 rounded-full border border-[#69C9D0]/20 inline-block">
+            INVESTIMENTO SEGURO
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            Planos Justos para Qualquer Operação
           </h2>
-          <p className="text-gray-400 text-sm sm:text-base font-medium">
-            Cancele quando quiser. Sem letras miúdas.
+          <p className="text-gray-400 text-xs sm:text-sm">
+            Seja você um iniciante buscando as primeiras comissões ou uma agência estruturada faturando múltiplos dígitos no TikTok Shop.
           </p>
         </div>
 
-        {/* Coupon Area form landonorris style (Clean custom input element) */}
-        <div className="max-w-md mx-auto pt-2 pb-6">
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              aplicarCupom();
-            }} 
-            className="flex items-center gap-2 bg-[#0E0B13]/90 border border-white/[0.06] rounded-full p-1.5 pl-4 shadow-xl"
-          >
-            <Gift className="w-4 h-4 text-gray-500 shrink-0" />
-            <input 
-              type="text" 
-              placeholder="TEM UM CUPOM DE INDICAÇÃO?" 
-              value={cupomCode}
-              onChange={(e) => {
-                setCupomCode(e.target.value);
-                setCupomError('');
-              }}
-              disabled={cupomLoading}
-              className="bg-transparent text-white text-xs font-bold outline-none border-none placeholder-gray-600 w-full uppercase tracking-wider"
-              id="coupon-input"
-            />
-            <button 
-              type="submit"
-              disabled={cupomLoading}
-              className="bg-[#FE2C55] hover:bg-[#E01E45] disabled:opacity-50 text-white text-xs font-extrabold px-6 py-2 rounded-full cursor-pointer transition-all duration-200 hover:scale-[1.02] tracking-widest shrink-0 flex items-center gap-1.5"
-              id="coupon-apply-btn"
-            >
-              {cupomLoading ? (
-                <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-              ) : null}
-              <span>{cupomLoading ? 'APLICANDO...' : 'APLICAR'}</span>
-            </button>
-          </form>
-          {cupomAplicado && (
-            <p className="text-emerald-400 text-sm font-bold mt-2 animate-fade-in tracking-wide bg-emerald-500/10 py-2 px-4 rounded-lg border border-emerald-500/20 inline-block">
-              ✅ Cupom {cupomAplicado.cupom} aplicado!
-            </p>
-          )}
-          {cupomError && (
-            <p className="text-[#FE2C55] text-sm font-bold mt-2 animate-fade-in tracking-wide inline-block">
-              {cupomError}
-            </p>
-          )}
-        </div>
-
-        {/* Planes Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-6">
+        <div className="flex items-center justify-center gap-4 pb-4">
+          <span className={`text-xs font-bold transition-all ${!isAnnual ? 'text-white' : 'text-gray-500'}`}>COBRANÇA MENSAL</span>
           
-          {/* PLAN 1: MENSAL */}
-          <div 
-            id="plan-card-mensal"
-            className="relative border border-white/[0.05] bg-[#0F0D15]/80 backdrop-blur-md rounded-3xl p-8 flex flex-col justify-between text-left transition-all duration-300 group hover:border-[#FE2C55]/20 hover:shadow-[0_0_40px_rgba(254,44,85,0.05)]"
+          <button 
+            type="button"
+            onClick={() => setIsAnnual(!isAnnual)}
+            className="w-14 h-8 bg-white/[0.05] border border-white/10 rounded-full p-1 flex items-center justify-start transition duration-300 relative"
           >
-            <div>
-              <h4 className="text-2xl font-black text-white tracking-tight">Mensal</h4>
-              <p className="text-sm text-gray-400 mt-2 font-medium">
-                Acesso completo com flexibilidade total.
-              </p>
-              
-              {/* Cost layout exactly like image */}
-              {cupomAplicado ? (
-                <div className="mt-8">
-                  <span className="line-through text-zinc-500 text-sm font-bold">R$ 245,00</span>
-                  <div className="text-4xl font-black text-emerald-400">R$ 147,00</div>
-                  <span className="text-xs text-zinc-400 mt-1 block font-bold tracking-wider">À VISTA — SEM PARCELAMENTO</span>
-                </div>
-              ) : (
-                <>
-                  <div className="mt-8 flex items-baseline gap-2">
-                    <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">R$ 245,00</span>
-                    <span className="text-gray-500 text-xs font-extrabold tracking-widest uppercase">/MÊS</span>
-                  </div>
+            <div className={`w-6 h-6 rounded-full bg-gradient-to-tr from-[#FE2C55] to-[#69C9D0] shadow-md transition duration-300 transform ${isAnnual ? 'translate-x-6' : 'translate-x-0'}`} />
+          </button>
 
-                  {/* Subtitle information */}
-                  <span className="text-[10px] font-mono text-gray-500 block mt-2 tracking-wider">
-                    Cobre mensalmente recorrente.
-                  </span>
-                </>
-              )}
-
-              {/* Features List with custom styled checkmarks */}
-              <ul className="space-y-4 border-t border-white/[0.04] pt-6 mt-8">
-                {[
-                  'Acesso mensal à plataforma',
-                  'Apenas 5 prompts de imagens por dia (Limite Diário)',
-                  'Espionagem de produtos em alta',
-                  'Gerador de vídeos com IA',
-                  'Gerador de imagens com IA',
-                  'Calendário de postagens',
-                  'Tutorial completo passo a passo',
-                  'Indique e Ganhe'
-                ].map((feat, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-xs text-gray-300 font-medium">
-                    <div className="w-4 h-4 rounded-full bg-[#FE2C55]/10 border border-[#FE2C55]/20 flex items-center justify-center shrink-0">
-                      <Check className="w-2.5 h-2.5 text-[#FE2C55]" strokeWidth={3} />
-                    </div>
-                    <span>{feat}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Action button */}
-            <div className="mt-8 pt-4 border-t border-white/[0.03]">
-              <button
-                type="button"
-                onClick={() => onSelectPlan('starter', appflyMonthly)}
-                className="w-full py-4 rounded-xl bg-white/[0.03] hover:bg-[#FE2C55] hover:text-white border border-white/[0.07] text-[#ECECFF] font-black text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-[#FE2C55]/15"
-                id="btn-select-mensal"
-              >
-                ASSINAR MENSAL
-              </button>
-            </div>
-          </div>
-
-          {/* PLAN 2: VITALÍCIO */}
-          <div 
-            id="plan-card-vitalicio"
-            className="relative border border-white/[0.05] bg-[#0F0D15]/80 backdrop-blur-md rounded-3xl p-8 flex flex-col justify-between text-left transition-all duration-300 group hover:border-[#69C9D0]/30 hover:shadow-[0_0_40px_rgba(105,201,208,0.05)] border-t-[#FE2C55]"
-          >
-            {/* Best Value Badge */}
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              {cupomAplicado ? (
-                <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] font-black uppercase px-5 py-2 rounded-full tracking-widest shadow-lg shadow-red-500/25 flex items-center gap-1 animate-pulse">
-                  🔥 {cupomAplicado.desconto_percentual || 40}% OFF
-                </span>
-              ) : (
-                <span className="bg-[#FE2C55] text-white text-[9px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-lg shadow-[#FE2C55]/25 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 fill-white text-white" /> MELHOR CUSTO-BENEFÍCIO
-                </span>
-              )}
-            </div>
-
-            <div>
-              <h4 className="text-2xl font-black text-white tracking-tight pt-2">Vitalício</h4>
-              <p className="text-sm text-gray-400 mt-2 font-medium">
-                Pague uma vez. Use para sempre, sem mensalidade.
-              </p>
-              
-              {/* Cost layout exactly like image */}
-              {cupomAplicado ? (
-                <div className="mt-8 space-y-2 bg-[#120F1D]/50 border border-white/[0.03] p-4 rounded-2xl">
-                  <div className="flex items-baseline gap-2.5">
-                    <span className="text-sm font-bold text-zinc-500 line-through">
-                      {formatPrice(cupomAplicado.preco_original || 497.00)}
-                    </span>
-                    <span className="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight">
-                      {formatPrice(cupomAplicado.preco_com_desconto || 297.00)}
-                    </span>
-                  </div>
-                  
-                  <div className="text-base sm:text-lg font-black text-amber-300">
-                    ou 12x R$31,75
-                  </div>
-                  
-                  <div className="text-xs text-zinc-400 font-medium">
-                    Economize R$ {((cupomAplicado.preco_original || 497.00) - (cupomAplicado.preco_com_desconto || 297.00)).toFixed(2).replace('.', ',')}
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-8 flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">R$ 497,00</span>
-                  <span className="text-gray-500 text-xs font-extrabold tracking-widest uppercase">PAGAMENTO ÚNICO</span>
-                </div>
-              )}
-
-              {/* Subtitle info */}
-              <span className="text-[10px] font-mono text-[#69C9D0] font-bold block mt-2 tracking-wider">
-                Acesso para sempre. Sem anuidades.
-              </span>
-              
-              {cupomAplicado?.tipo === 'presente' && (
-                <div className="mt-3 bg-gradient-to-r from-amber-500/20 to-orange-500/5 border border-amber-500/30 rounded-lg p-2 flex items-center justify-center gap-2">
-                  <span className="text-xs font-extrabold text-amber-400 uppercase tracking-widest">+ Kit Viral Premium (EM BREVE)</span>
-                </div>
-              )}
-
-              {/* Features List with custom styled checkmarks */}
-              <ul className="space-y-4 border-t border-white/[0.04] pt-6 mt-8">
-                {[
-                  'Acesso Vitalício (pague uma vez, use para sempre)',
-                  'Apenas 5 prompts de imagens por dia (Limite Diário)',
-                  'Tudo do plano Mensal',
-                  'Gerador de vídeos com IA',
-                  'Gerador de imagens com IA',
-                  'Suporte prioritário',
-                  'Comunidade Exclusiva',
-                  'Treinamento Personalizado',
-                  'Indique e Ganhe',
-                  'Bônus exclusivos'
-                ].map((feat, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-xs text-gray-300 font-medium">
-                    <div className="w-4 h-4 rounded-full bg-[#FE2C55]/10 border border-[#FE2C55]/20 flex items-center justify-center shrink-0">
-                      <Check className="w-2.5 h-2.5 text-[#FE2C55]" strokeWidth={3} />
-                    </div>
-                    <span>{feat}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Action button */}
-            <div className="mt-8 pt-4 border-t border-white/[0.03]">
-              <button
-                type="button"
-                onClick={() => onSelectPlan('pro', appflyLifetime)}
-                className="w-full py-4 rounded-xl bg-[#FE2C55]/5 hover:bg-[#FE2C55] hover:text-white border border-[#FE2C55]/30 text-[#FE2C55] font-black text-xs uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-[#FE2C55]/25"
-                id="btn-select-vitalicio"
-              >
-                GARANTIR VITALÍCIO
-              </button>
-            </div>
-          </div>
-
+          <span className={`text-xs font-bold transition-all flex items-center gap-1.5 ${isAnnual ? 'text-[#69C9D0]' : 'text-gray-500'}`}>
+            COBRANÇA ANUAL
+            <span className="bg-[#69C9D0]/10 text-[#69C9D0] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse border border-[#69C9D0]/20 font-mono">
+              -20% OFF
+            </span>
+          </span>
         </div>
 
-        <div className="mt-8 text-center max-w-lg mx-auto">
-          <p className="text-[#8888AA] text-sm">
-            Após o pagamento você receberá um email para criar sua senha e acessar a plataforma.
-          </p>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {plans.map((p) => (
+            <div 
+              key={p.key} 
+              className={`relative border rounded-2.5xl p-6 sm:p-7 flex flex-col justify-between text-left transition-all duration-300 group overflow-hidden ${p.highlightColor}`}
+            >
+              {p.popular && (
+                <div className="absolute top-4 right-4 bg-[#FE2C55] text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full tracking-widest flex items-center gap-1 shadow-lg shadow-[#FE2C55]/25">
+                  <Sparkles className="w-3" /> MAIS POPULAR
+                </div>
+              )}
 
+              <div>
+                <span className="text-xs uppercase font-mono text-gray-500 tracking-wider block font-bold mb-2 font-sans">PROJETO VITÃO</span>
+                <h4 className="text-xl font-black text-white font-sans">{p.name}</h4>
+                <p className="text-xs text-gray-400 mt-2 min-h-[32px] font-sans">{p.desc}</p>
+                
+                <div className="mt-6 flex items-baseline gap-1 font-sans">
+                  <span className="text-slate-400 text-xs font-bold">R$</span>
+                  <span className="text-4xl sm:text-5xl font-black text-white tracking-tight">{p.price}</span>
+                  <span className="text-slate-500 text-xs">/mês</span>
+                </div>
+                <span className="text-[10px] font-mono text-[#69C9D0] font-semibold block mt-1.5 italic min-h-[15px]">
+                  {isAnnual ? `R$ ${(p.price * 12).toLocaleString('pt-BR')} cobrados anualmente` : 'Cobrado mensalmente'}
+                </span>
+
+                <span className="text-[11px] font-mono tracking-wide block bg-white/[0.03] border border-white/[0.04] p-2.5 rounded-xl text-[#69C9D0] font-bold mt-5 mb-6 text-center leading-relaxed">
+                  {p.credits}
+                </span>
+
+                <ul className="space-y-3.5 border-t border-white/[0.04] pt-5">
+                  {p.features.map((feat, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-gray-300 font-medium">
+                      <Check className="w-4.5 h-4.5 text-[#69C9D0] shrink-0 mt-0.5" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-8 pt-4 border-t border-white/[0.03]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (p.key === 'free') {
+                      onSelectFree();
+                    } else {
+                      onSelectPlan(p.key);
+                    }
+                  }}
+                  className={`w-full py-3.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer ${
+                    p.popular
+                      ? 'bg-[#FE2C55] hover:bg-[#E01E45] text-white fill-white shadow-lg shadow-[#FE2C55]/25 hover:scale-103'
+                      : 'bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] text-[#ECECFF]'
+                  }`}
+                >
+                  <Zap className={`w-4 h-4 ${p.popular ? 'fill-yellow-300 text-yellow-300' : 'text-gray-400'}`} />
+                  {p.btnText}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-
     </section>
   );
 }

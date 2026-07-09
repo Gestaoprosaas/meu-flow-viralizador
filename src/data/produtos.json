@@ -1,310 +1,74 @@
 [
   {
-    "id": "545073619453",
-    "nome": "50 Envelopes de Figurinha da  Copa do Mundo 2026",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1735473336990794971/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$331,60",
+    "id": "1735089994906043782",
+    "nome": "Escova de Cabelo Elétrica XYZ",
+    "imagem": "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&q=80&w=400",
+    "tags": ["Beleza", "Cabelo", "Eletrônico"],
+    "niche": "Beleza",
+    "preco": "89,90",
     "rating": "4.8",
-    "scoreViralidade": 95,
     "afiliado": {
-      "link": "https://www.kalodata.com/product",
+      "link": "https://shop.tiktok.com/view/product/1735089994906043782",
       "comissao": "10%"
     },
     "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
+      "ugc": "Vídeo vertical 9:16. Jovem mulher segura a Escova Elétrica XYZ em um ambiente de sala iluminado. Estilo selfie, sorriso natural. Ela diz diretamente para a câmera: \"Tenho usado a Escova XYZ há uma semana e meu cabelo nunca esteve tão brilhante e macio! Você precisa experimentar também!\"",
+      "pov": "Cena POV sobre bancada de mármore limpa. Mãos femininas claras seguram a Escova XYZ, mostrando de perto o produto contra a luz natural. Voz em off descreve: \"Esta escova elétrica dá brilho instantâneo ao seu cabelo. Sua tecnologia única alisa sem danos.\" O estilo é realista e editorial.",
+      "movimento": "Avatar masculino confiante em estúdio moderno. Ele levanta a Escova XYZ e faz um giro suave para mostrar diferentes ângulos enquanto música animada toca ao fundo. Câmera faz zoom dinâmico no produto quando o avatar destaca: \"Veja como a XYZ elimina o frizz em segundos!\""
     }
   },
   {
-    "id": "860919266244",
-    "nome": "Jogo De Panela Monaco Platinum Cerâmica Premium 21 Peças - Antiaderente",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1735783419126384425/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$634,40 - R$939,74",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "315384255515",
-    "nome": "Jaqueta Sarja Masculina Com Capuz Removível Forrado",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1731782910893327486/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$156,27",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "292529794495",
-    "nome": "Coberdrom Casal Queen Sherpa Edredrom Pele de Carneiro 2,40m x 2,20m",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1734130764631541131/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$127,00",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "427068288922",
-    "nome": "Bicicleta Spinning Ergométrica Para Exercícios Com Monitor Profissional Sport Suporta até 120kg",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1735181563649098928/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$523,70",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "260287570340",
-    "nome": "Conjunto de Panelas Cerâmicas MAAT BRAND Exclusive Design 18 Peças",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1735651855735293916/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$682,90",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "538484650744",
-    "nome": "Jaqueta Feminina Puffer Forrada Premium | Quentinha, Leve e Estilosa",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1735010020300981836/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$315,70",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "631342699241",
-    "nome": "Zencial Envy Skin GHK-CU - Sérum com Peptídeos de Cobre Colágeno e Ácido Hialurônico 30ml",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1735782975746639835/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$69,23",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "421917827929",
-    "nome": "Kit Body Splash Masculino Barbarius e Midtown 200ml by Primacial",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1732403584554075381/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$55,70",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "570937439664",
-    "nome": "Calça Legging Flare Flanelada Leg Boca De Sino Bailarina Grossa Zero Transparência Cintura Alta Confortável Fitness Apertado",
-    "imagem": "https://img.kalocdn.com/tiktok.product/1731300956302051050/cover.png",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$32,63",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "15426038484",
-    "nome": "Smartwatch Ultra Series 9",
-    "imagem": "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?auto=format&fit=crop&q=80&w=400",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$ 199,90",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "275981337334",
-    "nome": "Kit Skincare Premium",
-    "imagem": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$ 149,90",
-    "rating": "4.8",
-    "scoreViralidade": 95,
-    "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
-    },
-    "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
-    }
-  },
-  {
-    "id": "189662511391",
-    "nome": "Fone de Ouvido Noise Cancelling Pro",
+    "id": "1735089994906043783",
+    "nome": "Fone Sem Fio Z",
     "imagem": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$ 299,90",
-    "rating": "4.8",
-    "scoreViralidade": 95,
+    "tags": ["Eletrônicos", "Áudio", "Gadgets"],
+    "niche": "Tecnologia",
+    "preco": "129,90",
+    "rating": "4.7",
     "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
+      "link": "https://shop.tiktok.com/view/product/1735089994906043783",
+      "comissao": "12%"
     },
     "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
+      "ugc": "Vídeo vertical 9:16, estilo selfie. Jovem segura o Fone Sem Fio Z sobre o sofá da sala. Ela sorri e fala naturalmente para a câmera: \"Eu adoro meu Fone Z, o som é super limpo e ele nem pesa na orelha. Dá pra usar o dia inteiro sem incômodo. Recomendo muito!\". Cenário aconchegante, luz suave.",
+      "pov": "Cena POV: câmera aponta para baixo mostrando uma bancada de madeira clara. Mãos femininas seguram o Fone Z de forma que seja visível o logo e os botões. O ambiente é bem iluminado, com fundo desfocado. Uma narração suave diz: \"Este fone Z tem cancelamento de ruído ativo e bateria de longa duração. Ideal para quem ama música!\"",
+      "movimento": "Avatar masculino elegante em estúdio claro. Ele coloca o Fone Z em volta do pescoço e o levanta perto da câmera, fazendo um giro de 360° no lugar. Close-ups intercalam mostrando o produto de diferentes ângulos. Música moderna toca enquanto o avatar aponta características: \"Som potente, design compacto e bateria para o dia todo!\""
     }
   },
   {
-    "id": "163615986605",
-    "nome": "Suporte Veicular Magnético com Carregamento",
-    "imagem": "https://images.unsplash.com/photo-1586105251261-72a756497a11?auto=format&fit=crop&q=80&w=400",
-    "tags": [
-      "Viral",
-      "Kalodata"
-    ],
-    "niche": "Geral",
-    "preco": "R$ 49,90",
-    "rating": "4.8",
-    "scoreViralidade": 95,
+    "id": "1735089994906043784",
+    "nome": "Mini Processador Triturador de Alimentos USB",
+    "imagem": "https://images.unsplash.com/photo-1506368249639-73a05d6f6488?auto=format&fit=crop&q=80&w=400",
+    "tags": ["Casa", "Cozinha", "Eletrônicos"],
+    "niche": "Casa",
+    "preco": "29,90",
+    "rating": "4.6",
     "afiliado": {
-      "link": "https://www.kalodata.com/product",
-      "comissao": "10%"
+      "link": "https://shop.tiktok.com/view/product/1735089994906043784",
+      "comissao": "25%"
     },
     "prompts": {
-      "ugc": "",
-      "pov": "",
-      "movimento": ""
+      "ugc": "Vídeo vertical 9:16. Jovem criadora sorridente na sua cozinha segurando o Mini Processador USB. Ela aperta o botão e mostra temperos sendo fatiados instantaneamente. Ela diz: \"Olha a facilidade disso aqui! Chega de chorar cortando cebola. Super rápido e prático de limpar, recomendo!\"",
+      "pov": "Cena POV em bancada de mármore. Mãos masculinas seguram o Mini Processador USB, removem a tampa mostrando as 3 lâminas e trituram alho em 5 segundos. Voz em off: \"Esse processador USB recarregável tritura seus temperos na hora sem esforço. Compacto, potente e limpo.\"",
+      "movimento": "Avatar feminino em estúdio escandinavo moderno. Ela segura o Mini Processador sobre a mesa, gesticulando e sorrindo. O vídeo corta para closes dinâmicos em slow motion do processamento de vegetais sob luz suave de estúdio."
+    }
+  },
+  {
+    "id": "1735089994906043785",
+    "nome": "Sunset Lamp LED Estética 16 Cores",
+    "imagem": "https://images.unsplash.com/photo-1507608077129-56e32842fcdb?auto=format&fit=crop&q=80&w=400",
+    "tags": ["Tecnologia", "Luzes", "Decoração"],
+    "niche": "Tecnologia",
+    "preco": "34,90",
+    "rating": "4.5",
+    "afiliado": {
+      "link": "https://shop.tiktok.com/view/product/1735089994906043785",
+      "comissao": "20%"
+    },
+    "prompts": {
+      "ugc": "Vídeo vertical 9:16. Jovem no quarto escuro acende a Sunset Lamp. O ambiente fica banhado por um tom dourado e avermelhado fantástico. Ela diz: \"Deixou meu quarto com uma vibe incrível e perfeita para tirar fotos e fazer meus tiktoks. É muito linda!\"",
+      "pov": "Cena POV: mãos posicionando a Sunset Lamp sobre uma mesa gamer, usando o controle remoto para trocar as cores (azul, violeta, dourado). Voz em off: \"Crie cenários cinematográficos em segundos. Sunset Lamp com 16 tonalidades para elevar o visual de qualquer gravação.\"",
+      "movimento": "Avatar masculino em estúdio moderno, ajustando a position da Sunset Lamp em 180° enquanto a luz projeta auréolas de cores vivas nas paredes. Close-ups de transição focando no design metálico de alta durabilidade."
     }
   }
 ]

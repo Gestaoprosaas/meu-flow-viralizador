@@ -1806,7 +1806,7 @@ app.get("/api/produtos", async (req, res) => {
     {
       "id": "1735089994906043782",
       "nome": "Escova de Cabelo Elétrica XYZ",
-      "imagem": "",
+      "imagem": "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&q=80&w=400",
       "tags": ["Beleza", "Cabelo", "Eletrônico"],
       "niche": "Beleza",
       "preco": "89,90",
@@ -1819,20 +1819,20 @@ app.get("/api/produtos", async (req, res) => {
     {
       "id": "1735089994906043783",
       "nome": "Fone Sem Fio Z",
-      "imagem": "",
+      "imagem": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400",
       "tags": ["Eletrônicos", "Áudio", "Gadgets"],
       "niche": "Tecnologia",
       "preco": "129,90",
       "rating": "4.7",
       "afiliado": {
-        "link": "",
+        "link": "https://shop.tiktok.com/view/product/1735089994906043783",
         "comissao": "12%"
       }
     },
     {
       "id": "1735089994906043784",
       "nome": "Mini Processador Triturador de Alimentos USB",
-      "imagem": "",
+      "imagem": "https://images.unsplash.com/photo-1506368249639-73a05d6f6488?auto=format&fit=crop&q=80&w=400",
       "tags": ["Casa", "Cozinha", "Eletrônicos"],
       "niche": "Casa",
       "preco": "29,90",
@@ -1845,7 +1845,7 @@ app.get("/api/produtos", async (req, res) => {
     {
       "id": "1735089994906043785",
       "nome": "Sunset Lamp LED Estética 16 Cores",
-      "imagem": "",
+      "imagem": "https://images.unsplash.com/photo-1507608077129-56e32842fcdb?auto=format&fit=crop&q=80&w=400",
       "tags": ["Tecnologia", "Luzes", "Decoração"],
       "niche": "Tecnologia",
       "preco": "34,90",

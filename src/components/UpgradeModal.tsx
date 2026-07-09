@@ -79,7 +79,7 @@ export default function UpgradeModal({
           <div>
             <h2 className="text-xl font-extrabold text-[#F0F0FF] flex items-center gap-2">
               <Zap className="w-5 h-5 text-[#7C3AED] fill-[#7C3AED]" />
-              Escolha seu plano PROJETO VITÃO
+              Escolha seu plano ViralSeller
             </h2>
             <p className="text-xs sm:text-sm text-[#8888AA]">Multiplique suas vendas no TikTok Shop com recursos ilimitados</p>
           </div>

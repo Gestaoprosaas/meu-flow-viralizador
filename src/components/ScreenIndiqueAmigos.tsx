@@ -69,7 +69,7 @@ export default function ScreenIndiqueAmigos({ profile }: ScreenIndiqueAmigosProp
             <div>
               <h3 className="text-lg font-black text-white">Modo Lucrar (40% OFF)</h3>
               <p className="text-xs text-[#8888AA] mt-1 max-w-xs mx-auto">
-                Seu amigo ganha 20% de desconto e você fatura sua parte via coprodução no checkout.
+                Seu amigo ganha 40% de desconto e você fatura sua parte via coprodução no checkout.
               </p>
             </div>
 

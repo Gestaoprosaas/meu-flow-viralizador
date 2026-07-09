@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { Copy, Check, Sparkles, User, Tag, ArrowUpRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { InfluencerTemplate } from '../data/influencerTemplates';
@@ -28,7 +29,7 @@ export default function InfluencerCard({ template, isCopied, onCopy }: Influence
 
       {/* Image container with tags on top */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-zinc-950">
-        <img
+        <ImageWithSkeleton
           src={template.image}
           alt={template.name}
           loading="lazy"

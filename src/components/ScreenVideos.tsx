@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LazyVideo } from './LazyVideo';
 import { Target, Sparkles, Video, Volume2, Music, Check, RefreshCw, Download, ChevronRight, Play, FileText, ArrowRight } from 'lucide-react';
 import { VideoGeneration, ScriptGeneration } from '../types';
 
@@ -309,7 +310,7 @@ export default function ScreenVideos({
               <div className="md:col-span-5 flex flex-col items-center justify-center">
                 <div className="relative rounded-2xl overflow-hidden border border-[#1E1E2E] bg-black shadow-lg aspect-[9/16] w-[220px] sm:w-[250px]">
                   {createdVideo ? (
-                    <video
+                    <LazyVideo
                       src={createdVideo.video_url}
                       controls
                       autoPlay

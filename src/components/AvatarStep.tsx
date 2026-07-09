@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
+import { AVATARS_PRESETS } from '../data/avatares';
 
 export interface Avatar {
   id: string;
@@ -9,24 +10,14 @@ export interface Avatar {
   descricao: string;
 }
 
-// Mock de avatares caso não exista avataresProntos
-const MOCK_AVATARES: Avatar[] = [
-  { id: '1', nome: 'Giovana', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Giovana', descricao: 'Avatar feminino' },
-  { id: '2', nome: 'Beatriz', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Beatriz', descricao: 'Avatar feminino' },
-  { id: '3', nome: 'Clara', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Clara', descricao: 'Avatar feminino' },
-  { id: '4', nome: 'Yasmin', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Yasmin', descricao: 'Avatar feminino' },
-  { id: '5', nome: 'Valentina', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Valentina', descricao: 'Avatar feminino' },
-  { id: '6', nome: 'Aurora', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Aurora', descricao: 'Avatar feminino' },
-  { id: '7', nome: 'Rafael', genero: 'Masculino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Rafael', descricao: 'Avatar masculino' },
-  { id: '8', nome: 'Caio', genero: 'Masculino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Caio', descricao: 'Avatar masculino' },
-  { id: '9', nome: 'Davi', genero: 'Masculino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Davi', descricao: 'Avatar masculino' },
-  { id: '10', nome: 'Lucas', genero: 'Masculino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Lucas', descricao: 'Avatar masculino' },
-  { id: '11', nome: 'Aisha', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Aisha', descricao: 'Avatar feminino' },
-  { id: '12', nome: 'Thiago', genero: 'Masculino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Thiago', descricao: 'Avatar masculino' },
-  { id: '13', nome: 'Enzo', genero: 'Masculino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Enzo', descricao: 'Avatar masculino' },
-  { id: '14', nome: 'Leticia', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Leticia', descricao: 'Avatar feminino' },
-  { id: '15', nome: 'Giovannaa', genero: 'Feminino', imagemUrl: 'https://placehold.co/130x160/1a1a2e/white?text=Giovannaa', descricao: 'Avatar feminino' },
-];
+// Convert AVATARS_PRESETS to Avatar format
+const avataresProntos: Avatar[] = AVATARS_PRESETS.map(av => ({
+  id: av.id,
+  nome: av.name,
+  genero: av.gender === 'FEMININO' ? 'Feminino' : 'Masculino',
+  imagemUrl: av.imageUrl,
+  descricao: av.description
+}));
 
 export interface AvatarStepProps {
   avatarSelecionado: Avatar | null;
@@ -47,7 +38,7 @@ export default function AvatarStep({
 }: AvatarStepProps) {
   const [filtro, setFiltro] = useState<'Todos' | 'Feminino' | 'Masculino'>('Todos');
 
-  const avataresFiltrados = MOCK_AVATARES.filter(
+  const avataresFiltrados = avataresProntos.filter(
     (avatar) => filtro === 'Todos' || avatar.genero === filtro
   );
 
@@ -109,6 +100,7 @@ export default function AvatarStep({
                 alt={avatar.nome}
                 className="absolute inset-0 w-full h-full object-cover"
                 loading="lazy"
+                referrerPolicy="no-referrer"
               />
               
               {/* Overlay inferior */}

@@ -1,0 +1,75 @@
+--- src/components/ScreenAdmin.tsx
++++ src/components/ScreenAdmin.tsx
+@@ -730,2 +730,68 @@
+               </div>
++
++              <div className="bg-[#0D0D1A] border border-[#1E1E35] rounded-3xl p-8 mt-6">
++                <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
++                  <Bell className="w-5 h-5 text-indigo-500" />
++                  Configuração Global de Som (Simulação de Vendas)
++                </h2>
++                
++                <div className="space-y-6">
++                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
++                    <div>
++                      <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest block mb-3">Intervalo Mínimo (Minutos)</label>
++                      <input 
++                        type="number" 
++                        min="0.1"
++                        step="0.1"
++                        value={simulatedSalesMinMin || 0.1}
++                        onChange={(e) => setSimulatedSalesMinMin?.(Number(e.target.value))}
++                        className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-white outline-none focus:border-indigo-500"
++                      />
++                    </div>
++                    <div>
++                      <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest block mb-3">Intervalo Máximo (Minutos)</label>
++                      <input 
++                        type="number" 
++                        min="0.1"
++                        step="0.1"
++                        value={simulatedSalesMaxMin || 1.5}
++                        onChange={(e) => setSimulatedSalesMaxMin?.(Number(e.target.value))}
++                        className="w-full bg-[#111118] border border-[#1E1E35] rounded-xl p-3 text-white outline-none focus:border-indigo-500"
++                      />
++                    </div>
++                  </div>
++
++                  <div className="flex items-center justify-between p-4 bg-[#111118] border border-[#1E1E35] rounded-xl">
++                    <div>
++                      <h3 className="text-sm font-bold text-white">Som de Venda Ativado</h3>
++                      <p className="text-xs text-zinc-500 mt-1">Toca o som de caixa registradora periodicamente</p>
++                    </div>
++                    <button
++                      onClick={() => setSimulatedSalesSound?.(!simulatedSalesSound)}
++                      className={`w-12 h-6 rounded-full transition-colors relative ${simulatedSalesSound ? 'bg-emerald-500' : 'bg-zinc-700'}`}
++                    >
++                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${simulatedSalesSound ? 'left-[26px]' : 'left-[2px]'}`} />
++                    </button>
++                  </div>
++
++                  <div className="flex gap-4">
++                    <button
++                      onClick={() => {
++                        if (simulatedSalesMinMin) localStorage.setItem('local_simulated_sales_min_min', String(simulatedSalesMinMin));
++                        if (simulatedSalesMaxMin) localStorage.setItem('local_simulated_sales_max_min', String(simulatedSalesMaxMin));
++                        if (simulatedSalesSound !== undefined) localStorage.setItem('local_simulated_sales_sound', String(simulatedSalesSound));
++                        notify('Configurações de som salvas!', 'success');
++                      }}
++                      className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-sm rounded-xl transition shadow-lg"
++                    >
++                      Salvar Configurações
++                    </button>
++                    <button
++                      onClick={() => {
++                        const audio = new Audio('/sounds/default-cash-register.mp3');
++                        audio.play().catch(console.error);
++                      }}
++                      className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm rounded-xl transition flex items-center gap-2"
++                    >
++                      🔊 Testar Som
++                    </button>
++                  </div>
++                </div>
++              </div>
+             </div>

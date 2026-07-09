@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { Target, Sparkles, ImageIcon, Download, Bookmark, Layers, RefreshCw, Eye, Check, Clipboard, ExternalLink, Save, CheckCircle2 } from 'lucide-react';
 import { ImageGeneration } from '../types';
 
@@ -378,7 +379,7 @@ export default function ScreenImagens({ images, onImageGenerated }: ScreenImagen
                   key={img.id}
                   className="group relative bg-[#111118] border border-[#1E1E2E] rounded-xl overflow-hidden hover:border-[#06B6D4]/60 transition"
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={img.image_url}
                     alt={img.prompt_used}
                     className="w-full h-48 object-cover group-hover:scale-105 transition duration-500 bg-[#0A0A0F]"
@@ -432,7 +433,7 @@ export default function ScreenImagens({ images, onImageGenerated }: ScreenImagen
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
           <div className="relative max-w-3xl w-full">
             <XCloseButton onClick={() => setZoomImg(null)} />
-            <img
+            <ImageWithSkeleton
               src={zoomImg}
               alt="High Definition Product Rendering Zoom View"
               className="w-full h-auto max-h-[80vh] object-contain rounded-xl border border-white/10 mx-auto"

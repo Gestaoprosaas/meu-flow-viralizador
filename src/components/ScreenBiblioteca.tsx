@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import { 
   Search, 
   Filter, 
@@ -438,107 +437,6 @@ export default function ScreenBiblioteca({ onNavigate }: ScreenBibliotecaProps) 
           </button>
         </div>
       )}
-
-      {/* Clube de Clientes Fiéis Section */}
-      <div className="mt-20 -mx-6 md:-mx-12 border-t border-transparent bg-[#0A0A14] relative overflow-hidden" id="clube-fidelidade-section">
-        {/* Border Top Gradient Line */}
-        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-[#FE2C55] to-[#813EF6]" />
-        
-        <div className="max-w-7xl mx-auto py-16 px-6 md:px-12">
-          {/* Header */}
-          <div className="text-center space-y-3 mb-12">
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-widest flex items-center justify-center gap-2">
-              🏆 CLUBE DE CLIENTES FIÉIS
-            </h2>
-            <p className="text-sm text-[#8888AA] font-semibold max-w-lg mx-auto leading-relaxed">
-              Benefícios exclusivos para quem está com a gente há mais tempo
-            </p>
-          </div>
-
-          {/* Grid of 3 Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {/* Card 1 */}
-            <div className="bg-[#111118] border border-[#1E1E35] rounded-2xl p-6 hover:border-[#FE2C55]/30 transition duration-300 flex flex-col space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FE2C55] to-[#813EF6] p-[1px]">
-                  <div className="w-full h-full bg-[#111118] rounded-[11px] flex items-center justify-center">
-                    <span className="text-lg">🔐</span>
-                  </div>
-                </div>
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">Aba Exclusiva</h3>
-              </div>
-              <p className="text-xs text-[#8888AA] leading-relaxed">
-                Esta biblioteca é reservada para clientes que demonstram comprometimento com a plataforma. Conteúdo premium selecionado a dedo pela nossa equipe.
-              </p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-[#111118] border border-[#1E1E35] rounded-2xl p-6 hover:border-[#813EF6]/30 transition duration-300 flex flex-col space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FE2C55] to-[#813EF6] p-[1px]">
-                  <div className="w-full h-full bg-[#111118] rounded-[11px] flex items-center justify-center">
-                    <span className="text-lg">⏳</span>
-                  </div>
-                </div>
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">Como Liberar</h3>
-              </div>
-              <p className="text-xs text-[#8888AA] leading-relaxed">
-                Após 30 dias como cliente ativo, você receberá acesso automático a todo o conteúdo desta biblioteca. Fique atento ao seu email!
-              </p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-[#111118] border border-[#1E1E35] rounded-2xl p-6 hover:border-[#FE2C55]/30 transition duration-300 flex flex-col space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FE2C55] to-[#813EF6] p-[1px]">
-                  <div className="w-full h-full bg-[#111118] rounded-[11px] flex items-center justify-center">
-                    <span className="text-lg">🎁</span>
-                  </div>
-                </div>
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">Benefícios Exclusivos</h3>
-              </div>
-              <ul className="text-xs text-[#8888AA] leading-relaxed space-y-2">
-                <li className="flex items-start gap-1.5">• Templates premium de alta conversão</li>
-                <li className="flex items-start gap-1.5">• Prompts avançados testados e validados</li>
-                <li className="flex items-start gap-1.5">• Estratégias secretas de afiliados top</li>
-                <li className="flex items-start gap-1.5">• Atualizações semanais de conteúdo</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Progress Section */}
-          <div className="max-w-xl mx-auto text-center space-y-4 bg-[#111118]/60 border border-[#1E1E35]/50 p-6 rounded-2xl">
-            <span className="text-xs font-black text-[#8888AA] uppercase tracking-widest block">
-              Seu progresso para desbloquear:
-            </span>
-            
-            {/* Visual ASCII representation block from prompt */}
-            <div className="font-mono text-xs text-[#8888AA] tracking-wider py-1.5 px-3 bg-[#0A0A0F] rounded-lg border border-[#1E1E2E] inline-block">
-              [<span className="text-[#FE2C55]">████████</span><span className="opacity-25">░░░░░░░░░░░░</span>] 30 dias necessários
-            </div>
-
-            {/* Animated Progress Bar */}
-            <div className="w-full bg-black/40 rounded-full h-2.5 overflow-hidden border border-white/[0.03]">
-              <motion.div 
-                className="bg-gradient-to-r from-[#FE2C55] via-[#813EF6] to-[#FE2C55] h-full rounded-full"
-                animate={{
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                style={{ width: '40%', backgroundSize: '200% 100%' }}
-              />
-            </div>
-
-            <p className="text-xs font-bold text-white/75 italic">
-              "Continue usando a plataforma para desbloquear"
-            </p>
-          </div>
-        </div>
-      </div>
 
     </div>
   );

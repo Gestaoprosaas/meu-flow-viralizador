@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { LazyVideo } from './LazyVideo';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { ArrowLeft, Play, Sparkles, Copy, Check } from 'lucide-react';
 import { MOVEMENTS_PRESETS, MovementPreset } from '../data/prompts';
 
@@ -54,13 +56,13 @@ function MovimentoCardItem({ movement, onSelect }: MovimentoCardItemProps) {
             />
           ) : (
             <>
-              <img
+              <ImageWithSkeleton
                 src={movement.imageUrl}
                 alt={movement.name}
                 className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
                 referrerPolicy="no-referrer"
               />
-              <video
+              <LazyVideo
                 key={movement.id}
                 src={videoSrc}
                 className="absolute inset-0 w-full h-full object-cover z-10"
@@ -73,7 +75,7 @@ function MovimentoCardItem({ movement, onSelect }: MovimentoCardItemProps) {
             </>
           )
         ) : (
-          <img
+          <ImageWithSkeleton
             src={movement.imageUrl}
             alt={movement.name}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -179,7 +181,7 @@ export default function ScreenMovimentos({ onNavigate }: ScreenMovimentosProps) 
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin scrollbar-thumb-[#1E1E2E] scrollbar-track-transparent w-full">
         <div className="w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             {movementsList.map((movement) => (
               <MovimentoCardItem
                 key={movement.id}

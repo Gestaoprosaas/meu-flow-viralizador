@@ -125,21 +125,30 @@ Para armazenar as fotos comerciais geradas pelas APIs sem expirar URLs temporár
 
 ## 🤖 Importação Automática de Produtos Kalodata (Opcional - Windows/Homologação)
 
-Para automatizar a busca de produtos em alta no **Kalodata** utilizando sua própria sessão local do Opera Browser (evitando assim bloqueios de IP de datacenter):
+Para automatizar a busca de produtos em alta no **Kalodata** utilizando sua própria sessão ativa no **Opera Browser** (conectando ao navegador já aberto para evitar detecção de robôs ou telas de login extras):
 
-1. **Instalar Dependências e Navegador Chromium localmente**:
+1. **Abra o Opera Browser com a Flag de Depuração**:
+   Feche todas as janelas do Opera e abra-o a partir do prompt de comando do Windows (cmd) ou execute com as opções de depuração habilitadas:
+   ```cmd
+   "C:\Users\TOTIS\AppData\Local\Programs\Opera\opera.exe" --remote-debugging-port=9222
+   ```
+   *(Nota: Certifique-se de que o caminho do executável do Opera corresponda ao do seu sistema).*
+
+2. **Instalar Dependências localmente**:
    ```bash
    npx playwright install chromium
    ```
 
-2. **Rodar Script de Teste**:
+3. **Rodar Script de Teste**:
+   Com o Opera já aberto e logado na sua conta Kalodata na porta `9222`, execute:
    ```bash
    npx ts-node scripts/importar-kalodata.ts
    ```
+   O script usará a mesma aba logada para fazer a extração de forma invisível e humana!
 
-3. **Agendar Atualização Diária Automática (No Windows)**:
-   Abra a pasta `scripts/` e clique duas vezes sobre o arquivo `agendar-importacao.bat`. 
-   Isso criará uma tarefa diária no seu Windows às **08:00 AM** para extrair os produtos top e sobrescrever os dados, atualizando todo o seu painel do ViralForge de forma invisível.
+4. **Agendar Atualização Diária Automática (No Windows)**:
+   Abra a pasta `scripts/` e execute o arquivo `agendar-importacao.bat`. 
+   Isso registrará a tarefa diária às **08:00 AM** para atualizar a base de produtos do ViralForge.
 
 ---
 
