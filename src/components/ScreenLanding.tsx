@@ -322,7 +322,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
     try {
       const client = getSupabaseClient();
       if (!client) {
-        throw new Error("Cliente Supabase não inicializado. Verifique a conexão.");
+        throw new Error("Estamos enfrentando problemas para conectar ao nosso servidor. Por favor, tente novamente mais tarde.");
       }
 
       // Log in in Supabase Auth
@@ -333,7 +333,7 @@ export default function ScreenLanding({ onEnter }: ScreenLandingProps) {
 
       if (error) {
         if (error.message.includes('Failed to fetch')) {
-          throw new Error('Falha de conexão com o Supabase. Verifique se a URL e Anon Key estão corretas nas Configurações.');
+          throw new Error('Estamos enfrentando problemas para conectar ao nosso servidor. Por favor, tente novamente mais tarde.');
         } else {
           throw new Error(`Erro de autenticação: ${error.message}`);
         }

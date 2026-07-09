@@ -23,26 +23,21 @@ export const LazyVideo = ({
 
   useEffect(() => {
     if (isIntersecting) return;
-    
-    // Safety fallback: if IntersectionObserver is not supported, or does not fire in 400ms
-    // inside the nested iframe, we force loading to begin.
-    const timer = setTimeout(() => {
-      setIsIntersecting(true);
-    }, 400);
 
+    // Sem timer: deixar o IntersectionObserver decidir quando carregar.
+    // O timer antigo fazia TODOS os vídeos carregarem ao mesmo tempo após o tempo limite.
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setIsIntersecting(true);
-            clearTimeout(timer);
             observer.disconnect();
           }
         });
       },
       { 
         threshold: 0.01,
-        rootMargin: '150px' // Começa a carregar o vídeo 150px antes de entrar na tela (ideal para mobile!)
+        rootMargin: '200px' // pré-carrega 200px antes de entrar na tela
       }
     );
 
@@ -51,7 +46,6 @@ export const LazyVideo = ({
     }
 
     return () => {
-      clearTimeout(timer);
       observer.disconnect();
     };
   }, [isIntersecting, src]);
@@ -95,7 +89,7 @@ export const LazyVideo = ({
         playsInline={playsInline}
         autoPlay={autoPlay}
         {...props}
-        preload="auto"
+        preload="none"
         onLoadedData={handleLoaded}
         onCanPlay={handleLoaded}
         onPlay={handleLoaded}

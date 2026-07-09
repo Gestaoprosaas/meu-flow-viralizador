@@ -20,6 +20,7 @@ const assetsMap = {
   '/videos/movimentos/ULTRA REALISTA MEXENDO CABELO.mp4': 'VIDEOS MOVIMENTOS/ULTRA REALISTA MEXENDO CABELO.mp4',
   '/videos/movimentos/ziper.mp4': 'VIDEOS MOVIMENTOS/ziper.mp4',
   '/videos/movimentos/movimento.mp4': 'TEMPLATES DOS TIPOS DE VIDEOS/movimento.mp4',
+  '/videos/movimentos/Beijo + CTA ': 'TEMPLATES DOS TIPOS DE VIDEOS/Beijo + CTA .mp4',
 
   // Vídeos de avatares
   '/videos/avatares/Tapar Camera.mp4': 'AVATARES/Tapar Camera.mp4',
