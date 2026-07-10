@@ -16,8 +16,8 @@ export const MOVEMENTS_PRESETS: MovementPreset[] = [
     type: 'Movimentos',
     format: 'Video',
     description: 'A avatar manda beijo para a câmera com gesto suave e simpático',
-    imageUrl: '/videos/movimentos/beijocta.mp4',
-    videoUrl: '/videos/movimentos/beijocta.mp4',
+    imageUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/Beijo%20+%20CTA.mp4',
+    videoUrl: 'https://bjwxsbcohqcpfftylovq.supabase.co/storage/v1/object/public/Midias/VIDEOS%20MOVIMENTOS/Beijo%20+%20CTA.mp4',
     promptText: `Versão 3.1. Aspect ratio 9:16. Duração de 8 segundos. Seed 12345.
 
 Usar a imagem enviada como âncora de identidade, mantendo exatamente as mesmas feições, tom de pele, cor de cabelo, mesma textura, mesmo volume e mesmo comprimento durante TODO o vídeo, sem qualquer alteração em nenhum momento.
