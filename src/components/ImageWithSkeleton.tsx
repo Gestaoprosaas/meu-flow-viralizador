@@ -64,8 +64,8 @@ export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName
         <img
           src={currentSrc}
           alt={alt || ''}
-          loading="eager"
-          decoding="sync"
+          loading="lazy"
+          decoding="async"
           className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 w-full h-full object-cover rounded-inherit`}
           onLoad={handleLoad}
           onError={handleError}

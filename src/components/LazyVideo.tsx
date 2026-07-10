@@ -13,10 +13,50 @@ export const LazyVideo = ({
   ...props
 }: any) => {
   const [loaded, setLoaded] = useState(false);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    setIsIntersecting(false);
     setLoaded(false);
   }, [src]);
+
+  useEffect(() => {
+    if (isIntersecting) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsIntersecting(true);
+            observer.disconnect();
+          }
+        });
+      },
+      { 
+        threshold: 0,
+        rootMargin: '1000px' // Load 1000px before entering viewport
+      }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isIntersecting, src]);
+
+  // Forçar reprodução no mobile assim que o vídeo estiver visível e marcado como autoPlay
+  useEffect(() => {
+    if (isIntersecting && autoPlay && videoRef.current) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {});
+      }
+    }
+  }, [isIntersecting, autoPlay]);
 
   const isPosterVideo = poster && (
     poster.toLowerCase().endsWith('.mp4') || 
@@ -37,7 +77,8 @@ export const LazyVideo = ({
         <div className="absolute inset-0 bg-zinc-800 animate-pulse rounded-inherit" />
       )}
       <video
-        src={src}
+        ref={videoRef}
+        src={isIntersecting ? src : undefined}
         poster={posterOptimized}
         loop={loop}
         muted={muted}

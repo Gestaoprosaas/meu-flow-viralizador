@@ -186,7 +186,7 @@ interface AvatarCardProps {
 }
 
 function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
-  const { isMobile, isInView, containerRef } = useMobileAndIntersection();
+  const { isMobile, containerRef } = useMobileAndIntersection();
 
   return (
     <button
@@ -216,7 +216,7 @@ function AvatarCard({ av, isSelected, onSelect }: AvatarCardProps) {
               loading="lazy"
               decoding="async"
             />
-            {isInView && (
+            {true && (
               <LazyVideo
                 key={av.id}
                 src={av.videoUrl}
@@ -269,7 +269,7 @@ interface ScenarioCardProps {
 }
 
 function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) {
-  const { isMobile, isInView, containerRef } = useMobileAndIntersection();
+  const { isMobile, containerRef } = useMobileAndIntersection();
 
   return (
     <button
@@ -300,7 +300,7 @@ function ScenarioCard({ sc, isSelected, onSelect, isLarge }: ScenarioCardProps) 
               loading="lazy"
               decoding="async"
             />
-            {isInView && (
+            {true && (
               <LazyVideo
                 key={sc.id}
                 src={sc.videoUrl}
@@ -357,7 +357,7 @@ function extractYoutubeId(url: string): string | null {
 function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const { isMobile, isInView, containerRef } = useMobileAndIntersection();
+  const { isMobile, containerRef } = useMobileAndIntersection();
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -441,7 +441,7 @@ function MovementCard({ mv, isSelected, onSelect, onInfo }: MovementCardProps) {
                   loading="lazy"
                   decoding="async"
                 />
-                {isInView && (
+                {true && (
                   <LazyVideo
                     key={mv.id}
                     src={mv.videoUrl}
@@ -710,23 +710,8 @@ function MobileProvider({ children }: { children: React.ReactNode }) {
 
 function useMobileAndIntersection() {
   const isMobile = React.useContext(MobileContext);
-  const [isInView, setIsInView] = useState(!isMobile); // desktop: sempre true
   const containerRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!isMobile) { setIsInView(true); return; }
-    setIsInView(false); // reset ao detectar mobile
-    const el = containerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInView(entry.isIntersecting),
-      { rootMargin: '150px', threshold: 0 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isMobile]);
-
-  return { isMobile, isInView, containerRef };
+  return { isMobile, containerRef };
 }
 
 export default function ScreenProdutos({
