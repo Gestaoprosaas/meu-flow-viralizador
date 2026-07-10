@@ -1,46 +1,27 @@
 import React, { useState, useEffect } from 'react';
 
+// Bypassing Supabase image transformation as it causes 7-10s delays on cold starts
+// and fails on videos causing fallback delays. 
 export const getOptimizedImageUrl = (url: string, width: number = 400) => {
-  if (!url || !url.includes('supabase.co')) return url;
-  try {
-    let optimizedUrl = url;
-    if (url.includes('/storage/v1/object/public/')) {
-      optimizedUrl = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-    }
-    const urlObj = new URL(optimizedUrl);
-    urlObj.searchParams.set('width', width.toString());
-    urlObj.searchParams.set('quality', '75');
-    urlObj.searchParams.set('format', 'webp');
-    return urlObj.toString();
-  } catch (e) {
-    return url;
-  }
+  return url;
 };
 
 export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName = 'w-full h-full', width = 400, onError, onLoad, ...props }: any) => {
   const isLocal = src && (src.startsWith('data:') || src.startsWith('blob:'));
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const [triedOriginal, setTriedOriginal] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(() => getOptimizedImageUrl(src, width));
+  const [currentSrc, setCurrentSrc] = useState(src);
 
   useEffect(() => {
     setLoaded(false); // sempre exibe skeleton até a imagem estar pronta
     setError(false);
-    setTriedOriginal(false);
-    setCurrentSrc(getOptimizedImageUrl(src, width));
-  }, [src, width]);
+    setCurrentSrc(src);
+  }, [src]);
 
   const handleError = (e: any) => {
-    const original = src;
-    if (!triedOriginal && original && currentSrc !== original) {
-      setTriedOriginal(true);
-      setCurrentSrc(original);
-    } else {
-      setError(true);
-      setLoaded(true);
-      if (onError) onError(e);
-    }
+    setError(true);
+    setLoaded(true);
+    if (onError) onError(e);
   };
 
   const handleLoad = (e: any) => {
@@ -72,6 +53,7 @@ export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName
           muted
           playsInline
           autoPlay
+          preload="auto"
           className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 w-full h-full object-cover rounded-inherit`}
           onLoadedData={handleLoad}
           onError={handleError}
@@ -82,8 +64,8 @@ export const ImageWithSkeleton = ({ src, alt, className = '', containerClassName
         <img
           src={currentSrc}
           alt={alt || ''}
-          loading="lazy"
-          decoding="async"
+          loading="eager"
+          decoding="sync"
           className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 w-full h-full object-cover rounded-inherit`}
           onLoad={handleLoad}
           onError={handleError}

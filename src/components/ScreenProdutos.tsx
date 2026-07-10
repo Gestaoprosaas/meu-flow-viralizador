@@ -2163,8 +2163,55 @@ Strictly maintain 100% visual consistency. Each image must be a complete, indepe
         }
       }
 
+      let finalBlob = blob;
+      if (['png', 'webp', 'svg'].includes(ext)) {
+        try {
+          const convertedBlob = await new Promise<Blob>((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            const tempUrl = URL.createObjectURL(blob);
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth || img.width;
+              canvas.height = img.naturalHeight || img.height;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                // Preencher fundo com branco para manter transparência de PNG/WEBP limpa em JPG
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                canvas.toBlob((b) => {
+                  URL.revokeObjectURL(tempUrl);
+                  if (b) {
+                    resolve(b);
+                  } else {
+                    resolve(blob);
+                  }
+                }, 'image/jpeg', 0.95);
+              } else {
+                URL.revokeObjectURL(tempUrl);
+                resolve(blob);
+              }
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(tempUrl);
+              resolve(blob);
+            };
+            img.src = tempUrl;
+          });
+          
+          if (convertedBlob !== blob) {
+            finalBlob = convertedBlob;
+            ext = 'jpg';
+            mimeType = 'image/jpeg';
+          }
+        } catch (e) {
+          console.warn("Erro ao converter imagem para JPEG:", e);
+        }
+      }
+
       // Forçar blob com tipo MIME correto
-      const typedBlob = new Blob([blob], { type: mimeType });
+      const typedBlob = new Blob([finalBlob], { type: mimeType });
       const objectUrl = URL.createObjectURL(typedBlob);
 
       // Limpar nome do arquivo e aplicar a extensão correta
